@@ -130,22 +130,25 @@ def main(args):
         total_relationship_result = session.run(total_relationship_statement)
         for record in total_relationship_result:
             neo4j_dict[TOTAL_RELATIONSHIP] = record[TOTAL_RELATIONSHIP]
-            log.info(f"Total relationships: {TOTAL_RELATIONSHIP}")
+            log.info(f"Total relationships: {record[TOTAL_RELATIONSHIP]}")
         # Query the counts for each node type
         node_counts_statement = f"MATCH (n) RETURN labels(n) AS {NODE_TYPE}, COUNT(*) AS {COUNT}"
         node_counts_result = session.run(node_counts_statement)
         neo4j_dict[NODE_COUNTS] = {}
+        node_counts_dict = {}
         for record in node_counts_result:
-            neo4j_dict[NODE_COUNTS][record[NODE_TYPE][0]] = record[COUNT]
+            node_counts_dict[record[NODE_TYPE][0]] = record[COUNT]
             log.info(f"Node {record[NODE_TYPE][0]}: {record[COUNT]}")
+        neo4j_dict[NODE_COUNTS] = {k: node_counts_dict[k] for k in sorted(node_counts_dict)}
         # Query the counts for each relationship type
         relationship_counts_statement = f"MATCH ()-[r]->() RETURN TYPE(r) AS {RELATIONSHIP_TYPE}, COUNT(*) AS {COUNT}"
         relationship_counts_result = session.run(relationship_counts_statement)
         neo4j_dict[RELATIONSHIP_COUNTS] = {}
+        relationship_counts_dict = {}
         for record in relationship_counts_result:
-            neo4j_dict[RELATIONSHIP_COUNTS][record[RELATIONSHIP_TYPE]] = record[COUNT]
+            relationship_counts_dict[record[RELATIONSHIP_TYPE]] = record[COUNT]
             log.info(f"Relationship {record[RELATIONSHIP_TYPE]}: {record[COUNT]}")    
-
+        neo4j_dict[RELATIONSHIP_COUNTS] = {k: relationship_counts_dict[k] for k in sorted(relationship_counts_dict)}
         with open(config_data[NEO4j_SUMMARY_FILE_NAME], "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
         

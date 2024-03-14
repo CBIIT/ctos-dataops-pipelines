@@ -1,3 +1,5 @@
 *tmp/
 *.json
 *test.yaml
+*venv/
+*__pycache__/

@@ -19,11 +19,12 @@ pull:
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
       branch: update_1
       include_submodules: True
-  - prefect.projects.steps.pip_install_requirements:
+  - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
 
+deployments:
   - name: neo4j_summary
     version: null
     tags: []

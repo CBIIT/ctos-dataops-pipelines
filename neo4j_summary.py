@@ -95,7 +95,7 @@ def uplaod_s3(config_data, log):
             try:
                 print(dest)
                 upload_log_file(dest, config_data[NEO4j_SUMMARY_FILE_NAME])
-                log.info(f'Uploading validation result zip file {os.path.basename(config_data[NEO4j_SUMMARY_FILE_NAME])} succeeded!')
+                log.info(f'Uploading neo4j summary file {os.path.basename(config_data[NEO4j_SUMMARY_FILE_NAME])} succeeded!')
             except Exception as e:
                 log.error(e)
 

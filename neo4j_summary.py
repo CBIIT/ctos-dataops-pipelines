@@ -75,11 +75,11 @@ def process_arguments(args, log, argument_list):
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Generate neo4j database summary')
     parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
-    parser.add_argument('--neo4j_uri', help='The neo4j uri')
-    parser.add_argument('--neo4j_user', help='The neo4j user')
-    parser.add_argument('--neo4j_password', help='The neo4j password')
-    parser.add_argument('--s3_bucket', help='The upload s3 file bucket')
-    parser.add_argument('--s3_folder', help='The upload s3 file folder')
+    parser.add_argument('--neo4j-uri', help='The neo4j uri')
+    parser.add_argument('--neo4j-user', help='The neo4j user')
+    parser.add_argument('--neo4j-password', help='The neo4j password')
+    parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
+    parser.add_argument('--s3-folder', help='The upload s3 file folder')
     return parser.parse_args()
 
 def uplaod_s3(config_data, log):

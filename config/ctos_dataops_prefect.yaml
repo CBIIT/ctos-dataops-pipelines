@@ -66,3 +66,23 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, S3 Bucket, Bento Config"
+    
+  - name: data_model_archiving
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  data_model_archiving_prefect.py:data_model_archiving
+    parameters:
+      data_model_repo_url: ""
+      data_model_version: ""
+      s3_bucket: ""
+      s3_folder: ""
+      # If file urls are not available in the manifest, then bucket name and prefix (folder name) need to be provided
+    work_pool:
+      name: ctos-dataops-neo4j-summary
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Data Model Archiving, S3 Bucket, Bento Config"

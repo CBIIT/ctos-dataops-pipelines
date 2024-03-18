@@ -78,7 +78,7 @@ deployments:
       data_model_repo_url: ""
       data_model_version: ""
       s3_bucket: ""
-      s3_folder: ""
+      s3_prefix: ""
       # If file urls are not available in the manifest, then bucket name and prefix (folder name) need to be provided
     work_pool:
       name: ctos-dataops-neo4j-summary

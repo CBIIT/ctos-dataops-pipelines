@@ -25,8 +25,8 @@ NEO4j_SUMMARY_FILE_NAME = "neo4j_summary_file_name"
 argument_list = [NEO4J_URI, NEO4j_USER, NEO4J_PASSWORD, NEO4j_SUMMARY_FILE_NAME]
 
 if LOG_PREFIX not in os.environ:
-    os.environ[LOG_PREFIX] = 'Stream_File_Validator'
-os.environ[APP_NAME] = 'Stream_File_Validator'
+    os.environ[LOG_PREFIX] = 'Neo4j_Summary'
+os.environ[APP_NAME] = 'Neo4j_Summary'
 
 class Neo4jConfig:
     def __init__(self, config_file, args, config_file_arg='config_file'):

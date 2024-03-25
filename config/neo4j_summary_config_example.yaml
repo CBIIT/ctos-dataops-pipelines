@@ -1,0 +1,7 @@
+Config:
+  neo4j_uri: bolt://localhost:7687
+  neo4j_user: neo4j
+  neo4j_password: password
+  s3_bucket: s3_bucket
+  s3_folder: s3_folder
+  neo4j_summary_file_name: neo4j_summary.json

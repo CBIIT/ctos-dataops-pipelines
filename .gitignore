@@ -1,0 +1,8 @@
+*tmp/
+*.json
+*test.yaml
+*venv/
+*__pycache__/
+*_test.py
+*model/
+*.dump

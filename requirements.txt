@@ -4,3 +4,4 @@ prefect
 boto3
 paramiko
 subprocess
+requests

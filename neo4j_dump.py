@@ -4,18 +4,18 @@ import argparse
 import os
 from neo4j_summary import uplaod_s3, process_arguments
 from bento.common.s3 import upload_log_file
-from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_host
 
 #host = get_host(neo4j_uri)
 
 is_shell = True
-NEO4J_IP = "neo4j_ip"
+NEO4J_URI = "neo4j_uri"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 DUMP_FILE = "dump_file_name"
 S3_FOLDER = "s3_folder"
 S3_BUCKET = "s3_bucket"
-argument_list = [NEO4J_IP, NEO4J_USER, NEO4J_PASSWORD, DUMP_FILE, S3_FOLDER, S3_BUCKET]
+argument_list = [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, DUMP_FILE, S3_FOLDER, S3_BUCKET]
 TMP = "/tmp/"
 
 if LOG_PREFIX not in os.environ:
@@ -26,7 +26,7 @@ os.environ[APP_NAME] = 'Neo4j_Dump_Generator'
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Generate neo4j database summary')
     parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
-    parser.add_argument('--neo4j-ip', help='The neo4j IP address')
+    parser.add_argument('--neo4j-uri', help='The neo4j uri address')
     parser.add_argument('--neo4j-user', help='The neo4j user')
     parser.add_argument('--neo4j-password', help='The neo4j password')
     parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
@@ -58,15 +58,16 @@ def main(args):
     config = process_arguments(args, log, argument_list)
     config_data = config.data
     file_key = os.path.join(TMP, config_data[DUMP_FILE])
+    host = get_host(config_data[NEO4J_URI])
     command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
-    if config_data[NEO4J_IP] in ['localhost', '127.0.0.1']:
+    if host in ['localhost', '127.0.0.1']:
         subprocess.call(command, shell = is_shell)
     else:
         #cmd_list = ["sudo su - commonsdocker","sudo -i", "systemctl stop neo4j", command, "systemctl start neo4j"]
         cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(config_data[NEO4J_IP], username=config_data[NEO4J_USER], password=config_data[NEO4J_PASSWORD])
+        client.connect(host, username=config_data[NEO4J_USER], password=config_data[NEO4J_PASSWORD])
         for cmd in cmd_list:
             print(cmd)
             stdin, stdout, stderr = client.exec_command(cmd)

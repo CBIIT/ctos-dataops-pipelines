@@ -16,7 +16,7 @@ DUMP_FILE = "dump_file_name"
 S3_FOLDER = "s3_folder"
 S3_BUCKET = "s3_bucket"
 argument_list = [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, DUMP_FILE, S3_FOLDER, S3_BUCKET]
-TMP = "/tmp/"
+TMP = "tmp"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Dump_Generator'
@@ -58,6 +58,7 @@ def main(args):
     config = process_arguments(args, log, argument_list)
     config_data = config.data
     file_key = os.path.join(TMP, config_data[DUMP_FILE])
+    print(file_key)
     host = get_host(config_data[NEO4J_URI])
     command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
     if host in ['localhost', '127.0.0.1']:

@@ -2,3 +2,5 @@ neo4j
 pyyaml
 prefect
 boto3
+paramiko
+subprocess

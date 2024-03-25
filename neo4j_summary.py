@@ -20,9 +20,9 @@ COUNT = "count"
 NODE_COUNTS = "node_counts"
 RELATIONSHIP_COUNTS = "relationship_counts"
 RELATIONSHIP_TYPE = "relationship_type"
-NEO4j_SUMMARY_FILE_NAME = "neo4j_summary_file_name"
+NEO4J_SUMMARY_FILE_NAME = "neo4j_summary_file_name"
 
-argument_list = [NEO4J_URI, NEO4j_USER, NEO4J_PASSWORD, NEO4j_SUMMARY_FILE_NAME]
+argument_list = [NEO4J_URI, NEO4j_USER, NEO4J_PASSWORD, NEO4J_SUMMARY_FILE_NAME]
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Summary'
@@ -80,6 +80,7 @@ def parse_arguments():
     parser.add_argument('--neo4j-password', help='The neo4j password')
     parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
     parser.add_argument('--s3-folder', help='The upload s3 file folder')
+    parser.add_argument('--neo4j-summary-file-name', help='The neo4j sumary file name')
     return parser.parse_args()
 
 def uplaod_s3(config_data, log):
@@ -95,8 +96,8 @@ def uplaod_s3(config_data, log):
                 dest = f"s3://{config_data[S3_BUCKET]}"
             try:
                 print(dest)
-                upload_log_file(dest, config_data[NEO4j_SUMMARY_FILE_NAME])
-                log.info(f'Uploading neo4j summary file {os.path.basename(config_data[NEO4j_SUMMARY_FILE_NAME])} succeeded!')
+                upload_log_file(dest, config_data[NEO4J_SUMMARY_FILE_NAME])
+                log.info(f'Uploading neo4j summary file {os.path.basename(config_data[NEO4J_SUMMARY_FILE_NAME])} succeeded!')
             except Exception as e:
                 log.error(e)
 
@@ -150,7 +151,7 @@ def main(args):
             relationship_counts_dict[record[RELATIONSHIP_TYPE]] = record[COUNT]
             log.info(f"Relationship {record[RELATIONSHIP_TYPE]}: {record[COUNT]}")    
         neo4j_dict[RELATIONSHIP_COUNTS] = {k: relationship_counts_dict[k] for k in sorted(relationship_counts_dict)}
-        with open(config_data[NEO4j_SUMMARY_FILE_NAME], "w") as json_file:
+        with open(config_data[NEO4J_SUMMARY_FILE_NAME], "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
         
         uplaod_s3(config_data, log)

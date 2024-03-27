@@ -11,9 +11,9 @@ def data_model_archiving(
         s3_prefix,
     ):
 
-    print("Start generating neo4j database summary")
+    print("Start generating data model")
     model_archiving(data_model_repo_url, data_model_version, s3_bucket, s3_prefix)
-    print("Finish generating neo4j database summary")
+    print("Finish generating data model")
 
 if __name__ == "__main__":
     # create your first deployment

@@ -3,5 +3,5 @@ pyyaml
 prefect
 boto3
 paramiko
-subprocess
+subprocess.run
 requests

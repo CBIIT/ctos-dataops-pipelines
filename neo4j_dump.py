@@ -2,6 +2,8 @@ import paramiko
 import subprocess
 import argparse
 import os
+import re
+import time
 from neo4j_summary import uplaod_s3, process_arguments
 from bento.common.s3 import upload_log_file
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_host
@@ -16,7 +18,7 @@ DUMP_FILE = "dump_file_name"
 S3_FOLDER = "s3_folder"
 S3_BUCKET = "s3_bucket"
 argument_list = [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, DUMP_FILE, S3_FOLDER, S3_BUCKET]
-TMP = "tmp"
+TMP = "/tmp/"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Dump_Generator'
@@ -59,7 +61,8 @@ def main(args):
     config_data = config.data
     file_key = os.path.join(TMP, config_data[DUMP_FILE])
     print(file_key)
-    host = get_host(config_data[NEO4J_URI])
+    #host = get_host(config_data[NEO4J_URI])
+    host = config_data[NEO4J_URI]
     command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
     if host in ['localhost', '127.0.0.1']:
         subprocess.call(command, shell = is_shell)
@@ -69,21 +72,32 @@ def main(args):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(host, username=config_data[NEO4J_USER], password=config_data[NEO4J_PASSWORD])
+        print("connect")
+        #channel = client.invoke_shell()
+        ''''''
         for cmd in cmd_list:
             print(cmd)
-            stdin, stdout, stderr = client.exec_command(cmd)
-            output = stdout.read().decode('utf-8')
-            error = stderr.read().decode('utf-8')
-            if output:
-                log.info(output)
+            stdin, stdout, stderr = client.exec_command(cmd, get_pty=True)
+            # Provide password for sudo if requested
+            stdin.write(config_data[NEO4J_PASSWORD] + '\n')
+            stdin.flush()
+            # Read and print command output
+            output = stdout.read().decode()
+            print(output)
+
+            # Check for errors
+            error = stderr.read().decode()
             if error:
-                log.error(error)
+                print("Error occurred:", error)
             
-        
+            #sftp = client.open_sftp()
+            # Download the file
+            #sftp.get(file_key, config_data[DUMP_FILE])
+            
         
         client.close()
     
-    uplaod_s3(config_data, log, file_key)
+    #uplaod_s3(config_data, log, file_key)
 
 if __name__ == '__main__':
     main(parse_arguments())

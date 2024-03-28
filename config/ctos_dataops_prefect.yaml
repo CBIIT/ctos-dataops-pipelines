@@ -31,7 +31,7 @@ deployments:
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  neo4j_summary_prefect.py:neo4j_summary
+    entrypoint:  neo4j_summary_prefect.py:neo4j_summary_prefect
     parameters:
       neo4j_uri: ""
       neo4j_user: ""
@@ -53,7 +53,7 @@ deployments:
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  neo4j_summary_prefect.py:neo4j_secret_summary
+    entrypoint:  neo4j_summary_prefect.py:neo4j_secret_summary_prefect
     parameters:
       secret_name: "{{ prefect.variables.secret_name_dev_neo4j_summary }}"
       s3_bucket: ""
@@ -73,7 +73,7 @@ deployments:
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  data_model_archiving_prefect.py:data_model_archiving
+    entrypoint:  data_model_archiving_prefect.py:data_model_archiving_prefect
     parameters:
       data_model_repo_url: ""
       data_model_version: ""

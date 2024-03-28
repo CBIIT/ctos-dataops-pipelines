@@ -18,7 +18,7 @@ def uplaod_s3(s3_bucket, s3_folder, log, model_file_list):
     except Exception as e:
         log.error(e)
 
-def model_archiving(model_repo, model_version, s3_bucket, s3_folder):
+def data_model_archiving(model_repo, model_version, s3_bucket, s3_folder):
     log = get_logger('Data Model Archiving')
     log.info(f"Start cloning the data model repository from {model_repo}")
     subprocess.run(['git', 'clone', model_repo])

@@ -1,8 +1,8 @@
 import argparse
 import os
-from neo4j_summary import process_arguments
+from neo4j_summary_local import process_arguments
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
-from data_model_archiving import model_archiving
+from data_model_archiving import data_model_archiving
 
 S3_BUCKET = "s3_bucket"
 S3_FOLDER = "s3_prefix"
@@ -26,8 +26,7 @@ def main(args):
     log = get_logger('Data Model Archiving')
     config = process_arguments(args, log, argument_list)
     config_data = config.data
-    #
-    model_archiving(config_data[DATA_MODEL_REPO], config_data[DATA_MODEL_VERSION], config_data[S3_BUCKET], config_data[S3_FOLDER])
+    data_model_archiving(config_data[DATA_MODEL_REPO], config_data[DATA_MODEL_VERSION], config_data[S3_BUCKET], config_data[S3_FOLDER])
 
 
 if __name__ == '__main__':

@@ -2,9 +2,7 @@ import paramiko
 import subprocess
 import argparse
 import os
-import re
-import time
-from neo4j_summary import uplaod_s3, process_arguments
+from neo4j_summary_local import process_arguments
 from bento.common.s3 import upload_log_file
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_host
 
@@ -76,7 +74,7 @@ def main(args):
         #channel = client.invoke_shell()
         ''''''
         for cmd in cmd_list:
-            print(cmd)
+            #print(cmd)
             stdin, stdout, stderr = client.exec_command(cmd, get_pty=True)
             # Provide password for sudo if requested
             stdin.write(config_data[NEO4J_PASSWORD] + '\n')
@@ -84,7 +82,6 @@ def main(args):
             # Read and print command output
             output = stdout.read().decode()
             print(output)
-
             # Check for errors
             error = stderr.read().decode()
             if error:

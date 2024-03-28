@@ -1,114 +1,38 @@
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 from bento.common.s3 import upload_log_file
 from neo4j import GraphDatabase
-import yaml
 import os
 import json
 import sys
-import argparse
 
-S3_BUCKET = "s3_bucket"
-S3_FOLDER = "s3_folder"
 TOTAL_NODES = "total_nodes"
 TOTAL_RELATIONSHIP = "total_relationships"
-NEO4J_URI = "neo4j_uri"
-NEO4j_USER = "neo4j_user"
-NEO4J_PASSWORD = "neo4j_password"
 TEMP_FOLDER = 'tmp'
 NODE_TYPE = "node_type"
 COUNT = "count"
 NODE_COUNTS = "node_counts"
 RELATIONSHIP_COUNTS = "relationship_counts"
 RELATIONSHIP_TYPE = "relationship_type"
-NEO4J_SUMMARY_FILE_NAME = "neo4j_summary_file_name"
-
-argument_list = [NEO4J_URI, NEO4j_USER, NEO4J_PASSWORD, NEO4J_SUMMARY_FILE_NAME]
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Summary'
 os.environ[APP_NAME] = 'Neo4j_Summary'
 
-class Neo4jConfig:
-    def __init__(self, config_file, args, config_file_arg='config_file'):
-        self.log = get_logger('Neo4j Config')
-        self.data = {}
+def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
+    dest = f"s3://{s3_bucket}/{s3_folder}"
+    try:
+        print(dest)
+        upload_log_file(dest, upload_file_key)
+        log.info(f'Uploading neo4j summary file {os.path.basename(upload_file_key)} succeeded!')
+    except Exception as e:
+        log.error(e)
 
-        self.config_file_arg = config_file_arg
-        if config_file:
-            with open(config_file) as c_file:
-                self.data = yaml.safe_load(c_file)['Config']
-                if self.data is None:
-                    self.data = {}
-        self._override(args)
-
-    def _override(self, args):
-        for key, value in vars(args).items():
-            # Ignore config file argument
-            if key == self.config_file_arg:
-                continue
-            if isinstance(value, bool):
-                if value:
-                    self.data[key] = value
-
-            elif value is not None:
-                self.data[key] = value
-
-def check_argument(config, argument_list, log):
-    for argument in argument_list:
-        if argument not in config.data.keys():
-            log.error(f'The argument {argument} is missing!')
-            sys.exit(1)
-        else:
-            if config.data[argument] is None:
-                log.error(f'The argument {argument} is missing!')
-                sys.exit(1)
-
-def process_arguments(args, log, argument_list):
-    config_file = None
-    if args.config_file:
-        config_file = args.config_file
-    config = Neo4jConfig(config_file, args)
-    #argument_list = [MANIFEST_FILE, FILE_NAME_COLUMN, FILE_SIZE_COLUMN, FILE_MD5_COLUMN]
-    check_argument(config, argument_list, log)
-    return config
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description='Generate neo4j database summary')
-    parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
-    parser.add_argument('--neo4j-uri', help='The neo4j uri')
-    parser.add_argument('--neo4j-user', help='The neo4j user')
-    parser.add_argument('--neo4j-password', help='The neo4j password')
-    parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
-    parser.add_argument('--s3-folder', help='The upload s3 file folder')
-    parser.add_argument('--neo4j-summary-file-name', help='The neo4j sumary file name')
-    return parser.parse_args()
-
-def uplaod_s3(config_data, log):
-    # Upload to s3 bucket
-    if S3_BUCKET in config_data.keys():
-        if S3_BUCKET is not None:
-            if S3_FOLDER in config_data.keys():
-                if S3_FOLDER is not None:
-                    dest = f"s3://{config_data[S3_BUCKET]}/{config_data[S3_FOLDER]}"
-                else:
-                    dest = f"s3://{config_data[S3_BUCKET]}"
-            else:
-                dest = f"s3://{config_data[S3_BUCKET]}"
-            try:
-                print(dest)
-                upload_log_file(dest, config_data[NEO4J_SUMMARY_FILE_NAME])
-                log.info(f'Uploading neo4j summary file {os.path.basename(config_data[NEO4J_SUMMARY_FILE_NAME])} succeeded!')
-            except Exception as e:
-                log.error(e)
-
-def main(args):
+def neo4j_summary(neo4j_uri, neo4j_user, neo4j_password, summary_file_key, s3_bucket, s3_folder):
     log = get_logger('Neo4j Summary Generator')
-    config = process_arguments(args, log, argument_list)
     neo4j_dict = {}
-    config_data = config.data
     driver = GraphDatabase.driver(
-                        config_data[NEO4J_URI],
-                        auth=(config_data[NEO4j_USER], config_data[NEO4J_PASSWORD]),
+                        neo4j_uri,
+                        auth=(neo4j_user, neo4j_password),
                         encrypted=False
                     )
     with driver.session() as session:
@@ -151,10 +75,8 @@ def main(args):
             relationship_counts_dict[record[RELATIONSHIP_TYPE]] = record[COUNT]
             log.info(f"Relationship {record[RELATIONSHIP_TYPE]}: {record[COUNT]}")    
         neo4j_dict[RELATIONSHIP_COUNTS] = {k: relationship_counts_dict[k] for k in sorted(relationship_counts_dict)}
-        with open(config_data[NEO4J_SUMMARY_FILE_NAME], "w") as json_file:
+        with open(summary_file_key, "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
         
-        uplaod_s3(config_data, log)
+        uplaod_s3(s3_bucket, s3_folder, summary_file_key, log)
 
-if __name__ == '__main__':
-    main(parse_arguments())

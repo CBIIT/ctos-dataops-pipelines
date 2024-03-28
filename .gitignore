@@ -6,3 +6,4 @@
 *_test.py
 *model/
 *.dump
+*flows.json

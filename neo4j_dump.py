@@ -25,8 +25,8 @@ def uplaod_s3(s3_bucket, s3_folder, log, file_key):
 def neo4j_dump(dump_file, neo4j_uri, neo4j_user, neo4j_password, s3_bucket, s3_folder):
     log = get_logger('Neo4j Dump Generator')
     file_key = os.path.join(TMP, dump_file)
-    #host = get_host(neo4j_uri)
-    host = neo4j_uri
+    host = get_host(neo4j_uri)
+    #host = neo4j_uri
     command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
     if host in ['localhost', '127.0.0.1']:
         try:

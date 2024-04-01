@@ -95,7 +95,6 @@ deployments:
       s3_bucket: ""
       s3_folder: ""
       dump_file_name: "test_dump.dump"
-      neo4j_summary_file_name: neo4j_summary.json
     work_pool:
       name: ctos-dataops-neo4j-summary
       work_queue_name: default

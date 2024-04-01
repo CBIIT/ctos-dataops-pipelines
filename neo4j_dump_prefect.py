@@ -7,7 +7,7 @@ NEO4J_URI = "neo4j_uri"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 
-@flow(name="neo4j secret summary", log_prints=True)
+@flow(name="neo4j dump", log_prints=True)
 def neo4j_dump_prefect(
         secret_name,
         s3_bucket,

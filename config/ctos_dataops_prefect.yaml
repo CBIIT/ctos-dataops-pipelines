@@ -39,8 +39,6 @@ deployments:
       s3_bucket: ""
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
-      # If file urls are not available in the manifest, then bucket name and prefix (folder name) need to be provided
-    work_pool:
       name: ctos-dataops-neo4j-summary
       work_queue_name: default
       job_variables:
@@ -59,7 +57,6 @@ deployments:
       s3_bucket: ""
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
-      # If file urls are not available in the manifest, then bucket name and prefix (folder name) need to be provided
     work_pool:
       name: ctos-dataops-neo4j-summary
       work_queue_name: default
@@ -79,10 +76,29 @@ deployments:
       data_model_version: ""
       s3_bucket: ""
       s3_prefix: ""
-      # If file urls are not available in the manifest, then bucket name and prefix (folder name) need to be provided
     work_pool:
       name: ctos-dataops-neo4j-summary
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Data Model Archiving, S3 Bucket, Bento Config"
+  
+  - name: neo4j_dump
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_dump_prefect.py:neo4j_dump_prefect
+    parameters:
+      secret_name: "{{ prefect.variables.secret_name_dev_neo4j_summary }}"
+      s3_bucket: ""
+      s3_folder: ""
+      dump_file_name: "test_dump.dump"
+      neo4j_summary_file_name: neo4j_summary.json
+    work_pool:
+      name: ctos-dataops-neo4j-summary
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Dump Generator, S3 Bucket, Bento Config"

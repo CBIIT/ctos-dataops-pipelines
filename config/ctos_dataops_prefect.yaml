@@ -58,7 +58,7 @@ deployments:
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
-      name: ctos-dataops-neo4j-summary
+      name: crdc-dh-dev-validation-ecs
       work_queue_name: default
       job_variables:
         env:

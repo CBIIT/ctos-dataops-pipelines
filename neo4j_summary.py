@@ -5,19 +5,6 @@ import os
 import json
 import sys
 
-TOTAL_NODES = "total_nodes"
-TOTAL_RELATIONSHIP = "total_relationships"
-TEMP_FOLDER = 'tmp'
-NODE_TYPE = "node_type"
-COUNT = "count"
-NODE_COUNTS = "node_counts"
-RELATIONSHIP_COUNTS = "relationship_counts"
-RELATIONSHIP_TYPE = "relationship_type"
-
-if LOG_PREFIX not in os.environ:
-    os.environ[LOG_PREFIX] = 'Neo4j_Summary'
-os.environ[APP_NAME] = 'Neo4j_Summary'
-
 def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
     dest = f"s3://{s3_bucket}/{s3_folder}"
     try:
@@ -28,6 +15,18 @@ def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
         log.error(e)
 
 def neo4j_summary(neo4j_uri, neo4j_user, neo4j_password, summary_file_key, s3_bucket, s3_folder):
+    TOTAL_NODES = "total_nodes"
+    TOTAL_RELATIONSHIP = "total_relationships"
+    NODE_TYPE = "node_type"
+    COUNT = "count"
+    NODE_COUNTS = "node_counts"
+    RELATIONSHIP_COUNTS = "relationship_counts"
+    RELATIONSHIP_TYPE = "relationship_type"
+
+    if LOG_PREFIX not in os.environ:
+        os.environ[LOG_PREFIX] = 'Neo4j_Summary'
+    os.environ[APP_NAME] = 'Neo4j_Summary'
+
     log = get_logger('Neo4j Summary Generator')
     neo4j_dict = {}
     driver = GraphDatabase.driver(

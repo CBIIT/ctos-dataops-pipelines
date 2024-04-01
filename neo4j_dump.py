@@ -4,8 +4,8 @@ import os
 from bento.common.s3 import upload_log_file
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_host
 
-is_shell = True
-dump_fail = False
+
+
 TMP = "/tmp/"
 NOT_ALLOW = "not allowed to execute"
 if LOG_PREFIX not in os.environ:
@@ -23,6 +23,8 @@ def uplaod_s3(s3_bucket, s3_folder, log, file_key):
         log.error(e)
 
 def neo4j_dump(dump_file, neo4j_uri, neo4j_user, neo4j_password, s3_bucket, s3_folder):
+    dump_fail = False
+    is_shell = True
     log = get_logger('Neo4j Dump Generator')
     file_key = os.path.join(TMP, dump_file)
     host = get_host(neo4j_uri)

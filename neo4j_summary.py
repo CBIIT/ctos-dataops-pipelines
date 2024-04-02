@@ -1,4 +1,4 @@
-from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_time_stamp
 from bento.common.s3 import upload_log_file
 from neo4j import GraphDatabase
 import os
@@ -8,7 +8,6 @@ import sys
 def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
     dest = f"s3://{s3_bucket}/{s3_folder}"
     try:
-        print(dest)
         upload_log_file(dest, upload_file_key)
         log.info(f'Uploading neo4j summary file {os.path.basename(upload_file_key)} succeeded!')
     except Exception as e:
@@ -22,7 +21,7 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
     NODE_COUNTS = "node_counts"
     RELATIONSHIP_COUNTS = "relationship_counts"
     RELATIONSHIP_TYPE = "relationship_type"
-
+    TMP = "tmp"
     if LOG_PREFIX not in os.environ:
         os.environ[LOG_PREFIX] = 'Neo4j_Summary'
     os.environ[APP_NAME] = 'Neo4j_Summary'
@@ -75,8 +74,9 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
             relationship_counts_dict[record[RELATIONSHIP_TYPE]] = record[COUNT]
             log.info(f"Relationship {record[RELATIONSHIP_TYPE]}: {record[COUNT]}")    
         neo4j_dict[RELATIONSHIP_COUNTS] = {k: relationship_counts_dict[k] for k in sorted(relationship_counts_dict)}
-        with open(summary_file_key, "w") as json_file:
+        timestamp = get_time_stamp()
+        new_summary_file_key = os.path.join(TMP, summary_file_key.replace(os.path.splitext(summary_file_key)[1], "_" + timestamp + ".json"))
+        with open(new_summary_file_key, "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
-        
-        uplaod_s3(s3_bucket, s3_folder, summary_file_key, log)
+        uplaod_s3(s3_bucket, s3_folder, new_summary_file_key, log)
 

@@ -4,7 +4,7 @@ import os
 import time
 from scp import SCPClient
 from bento.common.s3 import upload_log_file
-from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+from bento.common.utils import get_logger, get_time_stamp, LOG_PREFIX, APP_NAME
 import signal
 
 class TimeoutError(Exception):
@@ -80,7 +80,8 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_password, s3_bucket, s3_fo
             log.error(e)
         # Download the file
         log.info(f"Start downloading from {file_key}")
-        local_file_key = os.path.join('tmp', dump_file)
+        timestamp = get_time_stamp()
+        local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
         if not dump_fail:
             #download_cmd = f"scp {neo4j_ip}:{file_key} ."
             scp = SCPClient(client.get_transport())
@@ -90,5 +91,5 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_password, s3_bucket, s3_fo
 
         client.close()
     if not dump_fail:
-        log.info(f"Start uploading file to S3://{s3_bucket}/{s3_folder}")
+        log.info(f"Start uploading file {local_file_key} to S3://{s3_bucket}/{s3_folder}")
         uplaod_s3(s3_bucket, s3_folder, log, local_file_key)

@@ -33,7 +33,7 @@ deployments:
     flow_name: null
     entrypoint:  neo4j_summary_prefect.py:neo4j_summary_prefect
     parameters:
-      neo4j_uri: ""
+      neo4j_ip: ""
       neo4j_user: ""
       neo4j_password: ""
       s3_bucket: ""

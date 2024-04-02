@@ -1,5 +1,5 @@
 Config:
   data_model_repo_url: https://github.com/CBIIT/cds-model.git
   data_model_version: 3.0.0
-  s3_bucket: bruce-cds
+  s3_bucket: s3_bucket
   s3_prefix: cds-model

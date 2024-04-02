@@ -1,5 +1,5 @@
 Config:
-  neo4j_uri: bolt://localhost:7687
+  neo4j_ip: localhost
   neo4j_user: neo4j
   neo4j_password: password
   s3_bucket: s3_bucket

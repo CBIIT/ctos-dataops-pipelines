@@ -8,11 +8,11 @@ from neo4j_summary import neo4j_summary
 
 S3_BUCKET = "s3_bucket"
 S3_FOLDER = "s3_folder"
-NEO4J_URI = "neo4j_uri"
+NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 NEO4J_SUMMARY_FILE_NAME = "neo4j_summary_file_name"
-argument_list = [NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_SUMMARY_FILE_NAME]
+argument_list = [NEO4J_IP, NEO4J_USER, NEO4J_PASSWORD, NEO4J_SUMMARY_FILE_NAME]
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Summary'
@@ -66,7 +66,7 @@ def process_arguments(args, log, argument_list):
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Generate neo4j database summary')
     parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
-    parser.add_argument('--neo4j-uri', help='The neo4j uri')
+    parser.add_argument('--neo4j-ip', help='The neo4j uri')
     parser.add_argument('--neo4j-user', help='The neo4j user')
     parser.add_argument('--neo4j-password', help='The neo4j password')
     parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
@@ -78,7 +78,7 @@ def main(args):
     log = get_logger('Neo4j Summary Generator')
     config = process_arguments(args, log, argument_list)
     config_data = config.data
-    neo4j_summary(config_data[NEO4J_URI], config_data[NEO4J_USER], config_data[NEO4J_PASSWORD], config_data[NEO4J_SUMMARY_FILE_NAME], config_data[S3_BUCKET], config_data[S3_FOLDER])
+    neo4j_summary(config_data[NEO4J_IP], config_data[NEO4J_USER], config_data[NEO4J_PASSWORD], config_data[NEO4J_SUMMARY_FILE_NAME], config_data[S3_BUCKET], config_data[S3_FOLDER])
 
 if __name__ == '__main__':
     main(parse_arguments())

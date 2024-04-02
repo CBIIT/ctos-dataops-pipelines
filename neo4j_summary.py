@@ -14,7 +14,7 @@ def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
     except Exception as e:
         log.error(e)
 
-def neo4j_summary(neo4j_uri, neo4j_user, neo4j_password, summary_file_key, s3_bucket, s3_folder):
+def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_bucket, s3_folder):
     TOTAL_NODES = "total_nodes"
     TOTAL_RELATIONSHIP = "total_relationships"
     NODE_TYPE = "node_type"
@@ -29,6 +29,7 @@ def neo4j_summary(neo4j_uri, neo4j_user, neo4j_password, summary_file_key, s3_bu
 
     log = get_logger('Neo4j Summary Generator')
     neo4j_dict = {}
+    neo4j_uri = "bolt://" + neo4j_ip + ":7687"
     driver = GraphDatabase.driver(
                         neo4j_uri,
                         auth=(neo4j_user, neo4j_password),

@@ -2,7 +2,7 @@ from prefect import flow
 from neo4j_summary import neo4j_summary
 from bento.common.secret_manager import get_secret
 
-NEO4J_IP = "neo4j_uri"
+NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 

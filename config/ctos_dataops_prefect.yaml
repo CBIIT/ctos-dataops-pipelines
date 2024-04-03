@@ -58,7 +58,7 @@ deployments:
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
-      name: crdc-dh-dev-validation-ecs
+      name: cds-curation-ecs
       work_queue_name: default
       job_variables:
         env:
@@ -96,7 +96,7 @@ deployments:
       s3_folder: ""
       dump_file_name: "test_dump.dump"
     work_pool:
-      name: crdc-dh-dev-validation-ecs
+      name: cds-curation-ecs
       work_queue_name: default
       job_variables:
         env:

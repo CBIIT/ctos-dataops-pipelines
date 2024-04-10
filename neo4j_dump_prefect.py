@@ -3,7 +3,7 @@ from neo4j_summary import neo4j_summary
 from bento.common.secret_manager import get_secret
 from neo4j_dump import neo4j_dump
 
-NEO4J_IP = "neo4j_uri"
+NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_KEY = "neo4j_key"
 

@@ -41,7 +41,7 @@ def wait_for_complete(log, channel, recv_timeout):
     return output_buffer
 
 def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder):
-    print(neo4j_key)
+    
     dump_fail = False
     is_shell = True
     TMP = "/tmp/"

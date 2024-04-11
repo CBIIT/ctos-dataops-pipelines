@@ -43,9 +43,6 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
     neo4j_pem = "neo4j_pem.pem"
     dump_fail = False
     is_shell = True
-    print(neo4j_ip)
-    print(neo4j_user)
-    print(neo4j_key)
     TMP = "/tmp/"
     if LOG_PREFIX not in os.environ:
         os.environ[LOG_PREFIX] = 'Neo4j_Dump_Generator'

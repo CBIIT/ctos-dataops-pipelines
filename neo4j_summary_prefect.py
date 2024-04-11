@@ -1,7 +1,7 @@
 from prefect import flow
 from neo4j_summary import neo4j_summary
 from bento.common.secret_manager import get_secret
-from prefect.artifacts import create_table_artifact
+from prefect.artifacts import create_markdown_artifact
 
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
@@ -27,6 +27,34 @@ def neo4j_secret_summary_prefect(
         neo4j_summary_file_name
     )
 
+def create_mark_down(neo4j_dict):
+    summary_str = f'''
+## Counts by Total
+
+| Counting Type | Counts |
+|:--------------|-------:|
+| total_ndoes | {neo4j_dict["total_nodes"]:,} |
+| total_relationships | {neo4j_dict["total_relationships"]:,} |
+'''
+    summary_str += f'''
+## Counts by Node
+
+| Node Type | Counts |
+|:--------------|-------:|'''
+    for node in neo4j_dict["node_counts"].keys():
+        node_count_string = f'''| {node} | {neo4j_dict["node_counts"][node]:,} |
+'''
+        summary_str += node_count_string
+    summary_str += f'''## Counts by Relationship
+
+| Relationship Type | Counts |
+|:--------------|-------:|'''
+    for relationship in neo4j_dict["relationship_counts"].keys():
+        node_count_string = f'''| {relationship} | {neo4j_dict["relationship_counts"][relationship]:,} |
+'''
+        summary_str += node_count_string
+    return summary_str
+
 @flow(name="neo4j summary", log_prints=True)
 def neo4j_summary_prefect(
         neo4j_ip,
@@ -38,17 +66,11 @@ def neo4j_summary_prefect(
     ):
     print("Start generating neo4j database summary")
     neo4j_dict = neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, neo4j_summary_file_name, s3_bucket, s3_folder)
-    general_counting = [{"counting_type": "total_nodes", "counts": neo4j_dict["total_nodes"]},
-                        {"counting_type": "total_relationships", "counts": neo4j_dict["total_relationships"]}]
-    #node_counts = []
-    for node in neo4j_dict["node_counts"]:
-        general_counting.append({"node":node, "counts": neo4j_dict["node_counts"][node]})
-    #relationship_counts = []
-    for relationship in neo4j_dict["relationship_counts"]:
-        general_counting.append({"relationship":relationship, "counts": neo4j_dict["relationship_counts"][relationship]})
-    create_table_artifact(
-        key="total-counts",
-        table=general_counting
+    summary_md = create_mark_down(neo4j_dict)
+    create_markdown_artifact(
+        key="neo4j-summary",
+        markdown=summary_md,
+        description="Neo4j Summary",
     )
     print("Finish generating neo4j database summary")
 

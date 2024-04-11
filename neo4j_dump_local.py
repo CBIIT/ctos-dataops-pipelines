@@ -19,7 +19,7 @@ def parse_arguments():
     parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
     parser.add_argument('--neo4j-ip', help='The neo4j uri address')
     parser.add_argument('--neo4j-user', help='The neo4j user')
-    parser.add_argument('--neo4j-key', help='The neo4j passkey')
+    parser.add_argument('--neo4j-key', help='The neo4j private key')
     parser.add_argument('--s3-bucket', help='The upload s3 file bucket')
     parser.add_argument('--s3-folder', help='The upload s3 file folder')
     parser.add_argument('--dump-file-name', help='The neo4j dump file name')

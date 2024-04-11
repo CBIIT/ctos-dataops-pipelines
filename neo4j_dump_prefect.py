@@ -1,5 +1,4 @@
 from prefect import flow
-from neo4j_summary import neo4j_summary
 from bento.common.secret_manager import get_secret
 from neo4j_dump import neo4j_dump
 

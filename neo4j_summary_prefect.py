@@ -40,23 +40,15 @@ def neo4j_summary_prefect(
     neo4j_dict = neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, neo4j_summary_file_name, s3_bucket, s3_folder)
     general_counting = [{"counting_type": "total_nodes", "counts": neo4j_dict["total_nodes"]},
                         {"counting_type": "total_relationships", "counts": neo4j_dict["total_relationships"]}]
-    node_counts = []
+    #node_counts = []
     for node in neo4j_dict["node_counts"]:
-        node_counts.append({"node":node, "counts": neo4j_dict["node_counts"][node]})
-    relationship_counts = []
+        general_counting.append({"node":node, "counts": neo4j_dict["node_counts"][node]})
+    #relationship_counts = []
     for relationship in neo4j_dict["relationship_counts"]:
-        relationship_counts.append({"relationship":relationship, "counts": neo4j_dict["relationship_counts"][relationship]})
+        general_counting.append({"relationship":relationship, "counts": neo4j_dict["relationship_counts"][relationship]})
     create_table_artifact(
         key="total-counts",
         table=general_counting
-    )
-    create_table_artifact(
-        key="node-counts",
-        table=node_counts
-    )
-    create_table_artifact(
-        key="relationship-counts",
-        table=relationship_counts
     )
     print("Finish generating neo4j database summary")
 

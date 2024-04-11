@@ -40,7 +40,8 @@ def create_mark_down(neo4j_dict):
 ## Counts by Node
 
 | Node Type | Counts |
-|:--------------|-------:|'''
+|:--------------|-------:|
+'''
     for node in neo4j_dict["node_counts"].keys():
         node_count_string = f'''| {node} | {neo4j_dict["node_counts"][node]:,} |
 '''
@@ -48,7 +49,8 @@ def create_mark_down(neo4j_dict):
     summary_str += f'''## Counts by Relationship
 
 | Relationship Type | Counts |
-|:--------------|-------:|'''
+|:--------------|-------:|
+'''
     for relationship in neo4j_dict["relationship_counts"].keys():
         node_count_string = f'''| {relationship} | {neo4j_dict["relationship_counts"][relationship]:,} |
 '''

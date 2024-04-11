@@ -1,6 +1,7 @@
 import paramiko
 import subprocess
 import os
+import io
 import time
 from scp import SCPClient
 from bento.common.s3 import upload_log_file
@@ -40,7 +41,6 @@ def wait_for_complete(log, channel, recv_timeout):
     return output_buffer
 
 def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder):
-    neo4j_pem = "neo4j_pem.pem"
     dump_fail = False
     is_shell = True
     TMP = "/tmp/"
@@ -63,11 +63,8 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
         cmd_list = ["sudo systemctl stop neo4j", command, f"sudo chmod 666 {file_key}", "sudo systemctl start neo4j"]
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        str_neo4j_key = str(neo4j_key)
-        with open(neo4j_pem, 'w') as pem_file:
-            pem_file.write(str_neo4j_key)
-        pkey = paramiko.RSAKey.from_private_key_file(neo4j_pem)
-        log.info("Start connecting to the neo4j server")
+        pkey = paramiko.RSAKey.from_private_key(io.StringIO(neo4j_key))
+        log.info("Start connecting to remote neo4j server")
         #client.connect(host, username=neo4j_user, password=neo4j_password, timeout=30)
         client.connect(host, username=neo4j_user, pkey=pkey, timeout=30)
         log.info("Connect to the remote server successfully")

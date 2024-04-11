@@ -79,4 +79,5 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
         with open(new_summary_file_key, "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
         uplaod_s3(s3_bucket, s3_folder, new_summary_file_key, log)
+        return neo4j_dict
 

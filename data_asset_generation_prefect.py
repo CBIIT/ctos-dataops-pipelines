@@ -15,7 +15,7 @@ def data_asset_generation_prefect(
         s3_bucket,
         s3_folder,
     ):
-    neo4j_secret_summary_prefect(neo4j_summary_secret, neo4j_summary_file_name, s3_bucket, s3_folder, neo4j_summary_file_name)
+    neo4j_secret_summary_prefect(neo4j_summary_secret, s3_bucket, s3_folder, neo4j_summary_file_name)
     data_model_archiving_prefect(data_model_repo_url, data_model_version, s3_bucket, s3_folder)
     neo4j_dump_prefect(neo4j_dump_secret, s3_bucket, s3_folder, neo4j_dump_file_name)
 

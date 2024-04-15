@@ -7,26 +7,6 @@ NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 
-@flow(name="neo4j secret summary", log_prints=True)
-def neo4j_secret_summary_prefect(
-        secret_name,
-        s3_bucket,
-        s3_folder,
-        neo4j_summary_file_name = "neo4j_summary.json"
-):
-    secret = get_secret(secret_name)
-    neo4j_ip = secret[NEO4J_IP]
-    neo4j_user = secret[NEO4J_USER]
-    neo4j_password = secret[NEO4J_PASSWORD]
-    neo4j_summary_prefect(
-        neo4j_ip,
-        neo4j_user,
-        neo4j_password,
-        s3_bucket,
-        s3_folder,
-        neo4j_summary_file_name
-    )
-
 def create_mark_down(neo4j_dict):
     summary_str = f'''
 ## Counts by Total
@@ -56,6 +36,28 @@ def create_mark_down(neo4j_dict):
 '''
         summary_str += node_count_string
     return summary_str
+
+
+@flow(name="neo4j secret summary", log_prints=True)
+def neo4j_secret_summary_prefect(
+        secret_name,
+        s3_bucket,
+        s3_folder,
+        neo4j_summary_file_name = "neo4j_summary.json"
+):
+    secret = get_secret(secret_name)
+    neo4j_ip = secret[NEO4J_IP]
+    neo4j_user = secret[NEO4J_USER]
+    neo4j_password = secret[NEO4J_PASSWORD]
+    neo4j_summary_prefect(
+        neo4j_ip,
+        neo4j_user,
+        neo4j_password,
+        s3_bucket,
+        s3_folder,
+        neo4j_summary_file_name
+    )
+
 
 @flow(name="neo4j summary", log_prints=True)
 def neo4j_summary_prefect(

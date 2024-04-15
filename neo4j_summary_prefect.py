@@ -49,6 +49,16 @@ def neo4j_secret_summary_prefect(
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret[NEO4J_USER]
     neo4j_password = secret[NEO4J_PASSWORD]
+    print("Start generating neo4j database summary")
+    neo4j_dict = neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, neo4j_summary_file_name, s3_bucket, s3_folder)
+    summary_md = create_mark_down(neo4j_dict)
+    create_markdown_artifact(
+        key="neo4j-summary",
+        markdown=summary_md,
+        description="Neo4j Summary",
+    )
+    print("Finish generating neo4j database summary")
+    '''
     neo4j_summary_prefect(
         neo4j_ip,
         neo4j_user,
@@ -56,7 +66,7 @@ def neo4j_secret_summary_prefect(
         s3_bucket,
         s3_folder,
         neo4j_summary_file_name
-    )
+    )'''
 
 
 @flow(name="neo4j summary", log_prints=True)

@@ -103,3 +103,26 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Dump Generator, S3 Bucket, Bento Config"
+
+  - name: ctos-dataops-neo4j-asset-generation
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  data_asset_generation_prefect.py:data_asset_generation_prefect
+    parameters:
+      neo4j_summary_secret: ""
+      neo4j_summary_file_name: neo4j_summary.json
+      neo4j_dump_secret: ""
+      neo4j_dump_file_name: test_dump.dump
+      data_model_repo_url: ""
+      data_model_version: ""
+      s3_bucket: ""
+      s3_folder: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"

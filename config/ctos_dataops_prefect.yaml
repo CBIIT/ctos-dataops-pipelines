@@ -93,6 +93,7 @@ deployments:
     flow_name: null
     entrypoint:  neo4j_dump_prefect.py:neo4j_dump_prefect
     parameters:
+      secret_name_ssh: ""
       secret_name: ""
       s3_bucket: ""
       s3_folder: ""

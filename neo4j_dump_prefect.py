@@ -8,6 +8,7 @@ NEO4J_KEY = "neo4j_key"
 
 @flow(name="neo4j dump", log_prints=True)
 def neo4j_dump_prefect(
+        secret_name_ssh,
         secret_name,
         s3_bucket,
         s3_folder,
@@ -15,9 +16,10 @@ def neo4j_dump_prefect(
         
 ):
     secret = get_secret(secret_name)
+    secret_ssh = get_secret(secret_name_ssh)
     neo4j_ip = secret[NEO4J_IP]
-    neo4j_user = secret[NEO4J_USER]
-    neo4j_key = secret[NEO4J_KEY]
+    neo4j_user = secret_ssh[NEO4J_USER]
+    neo4j_key = secret_ssh[NEO4J_KEY]
     neo4j_dump(dump_file_name, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
 
 if __name__ == "__main__":

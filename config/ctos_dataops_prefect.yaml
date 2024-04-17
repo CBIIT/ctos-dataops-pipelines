@@ -39,8 +39,7 @@ deployments:
       s3_bucket: ""
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
-      name: ctos-dataops-neo4j-summary
-      work_pool:
+    work_pool:
         name: cds-curation-ecs
         work_queue_name: default
         job_variables:

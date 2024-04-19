@@ -45,6 +45,7 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
         client.connect(host, username=neo4j_user, pkey=pkey, timeout=30)
         log.info("Connect to the remote server successfully")
         channel = client.invoke_shell()
+        log.info(f"Uploading file {file_key} to remote server")
         scp = SCPClient(client.get_transport())
         local_file_key = file_key
         scp.put(local_file_key, file_key)

@@ -6,7 +6,7 @@ NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_KEY = "neo4j_key"
 
-@flow(name="neo4j dump", log_prints=True)
+@flow(name="neo4j restore", log_prints=True)
 def neo4j_restore_prefect(
         secret_name_ssh,
         neo4j_ip,

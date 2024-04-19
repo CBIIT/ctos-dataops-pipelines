@@ -15,8 +15,10 @@ def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
     try:
         bucket.download_file(s3_file_key, file_key)
         log.info(f'Downloading neo4j dump file {os.path.basename(s3_file_key)} succeeded!')
+        return True
     except Exception as e:
         log.error(e)
+        return False
 
 def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
     is_shell = True
@@ -27,38 +29,42 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
     log = get_logger('Neo4j Restore')
     file_key = os.path.join(TMP, os.path.basename(s3_file_key))
     log.info(f"Start downloading from {s3_file_key}")
-    downlaod_s3(s3_bucket, s3_file_key, log, file_key)
-    host = neo4j_ip
-    command = f"neo4j-admin load --from={file_key} --database=neo4j --force"
-    if host in ['localhost', '127.0.0.1']:
-        try:
-            subprocess.call(command, shell = is_shell)
-        except Exception as e:
-            log.error(e)
+    download_succeeded = False
+    download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, file_key)
+    if download_succeeded:
+        host = neo4j_ip
+        command = f"neo4j-admin load --from={file_key} --database=neo4j --force"
+        if host in ['localhost', '127.0.0.1']:
+            try:
+                subprocess.call(command, shell = is_shell)
+            except Exception as e:
+                log.error(e)
+        else:
+            #cmd_list = ["sudo su - commonsdocker","sudo -i", "systemctl stop neo4j", command, "systemctl start neo4j"]
+            cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            pkey = paramiko.RSAKey.from_private_key(io.StringIO(neo4j_key))
+            log.info("Start connecting to remote neo4j server")
+            client.connect(host, username=neo4j_user, pkey=pkey, timeout=30)
+            log.info("Connect to the remote server successfully")
+            channel = client.invoke_shell()
+            log.info(f"Uploading file {file_key} to remote server")
+            scp = SCPClient(client.get_transport())
+            local_file_key = file_key
+            scp.put(local_file_key, file_key)
+            ''''''
+            try:
+                for cmd in cmd_list:
+                    channel.send(cmd + "\n")
+                    while not channel.recv_ready():
+                        time.sleep(0.1)
+                    #set up timer because channel.recv() will stuck when there is no more output
+                    recv_timeout = 3
+                    output_buffer = wait_for_complete(log, channel, recv_timeout)
+                    log.info(output_buffer)
+            except Exception as e:
+                log.error(e)
+            client.close()
     else:
-        #cmd_list = ["sudo su - commonsdocker","sudo -i", "systemctl stop neo4j", command, "systemctl start neo4j"]
-        cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        pkey = paramiko.RSAKey.from_private_key(io.StringIO(neo4j_key))
-        log.info("Start connecting to remote neo4j server")
-        client.connect(host, username=neo4j_user, pkey=pkey, timeout=30)
-        log.info("Connect to the remote server successfully")
-        channel = client.invoke_shell()
-        log.info(f"Uploading file {file_key} to remote server")
-        scp = SCPClient(client.get_transport())
-        local_file_key = file_key
-        scp.put(local_file_key, file_key)
-        ''''''
-        try:
-            for cmd in cmd_list:
-                channel.send(cmd + "\n")
-                while not channel.recv_ready():
-                    time.sleep(0.1)
-                #set up timer because channel.recv() will stuck when there is no more output
-                recv_timeout = 3
-                output_buffer = wait_for_complete(log, channel, recv_timeout)
-                log.info(output_buffer)
-        except Exception as e:
-            log.error(e)
-        client.close()
+        log.error(f"Fail to download the file {s3_file_key} from the bucket {s3_bucket}")

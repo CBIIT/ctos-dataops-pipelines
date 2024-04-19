@@ -26,7 +26,7 @@ def uplaod_s3(s3_bucket, s3_folder, log, file_key):
 def wait_for_complete(log, channel, recv_timeout):
     output_buffer = ""
     signal.signal(signal.SIGALRM, timeout_handler)
-    while not output_buffer.endswith("~]$ "):
+    while not (output_buffer.endswith("~]$ ") or output_buffer.endswith("~]# ")):
         try:
             # Attempt to receive data from the channel
             signal.alarm(recv_timeout)

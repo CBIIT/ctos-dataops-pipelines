@@ -127,21 +127,21 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
   
-    - name: ctos-dataops-neo4j-restore
-      version: null
-      tags: []
-      description: null
-      schedule: {}
-      flow_name: null
-      entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
-      parameters:
-        secret_name_ssh: ""
-        neo4j_ip: ""
-        s3_bucket: ""
-        s3_file_key: ""
-      work_pool:
-        name: cds-curation-ecs
-        work_queue_name: cds-curation-queue
-        job_variables:
-          env:
-            PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Restore, S3 Bucket, Bento Config"
+  - name: ctos-dataops-neo4j-restore
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
+    parameters:
+      secret_name_ssh: ""
+      neo4j_ip: ""
+      s3_bucket: ""
+      s3_file_key: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Restore, S3 Bucket, Bento Config"

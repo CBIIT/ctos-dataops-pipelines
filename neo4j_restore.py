@@ -6,15 +6,15 @@ import time
 from scp import SCPClient
 from neo4j_dump import wait_for_complete
 from bento.common.s3 import S3Bucket
-from bento.common.utils import get_logger, get_time_stamp, LOG_PREFIX, APP_NAME
+from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 
 def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
     # Upload to s3 bucket
     #dest = f"s3://{s3_bucket}/{s3_folder}"
     bucket = S3Bucket(s3_bucket)
     try:
-        bucket.download_files_in_folder(s3_file_key, file_key)
-        log.info(f'Downloading neo4j dump file {os.path.basename(file_key)} succeeded!')
+        bucket.download_file(s3_file_key, file_key)
+        log.info(f'Downloading neo4j dump file {os.path.basename(s3_file_key)} succeeded!')
     except Exception as e:
         log.error(e)
 
@@ -26,7 +26,7 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
     os.environ[APP_NAME] = 'Neo4j_Restore'
     log = get_logger('Neo4j Restore')
     file_key = os.path.join(TMP, os.path.basename(s3_file_key))
-    log.info(f"Start downloading from {file_key}")
+    log.info(f"Start downloading from {s3_file_key}")
     downlaod_s3(s3_bucket, s3_file_key, log, file_key)
     host = neo4j_ip
     command = f"neo4j-admin load --from={file_key} --database=neo4j --force"

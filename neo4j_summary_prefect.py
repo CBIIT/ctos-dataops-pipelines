@@ -90,4 +90,4 @@ def neo4j_summary_prefect(
 
 if __name__ == "__main__":
     # create your first deployment
-    neo4j_summary_prefect.serve(name="neo4j_deployment")
+    neo4j_summary_prefect.serve(name="neo4j_summary")

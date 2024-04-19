@@ -41,7 +41,7 @@ deployments:
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
         name: cds-curation-ecs
-        work_queue_name: default
+        work_queue_name: cds-curation-queue
         job_variables:
           env:
             PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, S3 Bucket, Bento Config"
@@ -60,7 +60,7 @@ deployments:
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
       name: cds-curation-ecs
-      work_queue_name: default
+      work_queue_name: cds-curation-queue
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, S3 Bucket, Bento Config"
@@ -79,7 +79,7 @@ deployments:
       s3_prefix: ""
     work_pool:
       name: cds-curation-ecs
-      work_queue_name: default
+      work_queue_name: cds-curation-queue
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Data Model Archiving, S3 Bucket, Bento Config"
@@ -99,7 +99,7 @@ deployments:
       dump_file_name: "test_dump.dump"
     work_pool:
       name: cds-curation-ecs
-      work_queue_name: default
+      work_queue_name: cds-curation-queue
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Dump Generator, S3 Bucket, Bento Config"
@@ -122,7 +122,26 @@ deployments:
       s3_folder: ""
     work_pool:
       name: cds-curation-ecs
-      work_queue_name: default
+      work_queue_name: cds-curation-queue
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
+  
+    - name: ctos-dataops-neo4j-restore
+      version: null
+      tags: []
+      description: null
+      schedule: {}
+      flow_name: null
+      entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
+      parameters:
+        secret_name_ssh: ""
+        neo4j_ip: ""
+        s3_bucket: ""
+        s3_file_key: ""
+      work_pool:
+        name: cds-curation-ecs
+        work_queue_name: cds-curation-queue
+        job_variables:
+          env:
+            PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Restore, S3 Bucket, Bento Config"

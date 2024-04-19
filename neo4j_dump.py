@@ -19,7 +19,7 @@ def uplaod_s3(s3_bucket, s3_folder, log, file_key):
     dest = f"s3://{s3_bucket}/{s3_folder}"
     try:
         upload_log_file(dest, file_key)
-        log.info(f'Uploading neo4j summary file {os.path.basename(file_key)} succeeded!')
+        log.info(f'Uploading neo4j dump file {os.path.basename(file_key)} succeeded!')
     except Exception as e:
         log.error(e)
 

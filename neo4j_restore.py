@@ -33,7 +33,7 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
     download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, file_key)
     if download_succeeded:
         host = neo4j_ip
-        command = f"neo4j-admin load --from={file_key} --database=neo4j --force"
+        command = f"neo4j-admin load --from='{file_key}' --database=neo4j --force"
         if host in ['localhost', '127.0.0.1']:
             try:
                 subprocess.call(command, shell = is_shell)

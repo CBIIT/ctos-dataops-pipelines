@@ -28,7 +28,7 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
 
     log = get_logger('Neo4j Summary Generator')
     neo4j_dict = {}
-    neo4j_uri = "bolt://" + neo4j_ip + ":7474"
+    neo4j_uri = "bolt://" + neo4j_ip + ":7687"
     driver = GraphDatabase.driver(
                         neo4j_uri,
                         auth=(neo4j_user, neo4j_password),

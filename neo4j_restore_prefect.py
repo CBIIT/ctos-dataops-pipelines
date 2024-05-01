@@ -1,5 +1,6 @@
 from prefect import flow
 import os
+import sys
 import json
 from bento.common.secret_manager import get_secret
 from neo4j_restore import neo4j_restore, downlaod_s3
@@ -33,7 +34,7 @@ def neo4j_restore_prefect(
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
-    #neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key)
+    neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key)
 
     neo4j_summary_user = secret[NEO4J_USER]
     neo4j_summary_password = secret[NEO4J_PASSWORD]
@@ -46,6 +47,7 @@ def neo4j_restore_prefect(
         log.info("Data restore successfully")
     else:
         log.error("Data resotre fail")
+        sys.exit(1)
 
 if __name__ == "__main__":
     # create your first deployment

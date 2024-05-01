@@ -33,17 +33,18 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
     download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, file_key)
     if download_succeeded:
         host = neo4j_ip
-        command = f"neo4j-admin load --from='{file_key}' --database=neo4j --force"
+        command = f"sudo neo4j-admin load --from='{file_key}' --database=neo4j --force"
         if host in ['localhost', '127.0.0.1']:
             try:
-                local_cmd_list = ["sudo neo4j stop", command, "sudo neo4j start"]
+                local_cmd_list = ["neo4j stop", command, "neo4j start"]
                 for local_cmd in local_cmd_list:
                     subprocess.call(local_cmd, shell = is_shell)
             except Exception as e:
                 log.error(e)
         else:
             #cmd_list = ["sudo su - commonsdocker","sudo -i", "systemctl stop neo4j", command, "systemctl start neo4j"]
-            cmd_list = ["sudo systemctl stop neo4j", "sudo su root", command, "sudo chown -R neo4j:neo4j /var/lib/neo4j/data", "exit", "sudo systemctl start neo4j"]
+            #cmd_list = ["sudo systemctl stop neo4j", "sudo su root", command, "sudo chown -R neo4j:neo4j /var/lib/neo4j/data", "exit", "sudo systemctl start neo4j"]
+            cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             pkey = paramiko.RSAKey.from_private_key(io.StringIO(neo4j_key))

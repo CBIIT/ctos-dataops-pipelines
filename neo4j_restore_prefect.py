@@ -30,7 +30,6 @@ def neo4j_restore_prefect(
     log = get_logger('Neo4j Dump Generator')
     secret = get_secret(neo4j_summary_secret)
     secret_ssh = get_secret(neo4j_restore_secrect)
-    #neo4j_ip = secret[NEO4J_IP]
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]

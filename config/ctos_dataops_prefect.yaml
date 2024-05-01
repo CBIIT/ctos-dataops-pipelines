@@ -135,10 +135,13 @@ deployments:
     flow_name: null
     entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
     parameters:
-      secret_name_ssh: ""
-      neo4j_ip: ""
+      neo4j_restore_secrect: ""
+      neo4j_summary_secret: ""
       s3_bucket: ""
       s3_file_key: ""
+      s3_summary_file_key: ""
+      neo4j_summary_folder: ""
+      neo4j_summary_file_name: ""
     work_pool:
       name: cds-curation-ecs
       work_queue_name: cds-curation-queue

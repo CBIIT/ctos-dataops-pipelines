@@ -3,7 +3,7 @@ from bento.common.s3 import upload_log_file
 from neo4j import GraphDatabase
 import os
 import json
-import sys
+import time
 
 def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
     dest = f"s3://{s3_bucket}/{s3_folder}"
@@ -37,12 +37,16 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
     with driver.session() as session:
         log.info("Start generating neo4j summary")
         session = driver.session()
-        try:
-            test_statement = "Match () Return 1 Limit 1"
-            session.run(test_statement)
-        except Exception as e:
-            log.error(e)
-            sys.exit(1)
+        max_retry = 3
+        for i in range (0, max_retry):
+            try:
+                test_statement = "Match () Return 1 Limit 1"
+                session.run(test_statement)
+                break
+            except Exception as e:
+                log.error(e)
+                time.sleep(10)
+                #sys.exit(1)
         log.info("Connect to the neo4j database successfully")
         # Query the count for total nodes
         total_node_statement = f"MATCH (n) RETURN COUNT(n) as {TOTAL_NODES}"

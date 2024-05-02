@@ -36,7 +36,9 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
         command = f"sudo neo4j-admin load --from='{file_key}' --database=neo4j --force"
         if host in ['localhost', '127.0.0.1']:
             try:
-                local_cmd_list = ["neo4j stop", command, "neo4j start"]
+                local_command = command.replace("sudo", "")
+                print(command)
+                local_cmd_list = ["neo4j stop", local_command, "neo4j start"]
                 for local_cmd in local_cmd_list:
                     subprocess.call(local_cmd, shell = is_shell)
             except Exception as e:

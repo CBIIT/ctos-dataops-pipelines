@@ -36,8 +36,9 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
                     )
     with driver.session() as session:
         log.info("Start generating neo4j summary")
-        session = driver.session()
         max_retry = 3
+        session = driver.session()
+        #test connection to the database
         for i in range (0, max_retry):
             try:
                 test_statement = "Match () Return 1 Limit 1"

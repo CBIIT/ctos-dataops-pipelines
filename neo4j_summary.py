@@ -4,6 +4,7 @@ from neo4j import GraphDatabase
 import os
 import json
 import time
+import sys
 
 def uplaod_s3(s3_bucket, s3_folder, upload_file_key, log):
     dest = f"s3://{s3_bucket}/{s3_folder}"
@@ -46,8 +47,10 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
                 break
             except Exception as e:
                 log.error(e)
-                time.sleep(10)
-                #sys.exit(1)
+                if i == max_retry -1:
+                    sys.exit(1)
+                time.sleep(30)
+   
         log.info("Connect to the neo4j database successfully")
         # Query the count for total nodes
         total_node_statement = f"MATCH (n) RETURN COUNT(n) as {TOTAL_NODES}"

@@ -49,7 +49,7 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
                 log.error(e)
                 if i == max_retry -1:
                     sys.exit(1)
-                time.sleep(30)
+                time.sleep(10)
    
         log.info("Connect to the neo4j database successfully")
         # Query the count for total nodes

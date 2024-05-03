@@ -14,8 +14,8 @@ NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
 
 if LOG_PREFIX not in os.environ:
-    os.environ[LOG_PREFIX] = 'Neo4j_Dump_Generator'
-os.environ[APP_NAME] = 'Neo4j_Dump_Generator'
+    os.environ[LOG_PREFIX] = 'Neo4j_Restore'
+    os.environ[APP_NAME] = 'Neo4j_Restore'
 
 @flow(name="neo4j restore", log_prints=True)
 def neo4j_restore_prefect(
@@ -27,7 +27,7 @@ def neo4j_restore_prefect(
         neo4j_summary_folder,
         neo4j_summary_file_name
 ):  
-    log = get_logger('Neo4j Dump Generator')
+    log = get_logger('Neo4j Restore')
     secret = get_secret(neo4j_summary_secret)
     secret_ssh = get_secret(neo4j_restore_secrect)
     neo4j_ip = secret[NEO4J_IP]

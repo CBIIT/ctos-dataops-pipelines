@@ -1,0 +1,150 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: CTOS DATAOPS
+prefect-version: 2.14.10
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+pull:
+  - prefect.deployments.steps.git_clone:
+      id: clone-step
+      repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
+      branch: update_1
+      include_submodules: True
+  - prefect.deployments.steps.pip_install_requirements:
+      requirements_file: requirements.txt
+      directory: "{{ clone-step.directory }}"
+      stream_output: False
+
+deployments:
+  - name: ctos-dataops-neo4j-summary
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_summary_prefect.py:neo4j_summary_prefect
+    parameters:
+      neo4j_ip: ""
+      neo4j_user: ""
+      neo4j_password: ""
+      s3_bucket: ""
+      s3_folder: ""
+      neo4j_summary_file_name: neo4j_summary.json
+    work_pool:
+        name: cds-curation-ecs
+        work_queue_name: cds-curation-queue
+        job_variables:
+          env:
+            PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, S3 Bucket, Bento Config"
+
+  - name: ctos-dataops-neo4j-secret-summary
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_summary_prefect.py:neo4j_secret_summary_prefect
+    parameters:
+      secret_name: "{{ prefect.variables.secret_name_dev_neo4j_summary }}"
+      s3_bucket: ""
+      s3_folder: ""
+      neo4j_summary_file_name: neo4j_summary.json
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, S3 Bucket, Bento Config"
+    
+  - name: ctos-dataops-data-model-archiving
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  data_model_archiving_prefect.py:data_model_archiving_prefect
+    parameters:
+      data_model_repo_url: ""
+      data_model_version: ""
+      s3_bucket: ""
+      s3_prefix: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Data Model Archiving, S3 Bucket, Bento Config"
+  
+  - name: ctos-dataops-neo4j-dump
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_dump_prefect.py:neo4j_dump_prefect
+    parameters:
+      secret_name_ssh: ""
+      secret_name: ""
+      s3_bucket: ""
+      s3_folder: ""
+      dump_file_name: "test_dump.dump"
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Dump Generator, S3 Bucket, Bento Config"
+
+  - name: ctos-dataops-neo4j-asset-generation
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  data_asset_generation_prefect.py:data_asset_generation_prefect
+    parameters:
+      neo4j_summary_secret: ""
+      neo4j_summary_file_name: neo4j_summary.json
+      neo4j_dump_secret: ""
+      neo4j_dump_file_name: test_dump.dump
+      data_model_repo_url: ""
+      data_model_version: ""
+      s3_bucket: ""
+      s3_folder: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
+  
+  - name: ctos-dataops-neo4j-restore
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
+    parameters:
+      neo4j_restore_secrect: ""
+      neo4j_summary_secret: ""
+      s3_bucket: ""
+      s3_file_key: ""
+      s3_summary_file_key: ""
+      neo4j_summary_folder: ""
+      neo4j_summary_file_name: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Restore, S3 Bucket, Bento Config"

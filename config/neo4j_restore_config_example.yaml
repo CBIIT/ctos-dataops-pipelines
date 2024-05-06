@@ -1,0 +1,6 @@
+Config:
+  neo4j_ip: neo4j_ip
+  neo4j_user: user
+  neo4j_key: neo4j_key
+  s3_bucket: s3bucket
+  s3_file_key: s3folder/dump_file.dump

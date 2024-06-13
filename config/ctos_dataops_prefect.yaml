@@ -36,7 +36,7 @@ deployments:
       neo4j_ip: ""
       neo4j_user: ""
       neo4j_password: ""
-      s3_bucket: ""
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
@@ -55,7 +55,7 @@ deployments:
     entrypoint:  neo4j_summary_prefect.py:neo4j_secret_summary_prefect
     parameters:
       secret_name: "{{ prefect.variables.secret_name_dev_neo4j_summary }}"
-      s3_bucket: ""
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
     work_pool:
@@ -75,7 +75,7 @@ deployments:
     parameters:
       data_model_repo_url: ""
       data_model_version: ""
-      s3_bucket: ""
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_prefix: ""
     work_pool:
       name: cds-curation-ecs
@@ -94,7 +94,7 @@ deployments:
     parameters:
       secret_name_ssh: ""
       secret_name: ""
-      s3_bucket: ""
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
       dump_file_name: "test_dump.dump"
     work_pool:
@@ -112,13 +112,12 @@ deployments:
     flow_name: null
     entrypoint:  data_asset_generation_prefect.py:data_asset_generation_prefect
     parameters:
-      neo4j_summary_secret: ""
+      environment: ""
       neo4j_summary_file_name: neo4j_summary.json
-      neo4j_dump_secret: ""
-      neo4j_dump_file_name: test_dump.dump
-      data_model_repo_url: ""
-      data_model_version: ""
-      s3_bucket: ""
+      neo4j_dump_file_name: neo4j_dump.dump
+      data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
+      data_model_version: "{{ prefect.variables.cds_model_version }}"
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
     work_pool:
       name: cds-curation-ecs
@@ -137,7 +136,7 @@ deployments:
     parameters:
       neo4j_restore_secrect: ""
       neo4j_summary_secret: ""
-      s3_bucket: ""
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_file_key: ""
       s3_summary_file_key: ""
       neo4j_summary_folder: ""

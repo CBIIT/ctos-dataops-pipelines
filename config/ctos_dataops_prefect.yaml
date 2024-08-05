@@ -113,12 +113,12 @@ deployments:
     entrypoint:  data_asset_generation_prefect.py:data_asset_generation_prefect
     parameters:
       environment: ""
+      data_model_version: "{{ prefect.variables.cds_model_version }}"
+      s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
       neo4j_dump_file_name: neo4j_dump.dump
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
-      data_model_version: "{{ prefect.variables.cds_model_version }}"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
-      s3_folder: ""
     work_pool:
       name: cds-curation-ecs
       work_queue_name: cds-curation-queue

@@ -41,6 +41,9 @@ def wait_for_complete(log, channel, recv_timeout):
     return output_buffer
 
 def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder):
+    timestamp = get_time_stamp()
+    if s3_folder == None or s3_folder == "":
+        s3_folder = "neo4j-assets-" + timestamp
     dump_fail = False
     is_shell = True
     TMP = "/tmp/"
@@ -84,7 +87,6 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
             log.error(e)
         # Download the file
         log.info(f"Start downloading from {file_key}")
-        timestamp = get_time_stamp()
         local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
         if not dump_fail:
             #download_cmd = f"scp {neo4j_ip}:{file_key} ."

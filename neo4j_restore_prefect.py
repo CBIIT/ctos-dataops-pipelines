@@ -6,6 +6,7 @@ from bento.common.secret_manager import get_secret
 from neo4j_restore import neo4j_restore, downlaod_s3
 from neo4j_summary import neo4j_summary
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+from bento.common.utils import get_time_stamp
 import prefect.variables as Variable
 from typing import Literal
 
@@ -23,26 +24,30 @@ if LOG_PREFIX not in os.environ:
 def neo4j_restore_prefect(
         environment: environment_choices,
         s3_bucket,
+        s3_folder,
         s3_dump_file_key,
         s3_summary_file_key,
-        neo4j_summary_folder,
         neo4j_summary_file_name
 ):  
     log = get_logger('Neo4j Restore')
-    #secret = get_secret(neo4j_summary_secret)
-    #secret_ssh = get_secret(neo4j_restore_secrect)
+    
+    neo4j_restore_secrect = ""
+    neo4j_summary_secret = ""
     if environment == "dev":
-        secret =  Variable.get('cds_secret_name_dev')
-        secret_ssh = Variable.get('cds_secret_name_ssh')
+        neo4j_summary_secret =  Variable.get('cds_secret_name_dev')
+        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
     elif environment == "dev2":
-        secret = Variable.get('cds_secret_name_dev2')
-        secret_ssh = Variable.get('cds_secret_name_ssh')
+        neo4j_summary_secret = Variable.get('cds_secret_name_dev2')
+        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
     elif environment == "qa":
-        secret = Variable.get('cds_secret_name_qa')
-        secret_ssh = Variable.get('cds_secret_name_ssh')
+        neo4j_summary_secret = Variable.get('cds_secret_name_qa')
+        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
     elif environment == "qa2":
-        secret = Variable.get('cds_secret_name_qa2')
-        secret_ssh = Variable.get('cds_secret_name_ssh')
+        neo4j_summary_secret = Variable.get('cds_secret_name_qa2')
+        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
+    
+    secret = get_secret(neo4j_summary_secret)
+    secret_ssh = get_secret(neo4j_restore_secrect)
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
@@ -50,7 +55,10 @@ def neo4j_restore_prefect(
 
     neo4j_summary_user = secret[NEO4J_USER]
     neo4j_summary_password = secret[NEO4J_PASSWORD]
-    restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, neo4j_summary_file_name, s3_bucket, neo4j_summary_folder)
+    timestamp = get_time_stamp()
+    if s3_folder == None or s3_folder == "":
+        s3_folder = "neo4j-assets-" + timestamp
+    restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, neo4j_summary_file_name, s3_bucket, s3_folder)
     summary_file_key = os.path.join(TMP, os.path.basename(s3_summary_file_key))
     downlaod_s3(s3_bucket, s3_summary_file_key, log, summary_file_key)
     with open(summary_file_key, 'r') as file:

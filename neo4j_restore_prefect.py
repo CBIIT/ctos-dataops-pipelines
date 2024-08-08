@@ -6,34 +6,47 @@ from bento.common.secret_manager import get_secret
 from neo4j_restore import neo4j_restore, downlaod_s3
 from neo4j_summary import neo4j_summary
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+import prefect.variables as Variable
+from typing import Literal
 
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_KEY = "neo4j_key"
 NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
-
+environment_choices = Literal["dev", "dev2", "qa", "qa2"]
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Restore'
     os.environ[APP_NAME] = 'Neo4j_Restore'
 
 @flow(name="neo4j restore", log_prints=True)
 def neo4j_restore_prefect(
-        neo4j_restore_secrect,
-        neo4j_summary_secret,
+        environment: environment_choices,
         s3_bucket,
-        s3_file_key,
+        s3_dump_file_key,
         s3_summary_file_key,
         neo4j_summary_folder,
         neo4j_summary_file_name
 ):  
     log = get_logger('Neo4j Restore')
-    secret = get_secret(neo4j_summary_secret)
-    secret_ssh = get_secret(neo4j_restore_secrect)
+    #secret = get_secret(neo4j_summary_secret)
+    #secret_ssh = get_secret(neo4j_restore_secrect)
+    if environment == "dev":
+        secret =  Variable.get('cds_secret_name_dev')
+        secret_ssh = Variable.get('cds_secret_name_ssh')
+    elif environment == "dev2":
+        secret = Variable.get('cds_secret_name_dev2')
+        secret_ssh = Variable.get('cds_secret_name_ssh')
+    elif environment == "qa":
+        secret = Variable.get('cds_secret_name_qa')
+        secret_ssh = Variable.get('cds_secret_name_ssh')
+    elif environment == "qa2":
+        secret = Variable.get('cds_secret_name_qa2')
+        secret_ssh = Variable.get('cds_secret_name_ssh')
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
-    neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key)
+    neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_dump_file_key)
 
     neo4j_summary_user = secret[NEO4J_USER]
     neo4j_summary_password = secret[NEO4J_PASSWORD]

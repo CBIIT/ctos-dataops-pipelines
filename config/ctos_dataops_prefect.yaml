@@ -137,9 +137,9 @@ deployments:
       environment: ""
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
-      s3_dump_file_key: ""
-      s3_summary_file_key: ""
-      neo4j_summary_file_name: "neo4j_summary.json"
+      dump_file_name: "neo4j_dump.dump"
+      validation_summary_file_name: "neo4j_summary.json"
+      restore_summary_file_name: "neo4j_restore_summary.json"
     work_pool:
       name: cds-curation-ecs
       work_queue_name: cds-curation-queue

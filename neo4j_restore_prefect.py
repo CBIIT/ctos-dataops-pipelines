@@ -25,9 +25,9 @@ def neo4j_restore_prefect(
         environment: environment_choices,
         s3_bucket,
         s3_folder,
-        s3_dump_file_key,
-        s3_summary_file_key,
-        neo4j_summary_file_name
+        dump_file_name,
+        validation_summary_file_name,
+        restore_summary_file_name
 ):  
     log = get_logger('Neo4j Restore')
     
@@ -51,6 +51,8 @@ def neo4j_restore_prefect(
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
+    s3_dump_file_key = os.path.join(s3_folder, dump_file_name)
+    s3_summary_file_key = os.path.join(s3_folder, validation_summary_file_name)
     neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_dump_file_key)
 
     neo4j_summary_user = secret[NEO4J_USER]
@@ -58,7 +60,7 @@ def neo4j_restore_prefect(
     timestamp = get_time_stamp()
     if s3_folder == None or s3_folder == "":
         s3_folder = "neo4j-assets-" + timestamp
-    restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, neo4j_summary_file_name, s3_bucket, s3_folder)
+    restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, restore_summary_file_name, s3_bucket, s3_folder)
     summary_file_key = os.path.join(TMP, os.path.basename(s3_summary_file_key))
     downlaod_s3(s3_bucket, s3_summary_file_key, log, summary_file_key)
     with open(summary_file_key, 'r') as file:

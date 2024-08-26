@@ -85,8 +85,9 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
             log.error(e)
         # Download the file
         log.info(f"Start downloading from {file_key}")
-        timestamp = get_time_stamp()
-        local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
+        #timestamp = get_time_stamp()
+        #local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
+        local_file_key = os.path.join('tmp', dump_file)
         if not dump_fail:
             #download_cmd = f"scp {neo4j_ip}:{file_key} ."
             scp = SCPClient(client.get_transport())

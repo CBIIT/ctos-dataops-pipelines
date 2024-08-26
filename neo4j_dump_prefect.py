@@ -1,6 +1,7 @@
 from prefect import flow
 from bento.common.secret_manager import get_secret
 from neo4j_dump import neo4j_dump
+from bento.common.utils import get_time_stamp
 
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
@@ -12,7 +13,7 @@ def neo4j_dump_prefect(
         secret_name,
         s3_bucket,
         s3_folder,
-        dump_file_name = "test_dump.dump"
+        dump_file_name
         
 ):
     secret = get_secret(secret_name)
@@ -20,6 +21,9 @@ def neo4j_dump_prefect(
     neo4j_ip = secret[NEO4J_IP]
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
+    timestamp = get_time_stamp()
+    if dump_file_name == None or dump_file_name == "":
+        dump_file_name = "neo4j_dump_" + timestamp +".dump"
     neo4j_dump(dump_file_name, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
 
 if __name__ == "__main__":

@@ -126,13 +126,13 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
   
-  - name: ctos-dataops-neo4j-restore
+  - name: ctos-dataops-neo4j-asset-loading
     version: null
     tags: []
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  neo4j_restore_prefect.py:neo4j_restore_prefect
+    entrypoint:  data_asset_loading_prefect.py:data_asset_loading_prefect
     parameters:
       environment: ""
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
@@ -145,4 +145,4 @@ deployments:
       work_queue_name: cds-curation-queue
       job_variables:
         env:
-          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Restore, S3 Bucket, Bento Config"
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, S3 Bucket, Bento Config"

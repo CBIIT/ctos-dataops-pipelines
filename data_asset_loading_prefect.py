@@ -20,8 +20,8 @@ if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Restore'
     os.environ[APP_NAME] = 'Neo4j_Restore'
 
-@flow(name="neo4j restore", log_prints=True)
-def neo4j_restore_prefect(
+@flow(name="data asset loading", log_prints=True)
+def data_asset_loading_prefect(
         environment: environment_choices,
         s3_bucket,
         s3_folder,
@@ -29,7 +29,7 @@ def neo4j_restore_prefect(
         validation_summary_file_name,
         restore_summary_file_name
 ):  
-    log = get_logger('Neo4j Restore')
+    log = get_logger('Neo4j Data Asset Loading')
     
     neo4j_restore_secrect = ""
     neo4j_summary_secret = ""
@@ -57,21 +57,18 @@ def neo4j_restore_prefect(
 
     neo4j_summary_user = secret[NEO4J_USER]
     neo4j_summary_password = secret[NEO4J_PASSWORD]
-    timestamp = get_time_stamp()
-    if s3_folder == None or s3_folder == "":
-        s3_folder = "neo4j-assets-" + timestamp
     restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, restore_summary_file_name, s3_bucket, s3_folder)
     summary_file_key = os.path.join(TMP, os.path.basename(s3_summary_file_key))
     downlaod_s3(s3_bucket, s3_summary_file_key, log, summary_file_key)
     with open(summary_file_key, 'r') as file:
         compare_neo4j_summary = json.load(file)
     if restore_neo4j_summary == compare_neo4j_summary:
-        log.info("Data restore successfully")
+        log.info("Data asset loading successfully")
     else:
-        log.error("Data resotre fail")
+        log.error("Data asset loading fail")
         sys.exit(1)
 
 if __name__ == "__main__":
     # create your first deployment
-   neo4j_restore_prefect.serve(name="neo4j_restore")
+   data_asset_loading_prefect.serve(name="neo4j_restore")
 

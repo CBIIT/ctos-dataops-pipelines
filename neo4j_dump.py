@@ -29,9 +29,10 @@ def wait_for_complete(log, channel, recv_timeout):
     while not (output_buffer.endswith("~]$ ") or output_buffer.endswith("]# ")):
         try:
             # Attempt to receive data from the channel
-            print(f"###{recv_data}")
             signal.alarm(recv_timeout)
             recv_data = channel.recv(1024).decode()
+            print(f"output_buffer###{output_buffer}")
+            print(f"recv_data###{recv_data}")
             signal.alarm(0)
         except TimeoutError as e:
             #log.info("ouput timeout")

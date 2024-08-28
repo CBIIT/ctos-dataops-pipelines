@@ -65,7 +65,7 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
                     #set up timer because channel.recv() will stuck when there is no more output
                     recv_timeout = 3
                     output_buffer = wait_for_complete(log, channel, recv_timeout)
-                    log.info(output_buffer)
+                    #log.info(output_buffer)
             except Exception as e:
                 log.error(e)
             client.close()

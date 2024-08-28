@@ -65,6 +65,7 @@ def data_asset_loading_prefect(
     if restore_neo4j_summary == compare_neo4j_summary:
         log.info("Data asset loading successfully")
     else:
+        log.error("Data asset counting unmatched")
         log.error("Data asset loading fail")
         sys.exit(1)
 

@@ -49,8 +49,6 @@ def data_asset_loading_prefect(
     secret = get_secret(neo4j_summary_secret)
     secret_ssh = get_secret(neo4j_restore_secrect)
     neo4j_ip = secret[NEO4J_IP]
-    print(neo4j_summary_secret)
-    print(neo4j_ip)
     neo4j_user = secret_ssh[NEO4J_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
     s3_dump_file_key = os.path.join(s3_folder, dump_file_name)

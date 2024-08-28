@@ -31,6 +31,7 @@ def wait_for_complete(log, channel, recv_timeout):
             # Attempt to receive data from the channel
             signal.alarm(recv_timeout)
             recv_data = channel.recv(1024).decode()
+            log.info(recv_data)
             signal.alarm(0)
         except TimeoutError as e:
             #log.info("ouput timeout")

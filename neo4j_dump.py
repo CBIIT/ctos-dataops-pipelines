@@ -53,7 +53,7 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
     file_key = os.path.join(TMP, dump_file)
     #host = get_host(neo4j_ip)
     host = neo4j_ip
-    command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
+    command = f"sudo rm -f {file_key} && sudo neo4j-admin dump --database=neo4j --to={file_key}"
     if host in ['localhost', '127.0.0.1']:
         try:
             subprocess.call(command, shell = is_shell)

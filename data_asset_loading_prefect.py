@@ -23,11 +23,11 @@ if LOG_PREFIX not in os.environ:
 @flow(name="data asset loading", log_prints=True)
 def data_asset_loading_prefect(
         environment: environment_choices,
-        s3_bucket,
         s3_folder,
         dump_file_name,
         validation_summary_file_name,
-        restore_summary_file_name
+        restore_summary_file_name,
+        s3_bucket
 ):  
     log = get_logger('Neo4j Data Asset Loading')
     

@@ -135,11 +135,11 @@ deployments:
     entrypoint:  data_asset_loading_prefect.py:data_asset_loading_prefect
     parameters:
       environment: ""
-      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       s3_folder: ""
       dump_file_name: "neo4j_dump.dump"
       validation_summary_file_name: "neo4j_summary.json"
       restore_summary_file_name: "neo4j_restore_summary.json"
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
       name: cds-curation-ecs
       work_queue_name: cds-curation-queue

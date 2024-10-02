@@ -9,13 +9,19 @@ from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 from bento.common.utils import get_time_stamp
 import prefect.variables as Variable
 from typing import Literal
+import yaml
 
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
 NEO4J_KEY = "neo4j_key"
 NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
-environment_choices = Literal["dev", "dev2", "qa", "qa2"]
+config_file = "config/prefect_drop_down_config.yaml"
+with open('config_file', 'r') as file:
+    config = yaml.safe_load(file)
+environment_choices = Literal[tuple(list(config.keys()))]
+SUMARY_SECRET = "neo4j_summary_secret"
+RESTORE_SECRET = "neo4j_ssh_secret"
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_Restore'
     os.environ[APP_NAME] = 'Neo4j_Restore'
@@ -30,22 +36,10 @@ def data_asset_loading_prefect(
         s3_bucket
 ):  
     log = get_logger('Neo4j Data Asset Loading')
-    
-    neo4j_restore_secrect = ""
-    neo4j_summary_secret = ""
-    if environment == "dev":
-        neo4j_summary_secret =  Variable.get('cds_secret_name_dev')
-        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
-    elif environment == "dev2":
-        neo4j_summary_secret = Variable.get('cds_secret_name_dev2')
-        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
-    elif environment == "qa":
-        neo4j_summary_secret = Variable.get('cds_secret_name_qa')
-        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
-    elif environment == "qa2":
-        neo4j_summary_secret = Variable.get('cds_secret_name_qa2')
-        neo4j_restore_secrect = Variable.get('cds_secret_name_ssh')
-    
+
+    neo4j_restore_secrect = Variable.get(config[environment][RESTORE_SECRET])
+    neo4j_summary_secret = Variable.get(config[environment][SUMARY_SECRET])
+
     secret = get_secret(neo4j_summary_secret)
     secret_ssh = get_secret(neo4j_restore_secrect)
     neo4j_ip = secret[NEO4J_IP]

@@ -5,8 +5,15 @@ from data_model_archiving_prefect import data_model_archiving_prefect
 from bento.common.utils import get_time_stamp
 import prefect.variables as Variable
 from typing import Literal
+import yaml
 
-environment_choices = Literal["dev", "dev2", "qa", "qa2"]
+config_file = "config/prefect_drop_down_config.yaml"
+with open('config_file', 'r') as file:
+    config = yaml.safe_load(file)
+environment_choices = Literal[tuple(list(config.keys()))]
+SUMARY_SECRET = "neo4j_summary_secret"
+DUMP_SECRET = "neo4j_ssh_secret"
+
 @flow(name="data asset generation", log_prints=True)
 def data_asset_generation_prefect(
         environment: environment_choices,
@@ -17,18 +24,8 @@ def data_asset_generation_prefect(
         data_model_repo_url,
         s3_bucket
     ):
-    if environment == "dev":
-        neo4j_summary_secret = Variable.get('cds_secret_name_dev')
-        neo4j_dump_secret = Variable.get('cds_secret_name_ssh')
-    elif environment == "dev2":
-        neo4j_summary_secret = Variable.get('cds_secret_name_dev2')
-        neo4j_dump_secret = Variable.get('cds_secret_name_ssh')
-    elif environment == "qa":
-        neo4j_summary_secret = Variable.get('cds_secret_name_qa')
-        neo4j_dump_secret = Variable.get('cds_secret_name_ssh')
-    elif environment == "qa2":
-        neo4j_summary_secret = Variable.get('cds_secret_name_qa2')
-        neo4j_dump_secret = Variable.get('cds_secret_name_ssh')
+    neo4j_summary_secret = Variable.get(config[environment][SUMARY_SECRET])
+    neo4j_dump_secret = Variable.get(config[environment][DUMP_SECRET])
     timestamp = get_time_stamp()
     if s3_folder == None or s3_folder == "":
         s3_folder = "neo4j-assets-" + timestamp

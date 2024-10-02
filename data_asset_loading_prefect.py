@@ -16,7 +16,7 @@ NEO4J_USER = "neo4j_user"
 NEO4J_KEY = "neo4j_key"
 NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
-config_file = "config/prefect_drop_down_config.yaml"
+config_file = "./config/prefect_drop_down_config.yaml"
 with open('config_file', 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]

@@ -7,7 +7,7 @@ import prefect.variables as Variable
 from typing import Literal
 import yaml
 
-config_file = "config/prefect_drop_down_config.yaml"
+config_file = "./config/prefect_drop_down_config.yaml"
 with open('config_file', 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]

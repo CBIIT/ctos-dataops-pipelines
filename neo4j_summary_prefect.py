@@ -2,6 +2,7 @@ from prefect import flow
 from neo4j_summary import neo4j_summary
 from bento.common.secret_manager import get_secret
 from prefect.artifacts import create_markdown_artifact
+from bento.common.utils import get_time_stamp
 
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
@@ -76,9 +77,12 @@ def neo4j_summary_prefect(
         neo4j_password,
         s3_bucket,
         s3_folder,
-        neo4j_summary_file_name = "neo4j_summary.json"
+        neo4j_summary_file_name
     ):
     print("Start generating neo4j database summary")
+    timestamp = get_time_stamp()
+    if neo4j_summary_file_name == None or neo4j_summary_file_name == "":
+        neo4j_summary_file_name = "neo4j_summary_" + timestamp + ".json"
     neo4j_dict = neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, neo4j_summary_file_name, s3_bucket, s3_folder)
     summary_md = create_mark_down(neo4j_dict)
     create_markdown_artifact(

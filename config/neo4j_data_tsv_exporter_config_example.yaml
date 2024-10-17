@@ -1,0 +1,12 @@
+neo4j_user: neo4j
+neo4j_password: password
+bolt_port: "bolt://localhost:7688"
+nodes:
+  - study
+  - file
+schema:
+  - cds-model/model-desc/cds-model.yml
+  - cds-model/model-desc/cds-model-props.yml
+where:
+  study.phs_accession:
+    - phs002790

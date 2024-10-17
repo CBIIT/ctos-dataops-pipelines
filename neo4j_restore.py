@@ -43,8 +43,8 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
                 log.error(e)
         else:
             #cmd_list = ["sudo su - commonsdocker","sudo -i", "systemctl stop neo4j", command, "systemctl start neo4j"]
-            #cmd_list = ["sudo systemctl stop neo4j", "sudo su root", command, "sudo chown -R neo4j:neo4j /var/lib/neo4j/data", "exit", "sudo systemctl start neo4j"]
-            cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
+            cmd_list = ["sudo systemctl stop neo4j", "sudo su root", command, "sudo chown -R neo4j:neo4j /var/lib/neo4j/data", "sudo systemctl start neo4j"]
+            #cmd_list = ["sudo systemctl stop neo4j", command, "sudo systemctl start neo4j"]
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             pkey = paramiko.RSAKey.from_private_key(io.StringIO(neo4j_key))
@@ -65,7 +65,7 @@ def neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_file_key):
                     #set up timer because channel.recv() will stuck when there is no more output
                     recv_timeout = 3
                     output_buffer = wait_for_complete(log, channel, recv_timeout)
-                    log.info(output_buffer)
+                    #log.info(output_buffer)
             except Exception as e:
                 log.error(e)
             client.close()

@@ -146,3 +146,28 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
+  
+  - name: ctos-memgraph-export
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  memgraph_export_prefect.py:memgraph_export_prefect
+    parameters:
+      compose_file_path: ""
+      memgraph_host: ""
+      memgraph_username: ""
+      memgraph_port: ""
+      memgraph_password: ""
+      tmp_folder: ""
+      local_tmp_folder: ""
+      s3_bucket: ""
+      s3_prefix: ""
+      container_name: ""
+    work_pool:
+      name: cds-curation-ecs
+      work_queue_name: cds-curation-queue
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Export"

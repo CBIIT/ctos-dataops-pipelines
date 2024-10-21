@@ -155,7 +155,6 @@ deployments:
     flow_name: null
     entrypoint:  memgraph_export_prefect.py:memgraph_export_prefect
     parameters:
-      compose_file_path: ""
       memgraph_host: ""
       memgraph_username: ""
       memgraph_port: ""

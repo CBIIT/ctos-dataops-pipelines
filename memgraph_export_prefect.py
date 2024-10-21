@@ -9,7 +9,6 @@ if LOG_PREFIX not in os.environ:
 
 @flow(name="memgraph_export", log_prints=True)
 def memgraph_export_prefect(
-    compose_file_path,
     memgraph_host,
     memgraph_port,
     memgraph_username,
@@ -21,9 +20,7 @@ def memgraph_export_prefect(
     container_name
 ):
     log = get_logger('Memgraph Export')
-    run_docker_compose(compose_file_path, log)
     memgraph_export(container_name, memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, local_tmp_folder, s3_bucket, s3_prefix, log)
-    stop_docker_compose(compose_file_path, log)
 
 if __name__ == "__main__":
     # create your first deployment

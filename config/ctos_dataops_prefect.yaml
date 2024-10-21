@@ -159,14 +159,12 @@ deployments:
       memgraph_username: ""
       memgraph_port: ""
       memgraph_password: ""
-      tmp_folder: ""
-      local_tmp_folder: ""
+      tmp_folder: "/tmp"
       s3_bucket: ""
       s3_prefix: ""
-      container_name: ""
     work_pool:
-      name: cds-curation-ecs
-      work_queue_name: cds-curation-queue
+      name: ctdc-curation-mgconsole
+      work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Export"

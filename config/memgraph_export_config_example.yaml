@@ -1,9 +1,0 @@
-compose_file_path: "config/memgraph-compose-file.yml"
-memgraph_host: "memgraph_host"
-memgraph_username: "memgraph"
-memgraph_port: "7687"
-memgraph_password: "password"
-tmp_folder: "/tmp"
-local_tmp_folder: "config/tmp" #because the docker compose file is in the config folder
-s3_bucket: "s3_bucke"
-s3_prefix: "s3_prefix"

@@ -1,5 +1,5 @@
 from prefect import flow
-from memgraph_export import memgraph_export, run_docker_compose, stop_docker_compose
+from memgraph_export import memgraph_export
 import os
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 
@@ -13,14 +13,12 @@ def memgraph_export_prefect(
     memgraph_port,
     memgraph_username,
     memgraph_password,
-    local_tmp_folder,
     tmp_folder,
     s3_bucket,
     s3_prefix,
-    container_name
 ):
     log = get_logger('Memgraph Export')
-    memgraph_export(container_name, memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, local_tmp_folder, s3_bucket, s3_prefix, log)
+    memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, s3_bucket, s3_prefix, log)
 
 if __name__ == "__main__":
     # create your first deployment

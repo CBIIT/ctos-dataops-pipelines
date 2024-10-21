@@ -1,11 +1,7 @@
 import subprocess
 import os
-import docker
-import yaml
-import argparse
 from bento.common.utils import get_time_stamp
 from bento.common.s3 import upload_log_file
-import sys
 
 
 
@@ -24,13 +20,7 @@ def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_pa
             "-c",
             f'echo "DUMP DATABASE;" | mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password} --output-format=cypherl > {export_file_key}'
             ]
-        exit_code, output = subprocess.run(command)
-        if exit_code == 0:
-            log.info(f"Memgraph export file was created and stored in {export_file_key}")
-            upload_s3(s3_prefix, s3_bucket, export_file_key, log)
-        else:
-            log.error(output)
-            sys.exit(1)
+        subprocess.run(command)
     except Exception as e:
         log.error(e)
 

@@ -9,9 +9,9 @@ from bento.common.s3 import upload_log_file
 def upload_s3(s3_prefix, s3_bucket, file_key, log):
     
     dest = os.path.join(f"s3://{s3_bucket}", s3_prefix)
-    log.info(dest)
+    log.info(f'Exported memgraph file successfully to {file_key}, now start uploading the memgraph export file to {dest}')
     upload_log_file(dest, file_key)
-    log.info(f'Uploading memgraph export file {os.path.basename(file_key)} succeeded!')
+    log.info(f'Uploading the memgraph export file {os.path.basename(file_key)} succeeded!')
 
 
 def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, s3_bucket, s3_prefix, log):

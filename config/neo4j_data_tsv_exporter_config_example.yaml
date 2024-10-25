@@ -9,4 +9,6 @@ schema:
   - cds-model/model-desc/cds-model-props.yml
 where:
   study.phs_accession:
-    - phs002790
+    values:
+      - phs002790
+    where_connected: TRUE #do not need this value if the user do not want the where query affect the children nodes

@@ -118,7 +118,7 @@ def check_parents_id(node, schema):
 
 def main():
     log = get_logger('Neo4j Data TSV Exporting')
-    with open("config/neo4j_data_tsv_exporter_config_example_test.yaml") as f:
+    with open("config/neo4j_data_tsv_exporter_config_example.yaml") as f:
         config = yaml.safe_load(f)
     schema = get_schema(config, log)
 
@@ -130,7 +130,6 @@ def main():
         )
     for node in config["nodes"]:
         query, query_parent_dict = create_query(config, node, schema)
-        print(query)
         with driver.session() as session:
             session = driver.session()
             results = session.run(query)

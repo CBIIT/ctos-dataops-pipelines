@@ -82,8 +82,9 @@ def neo4j_summary(neo4j_ip, neo4j_user, neo4j_password, summary_file_key, s3_buc
             relationship_counts_dict[record[RELATIONSHIP_TYPE]] = record[COUNT]
             log.info(f"Relationship {record[RELATIONSHIP_TYPE]}: {record[COUNT]}")    
         neo4j_dict[RELATIONSHIP_COUNTS] = {k: relationship_counts_dict[k] for k in sorted(relationship_counts_dict)}
-        timestamp = get_time_stamp()
-        new_summary_file_key = os.path.join(TMP, summary_file_key.replace(os.path.splitext(summary_file_key)[1], "_" + timestamp + ".json"))
+        #timestamp = get_time_stamp()
+        #new_summary_file_key = os.path.join(TMP, summary_file_key.replace(os.path.splitext(summary_file_key)[1], "_" + timestamp + ".json"))
+        new_summary_file_key = os.path.join(TMP, summary_file_key)
         with open(new_summary_file_key, "w") as json_file:
             json.dump(neo4j_dict, json_file, indent=4)
         uplaod_s3(s3_bucket, s3_folder, new_summary_file_key, log)

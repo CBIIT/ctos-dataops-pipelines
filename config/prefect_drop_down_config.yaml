@@ -1,0 +1,12 @@
+dev:
+  neo4j_summary_secret: "cds_secret_name_dev"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+dev2:
+  neo4j_summary_secret: "cds_secret_name_dev2"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+qa:
+  neo4j_summary_secret: "cds_secret_name_qa"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+qa2:
+  neo4j_summary_secret: "cds_secret_name_qa2"
+  neo4j_ssh_secret: "cds_secret_name_ssh"

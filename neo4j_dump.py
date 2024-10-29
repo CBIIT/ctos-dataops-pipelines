@@ -31,6 +31,7 @@ def wait_for_complete(log, channel, recv_timeout):
             # Attempt to receive data from the channel
             signal.alarm(recv_timeout)
             recv_data = channel.recv(1024).decode()
+            log.info(recv_data)
             signal.alarm(0)
         except TimeoutError as e:
             #log.info("ouput timeout")
@@ -41,6 +42,7 @@ def wait_for_complete(log, channel, recv_timeout):
     return output_buffer
 
 def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder):
+    
     dump_fail = False
     is_shell = True
     TMP = "/tmp/"
@@ -51,7 +53,7 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
     file_key = os.path.join(TMP, dump_file)
     #host = get_host(neo4j_ip)
     host = neo4j_ip
-    command = f"sudo neo4j-admin dump --database=neo4j --to={file_key}"
+    command = f"sudo rm -f {file_key} && sudo neo4j-admin dump --database=neo4j --to={file_key}"
     if host in ['localhost', '127.0.0.1']:
         try:
             subprocess.call(command, shell = is_shell)
@@ -84,8 +86,9 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
             log.error(e)
         # Download the file
         log.info(f"Start downloading from {file_key}")
-        timestamp = get_time_stamp()
-        local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
+        #timestamp = get_time_stamp()
+        #local_file_key = os.path.join('tmp', dump_file.replace(os.path.splitext(dump_file)[1], "_" + timestamp + ".dump"))
+        local_file_key = os.path.join('tmp', dump_file)
         if not dump_fail:
             #download_cmd = f"scp {neo4j_ip}:{file_key} ."
             scp = SCPClient(client.get_transport())

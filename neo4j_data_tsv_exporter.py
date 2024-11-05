@@ -4,6 +4,7 @@ import yaml
 from bento.common.utils import get_time_stamp, get_logger, LOG_PREFIX, APP_NAME
 from neo4j import GraphDatabase
 import os
+from collections import defaultdict
 
 SCHEMA = "schema"
 RELATIONSHIPS = "Relationships"
@@ -17,46 +18,73 @@ PROPS = "Props"
 PROP_DEFINITIONS = "PropDefinitions"
 KEY = "Key"
 TMP = "tmp"
+SRC = "Src"
+DST = "Dst"
+FILTER_RELATED_NODES = "filter_related_nodes"
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_TSV_Export'
     os.environ[APP_NAME] = 'Neo4j_TSV_Export'
 
+def find_all_paths(paths, start, end):
+    graph = defaultdict(list)
+    for path in paths:
+        graph[path[SRC]].append(path[DST])
+        #graph[path['dst']].append(path['src'])  # Add reverse connection for undirected graph
+    all_paths = []
+    def dfs(current, path, visited):
+        if current == end:
+            all_paths.append(path)
+            return
+        visited.add(current)
+        for neighbor in graph[current]:
+            if neighbor not in visited:  # Prevent cycles
+                dfs(neighbor, path + [neighbor], visited)
+        visited.remove(current)
+    dfs(start, [start], set())
+
+    return all_paths
 
 def write_to_tsv(output_key, node, results, query_parent_dict, log):
-    with open(output_key, "w", newline="") as csvfile:
-        fieldnames = set()
-        row_list = []
-        for record in results:
-            result_list = list(record.keys())
-            for r in result_list:
-                if r == "n":
-                    row = {key: value for key, value in record[r].items() if key != "created"}
-                else:
-                    column_name = ""
-                    for parent, parent_id in query_parent_dict[r].items():
-                        column_name = parent + "." + parent_id
-                        if record[r] is not None:
-                            row[column_name] = record[r][parent_id]
-                        else:
-                            row[column_name] = None
-            row[TYPE] = node
-            row_list.append(row)
-            fieldnames.update(row.keys())
+    if results.peek():
+        with open(output_key, "w", newline="") as csvfile:
+            fieldnames = set()
+            row_list = []
+            for record in results:
+                result_list = list(record.keys())
+                for r in result_list:
+                    if r == "n":
+                        row = {key: value for key, value in record[r].items() if key != "created"}
+                    else:
+                        column_name = ""
+                        for parent, parent_id in query_parent_dict[r].items():
+                            column_name = parent + "." + parent_id
+                            if record[r] is not None:
+                                row[column_name] = record[r][parent_id]
+                            else:
+                                row[column_name] = None
+                row[TYPE] = node
+                row_list.append(row)
+                fieldnames.update(row.keys())
+            fieldname_list = list(fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=fieldname_list, delimiter='\t')
+            writer.writeheader()
+            for r in row_list:
+                writer.writerow(r)
+        log.info(f"Data has been written to {output_key}")
 
-        fieldname_list = list(fieldnames)
-        writer = csv.DictWriter(csvfile, fieldnames=fieldname_list, delimiter='\t')
-        writer.writeheader()
-        for r in row_list:
-            writer.writerow(r)
-    log.info(f"Data has been written to {output_key}")
+def collect_path(schema):
+    paths = []
+    for real in schema[RELATIONSHIPS].keys():
+        paths = paths + schema[RELATIONSHIPS][real][ENDS]
+    return paths
 
-def create_query(config, node, schema):
+def create_query(config, node, schema, log):
     #query = f"MATCH (n:{node})"
     parent_list = check_parents(node, schema)
     query_match = f"MATCH (n:{node})"
     query_where = ""
     query_optional = ""
-    query_return = " Return n"
+    query_return = " Return distinct(n)"
     query_parent_dict = {}
     if len(parent_list) > 0:
         query_parent_count = 0
@@ -74,18 +102,43 @@ def create_query(config, node, schema):
                 prop_node = w.split(".")[0]
                 prop = w.split(".")[1]
                 pv = config[WHERE][w].get("values")
-                where_connected = config[WHERE][w].get("where_connected")
+                filter_related_nodes = config[WHERE][w].get(FILTER_RELATED_NODES)
+                if filter_related_nodes is None:
+                    filter_related_nodes = True
                 if node == prop_node:
                     if "WHERE" not in query_where:
                         query_where = query_where + f" WHERE n.{prop} IN {str(pv)}"
                     else:
                         query_where = query_where + f" AND n.{prop} in {str(pv)}"
-                elif prop_node in parent_list and where_connected:
-                    query_match = query_match + f" MATCH (n)-->({prop_node}:{prop_node})"
-                    if "WHERE" not in query_where:
-                        query_where = query_where + f" WHERE {prop_node}.{prop} IN {str(pv)}"
+                elif filter_related_nodes:
+                    #query_match = query_match + f" MATCH (n)-->({prop_node}:{prop_node})"
+                    paths = collect_path(schema)
+                    all_paths = find_all_paths(paths, node, prop_node)
+                    related = False
+                    if all_paths:
+                        shortest_path = min(all_paths, key=len)
+                        related = True
                     else:
-                        query_where = query_where + f" AND {prop_node}.{prop} IN {str(pv)}"
+                        all_paths = find_all_paths(paths, prop_node, node)
+                        if all_paths:
+                            shortest_path = min(all_paths, key=len)
+                            related = True
+                        else:
+                            log.error(f"can not find relationship between {prop_node} and {node}")
+                    if related:
+                        query_match_list = []
+                        for i in range(0,len(shortest_path)):
+                            if shortest_path[i] == node:
+                                query_match_list.append("(n)")
+                            else:
+                                query_match_list.append(f"({shortest_path[i]}:{shortest_path[i]})")
+                        
+                        query_match = query_match + " MATCH " + "-->".join(query_match_list)
+                        if "WHERE" not in query_where:
+                            query_where = query_where + f" WHERE {prop_node}.{prop} IN {str(pv)}"
+                        else:
+                            query_where = query_where + f" AND {prop_node}.{prop} IN {str(pv)}"
+
     query = query_match + query_where + query_optional + query_return
     return query, query_parent_dict
 
@@ -128,12 +181,15 @@ def main():
             auth=(config["neo4j_user"], config["neo4j_password"]),
             encrypted=False
         )
-    for node in config["nodes"]:
-        query, query_parent_dict = create_query(config, node, schema)
+    timestamp = get_time_stamp()
+    node_list = config.get("nodes")
+    if node_list is None:
+        node_list = list(schema[NODES].keys())
+    for node in node_list:
+        query, query_parent_dict = create_query(config, node, schema, log)
         with driver.session() as session:
             session = driver.session()
             results = session.run(query)
-            timestamp = get_time_stamp()
             folder_path = os.path.join(TMP, "tsv_exporter" + "-" + timestamp)
             if not os.path.exists(folder_path):
                 os.mkdir(folder_path)

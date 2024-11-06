@@ -26,7 +26,7 @@ with open(config_file, 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]
 
-@flow(name="memgraph_export", log_prints=True)
+@flow(name="memgraph data asset generation", log_prints=True)
 def memgraph_data_asset_generation_prefect(
     environment: environment_choices,
     s3_folder,

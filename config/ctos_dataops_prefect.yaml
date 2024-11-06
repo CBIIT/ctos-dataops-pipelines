@@ -147,7 +147,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
   
-  - name: ctos-memgraph-export
+  - name: ctos-dataops-memgraph-asset-loading
     version: null
     tags: []
     description: null

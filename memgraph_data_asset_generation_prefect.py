@@ -50,7 +50,7 @@ def memgraph_data_asset_generation_prefect(
     memgraph_dict = neo4j_summary(memgraph_host, memgraph_user, memgraph_password, memgraph_summary_file_name, s3_bucket, s3_folder)
     summary_md = create_mark_down(memgraph_dict)
     create_markdown_artifact(
-        key="Memgraph-summary",
+        key="memgraph-summary",
         markdown=summary_md,
         description="Memgraph Summary",
     )

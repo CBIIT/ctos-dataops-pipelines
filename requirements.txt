@@ -7,4 +7,3 @@ subprocess.run
 requests
 scp
 docker
-pymgclient

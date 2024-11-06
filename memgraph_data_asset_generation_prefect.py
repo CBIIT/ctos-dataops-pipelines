@@ -2,7 +2,7 @@ from prefect import flow
 from typing import Literal
 from neo4j_summary import neo4j_summary
 from neo4j_summary_prefect import create_mark_down
-from data_model_archiving_prefect import data_model_archiving_prefect
+from data_model_archiving import data_model_archiving
 from prefect.artifacts import create_markdown_artifact
 from memgraph_export import memgraph_export
 from bento.common.secret_manager import get_secret
@@ -28,7 +28,7 @@ environment_choices = Literal[tuple(list(config.keys()))]
 
 @flow(name="memgraph data asset generation", log_prints=True)
 def memgraph_data_asset_generation_prefect(
-    environment: environment_choices,
+    environment: environment_choices, # type: ignore
     s3_folder,
     s3_bucket,
     tmp_folder,
@@ -55,7 +55,7 @@ def memgraph_data_asset_generation_prefect(
         description="Memgraph Summary",
     )
     #generate memgraph data model
-    data_model_archiving_prefect(data_model_repo_url, data_model_version, s3_bucket, s3_folder)
+    data_model_archiving(data_model_repo_url, data_model_version, s3_bucket, s3_folder)
     #generate memgraph database dump file
     memgraph_export(memgraph_host, MEMGRAPH_PORT, memgraph_user, memgraph_password, tmp_folder, s3_bucket, s3_folder, memgraph_dump_file_name, log)
 

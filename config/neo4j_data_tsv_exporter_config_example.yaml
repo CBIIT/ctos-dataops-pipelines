@@ -12,4 +12,4 @@ where:
   study.phs_accession:
     values:
       - phs002790
-    filter_related_nodes: FALSE #do not need this section if the user want the where query filter the related nodes
+    filter_related_nodes: false #do not need this section if the user want the where query filter the related nodes

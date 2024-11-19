@@ -20,6 +20,7 @@ KEY = "Key"
 TMP = "tmp"
 SRC = "Src"
 DST = "Dst"
+MUL = "Mul"
 FILTER_RELATED_NODES = "filter_related_nodes"
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_TSV_Export'
@@ -29,7 +30,7 @@ def find_all_paths(paths, start, end):
     graph = defaultdict(list)
     for path in paths:
         graph[path[SRC]].append(path[DST])
-        #graph[path['dst']].append(path['src'])  # Add reverse connection for undirected graph
+        graph[path[DST]].append(path[SRC])# Add reverse connection for the graph
     all_paths = []
     def dfs(current, path, visited):
         if current == end:
@@ -75,13 +76,71 @@ def write_to_tsv(output_key, node, results, query_parent_dict, log):
 def collect_path(schema):
     paths = []
     for real in schema[RELATIONSHIPS].keys():
-        paths = paths + schema[RELATIONSHIPS][real][ENDS]
+        #paths = paths + schema[RELATIONSHIPS][real][ENDS].pop(MUL)
+        for end in schema[RELATIONSHIPS][real][ENDS]:
+            end.pop(MUL, None)
+            paths.append(end)
     return paths
+
+def find_path_direction(separate_path, paths):
+    for path in paths:
+        path_list = list(path.values())
+        if set(path_list) == set(separate_path) and len(path_list) == len(separate_path):
+            return path
+    return None
+
+def query_match_update(paths, all_paths, node):
+    for path in all_paths:
+        query_match_list = []
+        diff_direction_query = []
+        diff_direction_exist = False
+        pass_node = {}
+        query_update = ""
+        separate_path_list = [path[i:i+2] for i in range(len(path)-1)]
+        #query_match = query_match + " MATCH "
+        node_query = f"({node})"
+        for separate_path in separate_path_list:
+            position = "right"
+            query_direction = ""
+            path_diretion = find_path_direction(separate_path, paths)
+            if path_diretion is not None:
+                if not pass_node:
+                    query_direction = f"({path_diretion[SRC]})-->({path_diretion[DST]})"
+                elif path_diretion[SRC] == pass_node[DST]:
+                    query_direction = f"-->({path_diretion[DST]})"
+                elif path_diretion[DST] == pass_node[SRC]:
+                    query_direction = f"({path_diretion[SRC]})-->"
+                    position = "left"
+                elif path_diretion[DST] == pass_node[DST]:
+                    query_direction = f"<--({path_diretion[SRC]})"
+                    diff_direction_exist = True
+                elif path_diretion[SRC] == pass_node[SRC]:
+                    query_direction = f"({path_diretion[DST]})<--"
+                    diff_direction_exist = True
+                    position = "left"
+            if position == "right":
+                query_update = query_update + query_direction
+            else:
+                query_update = query_direction + query_update
+            query_update = query_update.replace(node_query, "(n)")
+            pass_node[SRC] = path_diretion[SRC]
+            pass_node[DST] = path_diretion[DST]
+        query_match_list.append(query_update)
+        if diff_direction_exist:
+            diff_direction_query.append(query_update)
+    # The query with different direction inside will be dropped if there is query with same direction exists.
+    if len(diff_direction_query) == len(query_match_list):
+        return query_match_list
+    else:
+        updated_query_match_list = [q for q in query_match_list if q not in diff_direction_query]
+        return updated_query_match_list
+
 
 def create_query(config, node, schema, log):
     #query = f"MATCH (n:{node})"
     parent_list = check_parents(node, schema)
     query_match = f"MATCH (n:{node})"
+    secondary_query_match_list = []
     query_where = ""
     query_optional = ""
     query_return = " Return distinct(n)"
@@ -111,35 +170,23 @@ def create_query(config, node, schema, log):
                     else:
                         query_where = query_where + f" AND n.{prop} in {str(pv)}"
                 elif filter_related_nodes:
-                    #query_match = query_match + f" MATCH (n)-->({prop_node}:{prop_node})"
                     paths = collect_path(schema)
                     all_paths = find_all_paths(paths, node, prop_node)
-                    related = False
                     if all_paths:
-                        shortest_path = min(all_paths, key=len)
-                        related = True
-                    else:
-                        all_paths = find_all_paths(paths, prop_node, node)
-                        if all_paths:
-                            shortest_path = min(all_paths, key=len)
-                            related = True
-                        else:
-                            log.error(f"can not find relationship between {prop_node} and {node}")
-                    if related:
-                        query_match_list = []
-                        for i in range(0,len(shortest_path)):
-                            if shortest_path[i] == node:
-                                query_match_list.append("(n)")
-                            else:
-                                query_match_list.append(f"({shortest_path[i]}:{shortest_path[i]})")
-                        
-                        query_match = query_match + " MATCH " + "-->".join(query_match_list)
+                        secondary_query_match_list = query_match_update(paths, all_paths, node)
                         if "WHERE" not in query_where:
                             query_where = query_where + f" WHERE {prop_node}.{prop} IN {str(pv)}"
                         else:
                             query_where = query_where + f" AND {prop_node}.{prop} IN {str(pv)}"
-
-    query = query_match + query_where + query_optional + query_return
+                    else:
+                        log.error(f"can not find relationship between {prop_node} and {node}")
+    if secondary_query_match_list:
+        query_list = []
+        for secondary_query_match in secondary_query_match_list:
+            query_list.append(query_match + " MATCH " + secondary_query_match + query_where + query_optional + query_return)
+        query = " UNION ".join(query_list)
+    else:
+        query = query_match + query_where + query_optional + query_return
     return query, query_parent_dict
 
 def get_schema(config, log):

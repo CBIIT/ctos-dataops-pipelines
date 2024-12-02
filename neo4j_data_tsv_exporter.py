@@ -90,34 +90,49 @@ def find_path_direction(separate_path, paths):
     return None
 
 def query_match_update(paths, all_paths, node):
+    query_match_list = []
+    diff_direction_query = []
     for path in all_paths:
-        query_match_list = []
-        diff_direction_query = []
         diff_direction_exist = False
         pass_node = {}
         query_update = ""
         separate_path_list = [path[i:i+2] for i in range(len(path)-1)]
         #query_match = query_match + " MATCH "
+        position = "right"
         node_query = f"({node})"
-        for separate_path in separate_path_list:
-            position = "right"
+        for separate_path in separate_path_list:         
             query_direction = ""
             path_diretion = find_path_direction(separate_path, paths)
             if path_diretion is not None:
                 if not pass_node:
                     query_direction = f"({path_diretion[SRC]})-->({path_diretion[DST]})"
-                elif path_diretion[SRC] == pass_node[DST]:
+                    position = "right"
+                elif path_diretion[SRC] == pass_node[DST] and position == "right":
                     query_direction = f"-->({path_diretion[DST]})"
+                    position = "right"
+                elif path_diretion[SRC] == pass_node[DST] and position == "left":
+                    query_direction = f"({path_diretion[DST]})<--"
+                    position = "left"
+                    diff_direction_exist = True
                 elif path_diretion[DST] == pass_node[SRC]:
                     query_direction = f"({path_diretion[SRC]})-->"
                     position = "left"
-                elif path_diretion[DST] == pass_node[DST]:
+                elif path_diretion[DST] == pass_node[DST] and position == "right":
                     query_direction = f"<--({path_diretion[SRC]})"
                     diff_direction_exist = True
-                elif path_diretion[SRC] == pass_node[SRC]:
+                    position = "right"
+                elif path_diretion[DST] == pass_node[DST] and position == "left":
+                    query_direction = f"({path_diretion[SRC]})-->"
+                    diff_direction_exist = True
+                    position = "left"
+                elif path_diretion[SRC] == pass_node[SRC] and position == "left":
                     query_direction = f"({path_diretion[DST]})<--"
                     diff_direction_exist = True
                     position = "left"
+                elif path_diretion[SRC] == pass_node[SRC] and position == "right":
+                    query_direction = f"-->({path_diretion[DST]})"
+                    diff_direction_exist = True
+                    position = "right"
             if position == "right":
                 query_update = query_update + query_direction
             else:
@@ -141,6 +156,7 @@ def create_query(config, node, schema, log):
     parent_list = check_parents(node, schema)
     query_match = f"MATCH (n:{node})"
     secondary_query_match_list = []
+    query_where_list = []
     query_where = ""
     query_optional = ""
     query_return = " Return distinct(n)"
@@ -173,17 +189,15 @@ def create_query(config, node, schema, log):
                     paths = collect_path(schema)
                     all_paths = find_all_paths(paths, node, prop_node)
                     if all_paths:
-                        secondary_query_match_list = query_match_update(paths, all_paths, node)
-                        if "WHERE" not in query_where:
-                            query_where = query_where + f" WHERE {prop_node}.{prop} IN {str(pv)}"
-                        else:
-                            query_where = query_where + f" AND {prop_node}.{prop} IN {str(pv)}"
+                        query_match_update_list = query_match_update(paths, all_paths, node)
+                        secondary_query_match_list = secondary_query_match_list + query_match_update_list
+                        query_where_list = query_where_list + [f"WHERE {prop_node}.{prop} IN {str(pv)}"] * len(query_match_update_list)
                     else:
                         log.error(f"can not find relationship between {prop_node} and {node}")
     if secondary_query_match_list:
         query_list = []
-        for secondary_query_match in secondary_query_match_list:
-            query_list.append(query_match + " MATCH " + secondary_query_match + query_where + query_optional + query_return)
+        for i in range(0, len(secondary_query_match_list)):
+            query_list.append(query_match + " MATCH " + secondary_query_match_list[i] + query_where_list[i] + query_optional + query_return)
         query = " UNION ".join(query_list)
     else:
         query = query_match + query_where + query_optional + query_return

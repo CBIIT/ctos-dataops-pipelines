@@ -1,0 +1,2 @@
+dev:
+  memgraph_summary_secret: "test_memgraph_secret_name_dev"

@@ -28,7 +28,7 @@ if LOG_PREFIX not in os.environ:
 
 @flow(name="data asset loading", log_prints=True)
 def data_asset_loading_prefect(
-        environment: environment_choices,
+        environment: environment_choices, # type: ignore
         s3_folder,
         dump_file_name,
         validation_summary_file_name,

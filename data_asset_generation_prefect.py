@@ -16,7 +16,7 @@ DUMP_SECRET = "neo4j_ssh_secret"
 
 @flow(name="data asset generation", log_prints=True)
 def data_asset_generation_prefect(
-        environment: environment_choices,
+        environment: environment_choices, # type: ignore
         data_model_version,
         s3_folder,
         neo4j_summary_file_name,

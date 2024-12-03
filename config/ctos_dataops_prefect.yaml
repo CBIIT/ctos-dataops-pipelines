@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: main
+      branch: tsv_update
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
@@ -147,24 +147,25 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
   
-  - name: ctos-memgraph-export
+  - name: ctos-dataops-memgraph-asset-generation
     version: null
     tags: []
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  memgraph_export_prefect.py:memgraph_export_prefect
+    entrypoint:  memgraph_data_asset_generation_prefect.py:memgraph_data_asset_generation_prefect
     parameters:
-      memgraph_host: ""
-      memgraph_username: ""
-      memgraph_port: ""
-      memgraph_password: ""
+      environment: ""
+      s3_folder: ""
+      s3_bucket: "{{ prefect.variables.memgraph_dataops_bucket }}"
       tmp_folder: "/tmp"
-      s3_bucket: ""
-      s3_prefix: ""
+      data_model_version: "{{ prefect.variables.cds_model_version }}"
+      data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
+      memgraph_summary_file_name: memgraph_summary.json
+      memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
       name: ctdc-curation-mgconsole
       work_queue_name: default
       job_variables:
         env:
-          PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Export"
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Generation, Neo4j Summary Generator, Data Model Archiving"

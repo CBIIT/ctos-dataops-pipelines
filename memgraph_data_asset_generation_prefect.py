@@ -41,7 +41,7 @@ def memgraph_data_asset_generation_prefect(
     memgraph_secret = Variable.get(config[environment][SUMARY_SECRET])
     timestamp = get_time_stamp()
     if s3_folder == None or s3_folder == "":
-        s3_folder = "neo4j-assets-" + timestamp
+        s3_folder = "memgraph-assets-" + timestamp
     secret = get_secret(memgraph_secret)
     memgraph_host = secret[MEMGRAPH_HOST]
     memgraph_user = secret[MEMGRAPH_USER]

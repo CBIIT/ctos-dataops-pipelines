@@ -16,7 +16,7 @@ def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
         if not os.path.exists(os.path.dirname(file_key)):
             os.makedirs(os.path.dirname(file_key))
         bucket.download_file(s3_file_key, file_key)
-        log.info(f'Downloading neo4j dump file {os.path.basename(s3_file_key)} succeeded!')
+        log.info(f'Downloading dump file {os.path.basename(s3_file_key)} succeeded!')
         return True
     except Exception as e:
         log.error(e)

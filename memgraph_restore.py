@@ -17,8 +17,8 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
                 f'echo "MATCH (n) DETACH DELETE n;"' + mgconsole_string,
                 f'cat {restore_file_key}' + mgconsole_string
                 ]
-            print(f'cat {restore_file_key}' + mgconsole_string)
-            subprocess.run(command)
+            result = subprocess.run(command, capture_output=True, text=True)
+            log.info(result.stdout)
     except Exception as e:
         log.error(e)
         sys.exit(1)

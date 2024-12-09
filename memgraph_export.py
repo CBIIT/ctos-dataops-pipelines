@@ -22,7 +22,7 @@ def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_pa
             "-c",
             f'echo "DUMP DATABASE;" | mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password} --output-format=cypherl > {export_file_key}'
             ]
-        subprocess.run(command)
+        result = subprocess.run(command, capture_output=True, text=True)
         upload_s3(s3_prefix, s3_bucket, export_file_key, log)
     except Exception as e:
         log.error(e)

@@ -8,7 +8,7 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
         restore_file_key = os.path.join(tmp_folder, export_filename)
         s3_file_key = os.path.join(s3_prefix, export_filename)
         log.info(s3_file_key)
-        log.ingo(restore_file_key)
+        log.info(restore_file_key)
         download_succeeded = False
         download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, restore_file_key)
         if download_succeeded:

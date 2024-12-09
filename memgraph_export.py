@@ -24,6 +24,7 @@ def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_pa
             ]
         result = subprocess.run(command, capture_output=True, text=True)
         result = subprocess.run("ls /tmp", capture_output=True, text=True)
+        print(result.stdout)
         upload_s3(s3_prefix, s3_bucket, export_file_key, log)
     except Exception as e:
         log.error(e)

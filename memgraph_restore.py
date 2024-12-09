@@ -18,8 +18,8 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
                 f'cat {restore_file_key}' + mgconsole_string
                 ]
             result = subprocess.run(command, capture_output=True, text=True)
-            log.info("finished running")
             log.info(result.stdout)
+            log.info("finished running")
     except Exception as e:
         log.error(e)
         sys.exit(1)

@@ -15,8 +15,8 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
                 "-c",
                 f'echo "MATCH (n) DETACH DELETE n;"' + mgconsole_string
                 ]
-            #command_restore = [f'cat {restore_file_key}' + mgconsole_string]
-            commands = [command_delete]
+            command_restore = [f'cat {restore_file_key}' + mgconsole_string]
+            commands = [command_delete, command_restore]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)
                 #log.info(result)

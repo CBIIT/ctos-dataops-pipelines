@@ -52,12 +52,7 @@ def memgraph_data_asset_loading_prefect(
     memgraph_restore_summary = neo4j_summary(memgraph_host, memgraph_user, memgraph_password, memgraph_restore_summary_file_name, s3_bucket, s3_folder)
     s3_validation_file_key = os.path.join(s3_folder, memgraph_validation_summary_file_name)
     validation_file_key = os.path.join(tmp_folder, memgraph_validation_summary_file_name)
-    log.info(s3_validation_file_key)
-    log.info(validation_file_key)
-    
     downlaod_s3(s3_bucket, s3_validation_file_key, log, validation_file_key)
-    result = subprocess.run(["ls /tmp/"], capture_output=True, text=True)
-    log.info(result)
     with open(validation_file_key, 'r') as file:
         memgraph_validation_summary = json.load(file)
         log.info(memgraph_validation_summary)

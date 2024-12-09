@@ -9,13 +9,13 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
         s3_file_key = os.path.join(s3_prefix, export_filename)
         download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, restore_file_key)
         if download_succeeded:
-            mgconsole_string = f" | mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password}"
+            mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password}"
             command_delete = [
                 "sh",
                 "-c",
-                f'echo "MATCH (n) DETACH DELETE n;"' + mgconsole_string
+                f'echo "MATCH (n) DETACH DELETE n;"' + " | " + mgconsole_string
                 ]
-            command_restore = [f'cat {restore_file_key}' + mgconsole_string]
+            command_restore = [mgconsole_string + f" < {restore_file_key}"]
             commands = [command_delete, command_restore]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)

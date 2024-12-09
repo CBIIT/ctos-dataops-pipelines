@@ -16,7 +16,6 @@ MEMGRAPH_USER = "memgraph_user"
 MEMGRAPH_PASSWORD = "memgraph_password"
 SUMARY_SECRET = "memgraph_summary_secret"
 MEMGRAPH_PORT = "7687"
-TMP = "/tmp/"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Memgraph Data Asset Loading'
@@ -48,10 +47,10 @@ def memgraph_data_asset_loading_prefect(
     memgraph_password = secret[MEMGRAPH_PASSWORD]
     #generate memgraph database dump file
     memgraph_restore(memgraph_host, MEMGRAPH_PORT, memgraph_user, memgraph_password, tmp_folder, s3_bucket, s3_folder, memgraph_dump_file_name, log)
-    #validate the memgraph restoring result
+    #validate the memgraph restoring
     memgraph_restore_summary = neo4j_summary(memgraph_host, memgraph_user, memgraph_password, memgraph_restore_summary_file_name, s3_bucket, s3_folder)
     s3_validation_file_key = os.path.join(s3_folder, memgraph_validation_summary_file_name)
-    validation_file_key = os.path.join(TMP, memgraph_validation_summary_file_name)
+    validation_file_key = os.path.join(tmp_folder, memgraph_validation_summary_file_name)
     downlaod_s3(s3_bucket, s3_validation_file_key, log, validation_file_key)
     with open(validation_file_key, 'r') as file:
         memgraph_validation_summary = json.load(file)

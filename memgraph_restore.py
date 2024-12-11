@@ -17,8 +17,8 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
                 f'echo "MATCH (n) DETACH DELETE n;"' + " | " + mgconsole_string
                 ]
             command_restore = [
-                #"sh",
-                #"-c",
+                "sh",
+                "-c",
                 mgconsole_string + f" < {restore_file_key}"]
             commands = [command_delete, command_restore]
             for command in commands:

@@ -5,7 +5,16 @@ from bento.common.utils import get_time_stamp, get_logger, LOG_PREFIX, APP_NAME
 from neo4j import GraphDatabase
 import os
 from collections import defaultdict
+from neo4j_summary_local import Neo4jConfig
+import argparse
+import os
 
+ENVIRONMENT_USERNAME = "DATABASE_USERNAME"
+ENVIRONMENT_PASSOWRD = "DATABASE_PASSWORD"
+TSV_EXPORTER_FILENAME = "tsv_exporter"
+BOLT_PORT = "bolt_port"
+USERNAME = "username"
+PASSWORD = "password"
 SCHEMA = "schema"
 RELATIONSHIPS = "Relationships"
 TYPE = "type"
@@ -22,6 +31,7 @@ SRC = "Src"
 DST = "Dst"
 MUL = "Mul"
 FILTER_RELATED_NODES = "filter_related_nodes"
+
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'Neo4j_TSV_Export'
     os.environ[APP_NAME] = 'Neo4j_TSV_Export'
@@ -228,18 +238,20 @@ def check_parents_id(node, schema):
                 return prop
     return None
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Generate neo4j database summary')
+    parser.add_argument('config_file', help='Confguration file', nargs='?', default=None)
+    parser.add_argument('--bolt-port', help='The bolt port')
+    parser.add_argument('--username', help='The username')
+    parser.add_argument('--password', help='The password')
+    return parser.parse_args()
 
-
-def main():
-    log = get_logger('Neo4j Data TSV Exporting')
-    with open("config/neo4j_data_tsv_exporter_config_example.yaml") as f:
-        config = yaml.safe_load(f)
+def tsv_export(config, log):
     schema = get_schema(config, log)
-
     # Connect to the Neo4j database
     driver = GraphDatabase.driver(
-            config["bolt_port"],
-            auth=(config["neo4j_user"], config["neo4j_password"]),
+            config[BOLT_PORT],
+            auth=(config[USERNAME], config[PASSWORD]),
             encrypted=False
         )
     timestamp = get_time_stamp()
@@ -251,11 +263,29 @@ def main():
         with driver.session() as session:
             session = driver.session()
             results = session.run(query)
-            folder_path = os.path.join(TMP, "tsv_exporter" + "-" + timestamp)
+            folder_path = os.path.join(TMP, TSV_EXPORTER_FILENAME + "-" + timestamp)
             if not os.path.exists(folder_path):
                 os.mkdir(folder_path)
             output_key = os.path.join(folder_path, node + ".tsv") 
             write_to_tsv(output_key, node, results, query_parent_dict, log)
 
+def process_arguments(args, log):
+    config_file = None
+    if args.config_file:
+        config_file = args.config_file
+    config = Neo4jConfig(config_file, args)
+    return config
+
+def main(args):
+    log = get_logger('Neo4j Data TSV Exporting')
+    config = process_arguments(args, log)
+    config_data = config.data
+    if USERNAME not in config_data.keys() and  PASSWORD not in config_data.keys(): #get username and password from the enviroment variable if 
+        log.info("username and password are not provided in the config file, using username and passowrd from environment variables instead")
+        config_data[USERNAME] = os.environ[ENVIRONMENT_USERNAME]
+        config_data[PASSWORD] = os.environ[ENVIRONMENT_PASSOWRD]
+    tsv_export(config_data, log)
+
+
 if __name__ == '__main__':
-    main()
+    main(parse_arguments())

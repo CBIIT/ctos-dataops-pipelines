@@ -55,13 +55,19 @@ def find_all_paths(paths, start, end):
 
     return all_paths
 
-def write_to_tsv(output_key, node, results, query_parent_dict, log):
+def rearrange_list(lst, values_to_front):
+    front = [val for val in values_to_front if val in lst]
+    rest = [val for val in lst if val not in values_to_front]
+    return front + rest
+
+def write_to_tsv(output_key, node, results, query_parent_dict, schema, log):
     if results.peek():
         with open(output_key, "w", newline="") as csvfile:
             fieldnames = set()
             row_list = []
             for record in results:
                 result_list = list(record.keys())
+                front_columns = [TYPE]
                 for r in result_list:
                     if r == "n":
                         row = {key: value for key, value in record[r].items() if key != "created"}
@@ -69,14 +75,18 @@ def write_to_tsv(output_key, node, results, query_parent_dict, log):
                         column_name = ""
                         for parent, parent_id in query_parent_dict[r].items():
                             column_name = parent + "." + parent_id
+                            front_columns.append(column_name)
                             if record[r] is not None:
                                 row[column_name] = record[r][parent_id]
                             else:
                                 row[column_name] = None
                 row[TYPE] = node
+                node_id = check_parents_id(node, schema)
+                if node_id is not None:
+                    front_columns.append(node_id)
                 row_list.append(row)
                 fieldnames.update(row.keys())
-            fieldname_list = list(fieldnames)
+            fieldname_list = rearrange_list(list(fieldnames), front_columns)
             writer = csv.DictWriter(csvfile, fieldnames=fieldname_list, delimiter='\t')
             writer.writeheader()
             for r in row_list:
@@ -267,7 +277,7 @@ def tsv_export(config, log):
             if not os.path.exists(folder_path):
                 os.mkdir(folder_path)
             output_key = os.path.join(folder_path, node + ".tsv") 
-            write_to_tsv(output_key, node, results, query_parent_dict, log)
+            write_to_tsv(output_key, node, results, query_parent_dict, schema, log)
 
 def process_arguments(args, log):
     config_file = None

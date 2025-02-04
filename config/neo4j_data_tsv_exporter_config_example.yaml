@@ -1,7 +1,7 @@
 Config:
   username: neo4j
   password: password
-  bolt_port: "bolt://localhost:7687"
+  bolt_url: "bolt://localhost:7687"
   nodes: # if the user want to export all node types, remove this section
     - program
     - study

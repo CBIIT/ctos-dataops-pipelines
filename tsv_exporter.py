@@ -12,7 +12,7 @@ import os
 ENVIRONMENT_USERNAME = "DATABASE_USERNAME"
 ENVIRONMENT_PASSOWRD = "DATABASE_PASSWORD"
 TSV_EXPORTER_FILENAME = "tsv_exporter"
-BOLT_PORT = "bolt_port"
+BOLT_URL = "bolt_url"
 USERNAME = "username"
 PASSWORD = "password"
 SCHEMA = "schema"
@@ -260,7 +260,7 @@ def tsv_export(config, log):
     schema = get_schema(config, log)
     # Connect to the Neo4j database
     driver = GraphDatabase.driver(
-            config[BOLT_PORT],
+            config[BOLT_URL],
             auth=(config[USERNAME], config[PASSWORD]),
             encrypted=False
         )

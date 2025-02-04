@@ -14,9 +14,8 @@ def upload_s3(s3_prefix, s3_bucket, file_key, log):
     log.info(f'Uploading the memgraph export file {os.path.basename(file_key)} succeeded!')
 
 
-def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, s3_bucket, s3_prefix, log):
+def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, s3_bucket, s3_prefix, export_filename, log):
     try:
-        export_filename = "memgraph_export-" + get_time_stamp() + ".cypherl"
         export_file_key = os.path.join(tmp_folder, export_filename)
         command = [
             "sh",

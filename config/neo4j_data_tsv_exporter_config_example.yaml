@@ -1,14 +1,16 @@
-neo4j_user: neo4j
-neo4j_password: password
-bolt_port: "bolt://localhost:7688"
-nodes:
-  - study
-  - file
-schema:
-  - cds-model/model-desc/cds-model.yml
-  - cds-model/model-desc/cds-model-props.yml
-where:
-  study.phs_accession:
-    values:
-      - phs002790
-    where_connected: TRUE #do not need this value if the user do not want the where query affect the children nodes
+Config:
+  username: neo4j
+  password: password
+  bolt_url: "bolt://localhost:7687"
+  nodes: # if the user want to export all node types, remove this section
+    - program
+    - study
+    - participant
+  schema:
+    - cds-model/model-desc/cds-model.yml
+    - cds-model/model-desc/cds-model-props.yml
+  where:
+    study.phs_accession:
+      values:
+        - phs002790
+      filter_related_nodes: false #do not need this section if the user want the where query filter the related nodes

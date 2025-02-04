@@ -4,7 +4,10 @@ import sys
 from bento.common.utils import get_time_stamp
 from bento.common.s3 import upload_log_file
 
-
+def remove_information(err_string, remove_value_list):
+    for remove_value in remove_value_list:
+        err_string = err_string.replace(remove_value, "")
+    return err_string
 
 def upload_s3(s3_prefix, s3_bucket, file_key, log):
     
@@ -22,9 +25,10 @@ def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_pa
             "-c",
             f'echo "DUMP DATABASE;" | mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password} --output-format=cypherl > {export_file_key}'
             ]
-        subprocess.run(command)
+        result = subprocess.run(command, capture_output=True, text=True)
         upload_s3(s3_prefix, s3_bucket, export_file_key, log)
     except Exception as e:
-        log.error(e)
+        updated_error_message = remove_information(str(e), [memgraph_password, memgraph_username, memgraph_port])
+        log.error(updated_error_message)
         sys.exit(1)
 

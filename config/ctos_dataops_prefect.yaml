@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: memgraph_restore
+      branch: main
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt

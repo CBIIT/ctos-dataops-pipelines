@@ -1,4 +1,4 @@
 dev:
   memgraph_summary_secret: "test_memgraph_secret_name_dev"
 bento_dev:
-  memgraph_summary_secret: "bento_memgraph_secret_n"
+  memgraph_summary_secret: "bento_memgraph_secret_name_dev"

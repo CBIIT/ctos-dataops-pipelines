@@ -89,8 +89,8 @@ def write_to_tsv(output_key, node, results, query_parent_dict, schema, log):
             fieldname_list = rearrange_list(list(fieldnames), front_columns)
             writer = csv.DictWriter(csvfile, fieldnames=fieldname_list, delimiter='\t')
             writer.writeheader()
-            for r in row_list:
-                writer.writerow(r)
+            #for r in row_list:
+            writer.writerows(row_list)
         log.info(f"Data has been written to {output_key}")
 
 def collect_path(schema):

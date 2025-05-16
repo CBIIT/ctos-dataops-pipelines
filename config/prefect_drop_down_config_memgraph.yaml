@@ -4,3 +4,5 @@ bento_dev:
   memgraph_summary_secret: "bento_memgraph_secret_name_dev"
 ctdc_dev:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_dev"
+gc_dev:
+  memgraph_summary_secret: "gc_memgraph_secret_name_dev"

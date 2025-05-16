@@ -7,7 +7,7 @@ import os
 from collections import defaultdict
 from neo4j_summary_local import Neo4jConfig
 import argparse
-import os
+import ast
 
 ENVIRONMENT_USERNAME = "DATABASE_USERNAME"
 ENVIRONMENT_PASSOWRD = "DATABASE_PASSWORD"
@@ -60,6 +60,23 @@ def rearrange_list(lst, values_to_front):
     rest = [val for val in lst if val not in values_to_front]
     return front + rest
 
+def update_list_value(list_value):
+    try:
+        real_list = ast.literal_eval(list_value)
+        return '|'.join(str(v) for v in real_list)
+    except Exception as e:
+        print(list_value)
+        return list_value
+
+def is_list_type(prop, schema):
+    prop_type = schema[PROP_DEFINITIONS].get(prop, {}).get("Type")
+    if prop_type is not None and isinstance(prop_type, dict):
+        value_type = schema[PROP_DEFINITIONS].get(prop, {}).get("Type", {}).get("value_type")
+        if value_type is not None:
+            if value_type == "list":
+                return True
+    return False
+
 def write_to_tsv(output_key, node, results, query_parent_dict, schema, log):
     if results.peek():
         with open(output_key, "w", newline="") as csvfile:
@@ -70,7 +87,7 @@ def write_to_tsv(output_key, node, results, query_parent_dict, schema, log):
                 front_columns = [TYPE]
                 for r in result_list:
                     if r == "n":
-                        row = {key: value for key, value in record[r].items() if key != "created"}
+                        row = {key: update_list_value(value) if is_list_type(key, schema) else value for key, value in record[r].items()}
                     else:
                         column_name = ""
                         for parent, parent_id in query_parent_dict[r].items():

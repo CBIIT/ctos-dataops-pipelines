@@ -10,7 +10,7 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
         s3_file_key = os.path.join(s3_prefix, export_filename)
         download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, restore_file_key)
         if download_succeeded:
-            mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password}"
+            mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password \"{memgraph_password}\""
             command_delete = [
                 "sh",
                 "-c",

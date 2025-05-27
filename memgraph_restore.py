@@ -23,8 +23,11 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
             commands = [command_delete, command_restore]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)
-                log.info(result)
-            log.info(f"Successsfuly restore the Memgraph data from {export_filename}")
+                if result.returncode != 0:
+                    error_message = result.stderr.decode()
+                    log.error(error_message)
+                else:
+                    log.info(f"Successsfuly restore the Memgraph data from {export_filename}")
     except Exception as e:
         updated_error_message = remove_information(str(e), [memgraph_password, memgraph_username, memgraph_port])
         log.error(updated_error_message)

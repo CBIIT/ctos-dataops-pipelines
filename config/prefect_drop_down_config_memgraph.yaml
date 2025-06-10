@@ -14,3 +14,5 @@ gc_qa2:
   memgraph_summary_secret: "gc_memgraph_secret_name_qa2"
 gc_stage:
   memgraph_summary_secret: "gc_memgraph_secret_name_stage"
+gc_prod:
+  memgraph_summary_secret: "gc_memgraph_secret_name_prod"

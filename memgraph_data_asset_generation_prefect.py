@@ -11,7 +11,7 @@ import yaml
 import os
 import prefect.variables as Variable
 
-MEMGRAPH_HOST = "memgraph_host"
+MEMGRAPH_HOST = "memgraph_endpoint"
 MEMGRAPH_USER = "memgraph_user"
 MEMGRAPH_PASSWORD = "memgraph_password"
 SUMARY_SECRET = "memgraph_summary_secret"

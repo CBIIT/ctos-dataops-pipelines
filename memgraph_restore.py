@@ -19,7 +19,7 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
             command_restore = [
                 "sh",
                 "-c",
-                mgconsole_string + f" < {restore_file_key}"]
+                mgconsole_string + f" --batch-size=10000 --workers-number=64 --import-mode=batched-parallel < {restore_file_key}"]
             commands = [command_delete, command_restore]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)

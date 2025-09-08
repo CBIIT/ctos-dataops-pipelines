@@ -1,2 +1,12 @@
-dev:
-  memgraph_summary_secret: "test_memgraph_secret_name_dev"
+gc_dev:
+  memgraph_summary_secret: "gc_memgraph_secret_name_dev"
+gc_dev2:
+  memgraph_summary_secret: "gc_memgraph_secret_name_dev2"
+gc_qa:
+  memgraph_summary_secret: "gc_memgraph_secret_name_qa"
+gc_qa2:
+  memgraph_summary_secret: "gc_memgraph_secret_name_qa2"
+gc_stage:
+  memgraph_summary_secret: "gc_memgraph_secret_name_stage"
+gc_prod:
+  memgraph_summary_secret: "gc_memgraph_secret_name_prod"

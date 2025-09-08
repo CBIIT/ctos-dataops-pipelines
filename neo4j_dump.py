@@ -57,6 +57,7 @@ def neo4j_dump(dump_file, neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_folder)
     if host in ['localhost', '127.0.0.1']:
         try:
             subprocess.call(command, shell = is_shell)
+            local_file_key = file_key
         except Exception as e:
             dump_fail = True
             log.error(e)

@@ -1,7 +1,7 @@
 Config:
-  neo4j_ip: neo4j_ip
-  neo4j_user: user
-  neo4j_password: password
-  s3_bucket: s3bucket
-  s3_folder: s3folder
+  neo4j_ip: localhost
+  neo4j_user: neo4j
+  neo4j_key: password
+  s3_bucket: s3_bucket
+  s3_folder: s3_folder
   dump_file_name: test_dump1.dump

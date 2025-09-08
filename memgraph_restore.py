@@ -10,7 +10,7 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
         s3_file_key = os.path.join(s3_prefix, export_filename)
         download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, restore_file_key)
         if download_succeeded:
-            mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password}"
+            mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password \"{memgraph_password}\""
             command_delete = [
                 "sh",
                 "-c",
@@ -19,12 +19,12 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
             command_restore = [
                 "sh",
                 "-c",
-                mgconsole_string + f" < {restore_file_key}"]
+                mgconsole_string + f" --batch-size=10000 --workers-number=64 --import-mode=batched-parallel < {restore_file_key}"]
             commands = [command_delete, command_restore]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)
-                #log.info(result)
-            log.info(f"Successsfuly restore the Memgraph data from {export_filename}")
+                str_result = remove_information(str(result), [memgraph_password, memgraph_username, memgraph_port])
+                log.info(str_result)
     except Exception as e:
         updated_error_message = remove_information(str(e), [memgraph_password, memgraph_username, memgraph_port])
         log.error(updated_error_message)

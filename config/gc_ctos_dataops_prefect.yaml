@@ -147,7 +147,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
   
-  - name: ctos-dataops-memgraph-asset-generation
+  - name: gc-ctos-dataops-memgraph-asset-generation
     version: null
     tags: []
     description: null
@@ -155,22 +155,21 @@ deployments:
     flow_name: null
     entrypoint:  memgraph_data_asset_generation_prefect.py:memgraph_data_asset_generation_prefect
     parameters:
-      environment: ""
       s3_folder: ""
-      s3_bucket: "{{ prefect.variables.memgraph_dataops_bucket }}"
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       tmp_folder: "/tmp"
       data_model_version: "{{ prefect.variables.cds_model_version }}"
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
       memgraph_summary_file_name: memgraph_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: ctdc-curation-mgconsole
+      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Generation, Neo4j Summary Generator, Data Model Archiving"
 
-  - name: ctos-dataops-memgraph-asset-loading
+  - name: gc-ctos-dataops-memgraph-asset-loading
     version: null
     tags: []
     description: null
@@ -178,15 +177,35 @@ deployments:
     flow_name: null
     entrypoint:  memgraph_data_asset_loading_prefect.py:memgraph_data_asset_loading_prefect
     parameters:
-      environment: ""
       s3_folder: ""
-      s3_bucket: "{{ prefect.variables.memgraph_dataops_bucket }}"
+      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       tmp_folder: "/tmp"
       memgraph_validation_summary_file_name: memgraph_summary.json
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: ctdc-curation-mgconsole
+      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Loading, Neo4j Summary Generator"
+
+  - name: gc-ctos-dataops-memgraph-asset-loading-prod
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  memgraph_data_asset_loading_prefect.py:memgraph_data_asset_loading_prefect
+    parameters:
+      s3_folder: ""
+      s3_bucket: "{{ prefect.variables.gc_prod_bucket }}"
+      tmp_folder: "/tmp"
+      memgraph_validation_summary_file_name: memgraph_summary.json
+      memgraph_restore_summary_file_name: memgraph_restore_summary.json
+      memgraph_dump_file_name: memgraph_dump.cypherl
+    work_pool:
+      name: cds-mgconsole-prefect-2.14.19-python3.9
       work_queue_name: default
       job_variables:
         env:

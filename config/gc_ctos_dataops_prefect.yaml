@@ -4,7 +4,7 @@
 
 # Generic metadata about this project
 name: CTOS DATAOPS
-prefect-version: 2.14.10
+prefect-version: null
 
 # build section allows you to manage and build docker images
 build: null
@@ -120,8 +120,8 @@ deployments:
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-curation-ecs
-      work_queue_name: cds-curation-queue
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
@@ -141,8 +141,8 @@ deployments:
       restore_summary_file_name: "neo4j_restore_summary.json"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-curation-ecs
-      work_queue_name: cds-curation-queue
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
@@ -163,7 +163,7 @@ deployments:
       memgraph_summary_file_name: memgraph_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
@@ -184,7 +184,7 @@ deployments:
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:

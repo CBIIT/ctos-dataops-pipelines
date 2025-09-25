@@ -11,16 +11,27 @@ def memgraph_restore(memgraph_host, memgraph_port, memgraph_username, memgraph_p
         download_succeeded = downlaod_s3(s3_bucket, s3_file_key, log, restore_file_key)
         if download_succeeded:
             mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password \"{memgraph_password}\""
+            command_change_storage_mode = [
+                "sh",
+                "-c",
+                f'echo "STORAGE MODE IN_MEMORY_ANALYTICAL;"' + " | " + mgconsole_string
+            ]
             command_delete = [
                 "sh",
                 "-c",
                 f'echo "MATCH (n) DETACH DELETE n;"' + " | " + mgconsole_string
-                ]
+            ]
             command_restore = [
                 "sh",
                 "-c",
-                mgconsole_string + f" --batch-size=10000 --workers-number=64 --import-mode=batched-parallel < {restore_file_key}"]
-            commands = [command_delete, command_restore]
+                mgconsole_string + f" --batch-size=10000 --workers-number=64 --import-mode=batched-parallel < {restore_file_key}"
+            ]
+            command_create_sanpshot = [
+                "sh",
+                "-c",
+                f'echo "CREATE SNAPSHOT;"' + " | " + mgconsole_string
+            ]
+            commands = [command_change_storage_mode, command_delete, command_restore, command_create_sanpshot]
             for command in commands:
                 result = subprocess.run(command, capture_output=True, text=True)
                 str_result = remove_information(str(result), [memgraph_password, memgraph_username, memgraph_port])

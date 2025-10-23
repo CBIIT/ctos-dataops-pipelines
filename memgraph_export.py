@@ -21,10 +21,11 @@ def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_pa
     try:
         export_file_key = os.path.join(tmp_folder, export_filename)
         mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password \"{memgraph_password}\""
+        export_string = f" --output-format=cypherl > {export_file_key}"
         command_export = [
             "sh",
             "-c",
-            f'echo "DUMP DATABASE;" | ' + mgconsole_string
+            f'echo "DUMP DATABASE;" | ' + mgconsole_string + export_string
             ]
         command_create_sanpshot = [
                 "sh",

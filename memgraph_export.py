@@ -20,12 +20,22 @@ def upload_s3(s3_prefix, s3_bucket, file_key, log):
 def memgraph_export(memgraph_host, memgraph_port, memgraph_username, memgraph_password, tmp_folder, s3_bucket, s3_prefix, export_filename, log):
     try:
         export_file_key = os.path.join(tmp_folder, export_filename)
-        command = [
+        mgconsole_string = f"mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password \"{memgraph_password}\""
+        command_export = [
             "sh",
             "-c",
-            f'echo "DUMP DATABASE;" | mgconsole --host {memgraph_host} --port {memgraph_port} --username {memgraph_username} --password {memgraph_password} --output-format=cypherl > {export_file_key}'
+            f'echo "DUMP DATABASE;" | ' + mgconsole_string
             ]
-        result = subprocess.run(command, capture_output=True, text=True)
+        command_create_sanpshot = [
+                "sh",
+                "-c",
+                f'echo "CREATE SNAPSHOT;"' + " | " + mgconsole_string
+            ]
+        commands = [command_export, command_create_sanpshot]
+        for command in commands:
+            result = subprocess.run(command, capture_output=True, text=True)
+            str_result = remove_information(str(result), [memgraph_password, memgraph_username, memgraph_port])
+            log.info(str_result)
         upload_s3(s3_prefix, s3_bucket, export_file_key, log)
     except Exception as e:
         updated_error_message = remove_information(str(e), [memgraph_password, memgraph_username, memgraph_port])

@@ -50,7 +50,7 @@ def opensearch_backup_prefect(
     role_arn = f"arn:aws:iam::${aws_account_id}:role/power-user-crdc-${aws_account_env}-cds-opensearch-snapshot"
     argList = {
         'oshost': secret[ES_HOST],
-        'repo': PROJECT_NAME,
+        'repo': os.path.join(PROJECT_NAME, snapshot_name),
         's3bucket': s3_bucket,
         'snapshot': snapshot_name,
         'indices': indices,

@@ -3,7 +3,7 @@
 # control along with your flow code.
 
 # Generic metadata about this project
-name: CTOS DATAOPS
+name: CTDC DATAOPS
 prefect-version: null
 
 # build section allows you to manage and build docker images
@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: dataops_gc_pipelines
+      branch: dataops_ctdc_pipelines
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt

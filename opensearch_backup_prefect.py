@@ -46,8 +46,8 @@ def opensearch_backup_prefect(
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
     secret = get_secret(opensearch_secret)
     aws_account_id = get_aws_account_id(log)
-    aws_account_env = Variable.get(config[environment][ENVIRONMENT])
-    role_arn = f"arn:aws:iam::${aws_account_id}:role/power-user-crdc-${aws_account_env}-cds-opensearch-snapshot"
+    aws_account_env = config[environment][ENVIRONMENT]
+    role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-cds-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

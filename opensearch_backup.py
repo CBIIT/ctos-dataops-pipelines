@@ -2,7 +2,6 @@ import argparse
 import boto3
 import requests
 from requests_aws4auth import AWS4Auth
-import os
 
 def getArgs():
   parser = argparse.ArgumentParser(description='Opensearch Backup Script')
@@ -46,8 +45,7 @@ def registerRepo(argList, awsauth):
 
   # Registering Repo
   path = '_snapshot/' + argList['repo']
-  #url = argList['oshost'] + path
-  url = os.path.join(argList['oshost'], path)
+  url = argList['oshost'] + path
 
   payload = {
     "type": "s3",

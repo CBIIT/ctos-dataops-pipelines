@@ -98,13 +98,14 @@ deployments:
       s3_folder: ""
       dump_file_name: "test_dump.dump"
     work_pool:
+      # replace 
       name: cds-curation-ecs
       work_queue_name: cds-curation-queue
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Dump Generator, S3 Bucket, Bento Config"
-
-  - name: ctos-dataops-neo4j-asset-generation
+# change each under here 
+  - name: ctdc-dataops-neo4j-generation-loading
     version: null
     tags: []
     description: null
@@ -120,13 +121,13 @@ deployments:
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
   
-  - name: ctos-dataops-neo4j-asset-loading
+  - name: ctdc-dataops-neo4j-asset-loading
     version: null
     tags: []
     description: null
@@ -141,13 +142,13 @@ deployments:
       restore_summary_file_name: "neo4j_restore_summary.json"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
   
-  - name: gc-ctos-dataops-memgraph-asset-generation
+  - name: ctdc-dataops-memgraph-asset-generation
     version: null
     tags: []
     description: null
@@ -163,13 +164,13 @@ deployments:
       memgraph_summary_file_name: memgraph_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Generation, Neo4j Summary Generator, Data Model Archiving"
 
-  - name: gc-ctos-dataops-memgraph-asset-loading
+  - name: ctdc-dataops-memgraph-asset-loading
     version: null
     tags: []
     description: null
@@ -184,13 +185,13 @@ deployments:
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Loading, Neo4j Summary Generator"
 
-  - name: gc-ctos-dataops-memgraph-asset-loading-prod
+  - name: ctdc-dataops-memgraph-asset-loading-prod
     version: null
     tags: []
     description: null
@@ -205,7 +206,7 @@ deployments:
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: prod-cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:

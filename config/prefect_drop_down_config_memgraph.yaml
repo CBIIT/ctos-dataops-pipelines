@@ -1,12 +1,12 @@
-gc_dev:
-  memgraph_summary_secret: "gc_memgraph_secret_name_dev"
-gc_dev2:
-  memgraph_summary_secret: "gc_memgraph_secret_name_dev2"
-gc_qa:
-  memgraph_summary_secret: "gc_memgraph_secret_name_qa"
-gc_qa2:
-  memgraph_summary_secret: "gc_memgraph_secret_name_qa2"
-gc_stage:
-  memgraph_summary_secret: "gc_memgraph_secret_name_stage"
-gc_prod:
-  memgraph_summary_secret: "gc_memgraph_secret_name_prod"
+ctdc_dev:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_dev"
+ctdc_dev2:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_dev2"
+ctdc_qa:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_qa"
+ctdc_qa2:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_qa2"
+ctdc_stage:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_stage"
+ctdc_prod:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_prod"

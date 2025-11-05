@@ -71,6 +71,7 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
+    print(r)
     time.sleep(100)
     print(url)
     if not check_repository(argList, awsauth):

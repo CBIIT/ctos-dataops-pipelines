@@ -2,6 +2,7 @@ import argparse
 import boto3
 import requests
 from requests_aws4auth import AWS4Auth
+import time
 
 def getArgs():
   parser = argparse.ArgumentParser(description='Opensearch Backup Script')
@@ -41,6 +42,14 @@ def osAuth(argList):
 
   return awsauth
 
+def check_repository(argList, awsauth):
+    headers = {"Content-Type": "application/json"}
+    check_url = argList['oshost'] + '_snapshot/' + argList['repo']
+    
+    response = requests.get(check_url, auth=awsauth, headers=headers)
+    print("Repository check response:", response.text)
+    return response.status_code == 200
+
 def registerRepo(argList, awsauth):
 
   # Registering Repo
@@ -62,7 +71,10 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    #time.sleep(100)
+    time.sleep(100)
+    print(url)
+    if not check_repository(argList, awsauth):
+      raise Exception("Failed to register repository")
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
   

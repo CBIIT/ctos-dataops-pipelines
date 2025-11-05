@@ -1,6 +1,9 @@
 gc_dev_cdk:
   memgraph_summary_secret: "gc_memgraph_secret_name_dev_cdk"
   env: dev
+gc_qa_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_qa_cdk"
+  env: dev
 gc_dev:
   memgraph_summary_secret: "gc_memgraph_secret_name_dev"
   env: dev

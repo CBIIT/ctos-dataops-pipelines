@@ -45,6 +45,7 @@ def osAuth(argList):
 def check_repository(argList, awsauth):
     headers = {"Content-Type": "application/json"}
     check_url = f"{argList['oshost']}_snapshot/_all"  # List all repositories
+    print("checking repo")
     print(check_url)
     response = requests.get(check_url, auth=awsauth, headers=headers)
     repos = response.json()

@@ -71,10 +71,8 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    print(r)
-    print(argList['rolearn'])
     time.sleep(5)
-    print(url)
+    print(payload)
     if not check_repository(argList, awsauth):
       raise Exception("Failed to register repository")
   except requests.exceptions.RequestException as e:

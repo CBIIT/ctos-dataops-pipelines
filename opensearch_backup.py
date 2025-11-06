@@ -76,7 +76,7 @@ def registerRepo(argList, awsauth):
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
     time.sleep(5)
     print(payload)
-    print(r)
+    print(r.text)
     #if not check_repository(argList, awsauth):
     #  raise Exception("Failed to register repository")
   except requests.exceptions.RequestException as e:

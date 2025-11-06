@@ -44,10 +44,12 @@ def osAuth(argList):
 
 def check_repository(argList, awsauth):
     headers = {"Content-Type": "application/json"}
-    check_url = argList['oshost'] + '_snapshot/' + argList['repo']
+    check_url = f"{argList['oshost']}/_snapshot/_all"  # List all repositories
     print(check_url)
     response = requests.get(check_url, auth=awsauth, headers=headers)
-    print("Repository check response:", response.text)
+    repos = response.json()
+    for repo_name, details in repos.items():
+        print(f"- {repo_name}: {details}")
     return response.status_code == 200
 
 def registerRepo(argList, awsauth):
@@ -73,8 +75,8 @@ def registerRepo(argList, awsauth):
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
     time.sleep(5)
     print(payload)
-    if not check_repository(argList, awsauth):
-      raise Exception("Failed to register repository")
+    #if not check_repository(argList, awsauth):
+    #  raise Exception("Failed to register repository")
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
   
@@ -90,7 +92,7 @@ def createSnapshot(argList, awsauth):
   
   # Create Snapshot
   snapshot_url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/'
-  print(snapshot_url)
+  #print(snapshot_url)
 
   headers = {"Content-Type": "application/json"}
   payload = {
@@ -99,6 +101,7 @@ def createSnapshot(argList, awsauth):
   }
 
   print("taking opensearch snapshot")
+  print(snapshot_url, payload)
   result = requests.put(snapshot_url, auth=awsauth, json=payload, headers=headers)
 
   return result
@@ -118,8 +121,10 @@ if __name__ == "__main__":
 def opensearch_backup(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
+    check_repository(argList, awsauth)
 
     result = createSnapshot(argList, awsauth)
+    check_repository(argList, awsauth)
     print(result.text)
     if result.status_code!=200:
         raise Exception("Sorry, pipeline does not run successfully")

@@ -5,6 +5,7 @@ from requests_aws4auth import AWS4Auth
 import time
 
 def getArgs():
+
   parser = argparse.ArgumentParser(description='Opensearch Backup Script')
   parser.add_argument("--oshost", type=str, help="opensearch host with trailing /")
   parser.add_argument("--repo", type=str, help="opensearch snapshot repository")
@@ -15,7 +16,7 @@ def getArgs():
   parser.add_argument("--basepath", type=str, help="basepath", nargs='?', const='')
   parser.add_argument("--region", type=str, help="region")
   args = parser.parse_args()
-
+  
   argList = {}
   argList['oshost'] = args.oshost
   argList['repo'] = args.repo
@@ -42,16 +43,6 @@ def osAuth(argList):
 
   return awsauth
 
-def check_repository(argList, awsauth):
-    headers = {"Content-Type": "application/json"}
-    check_url = f"{argList['oshost']}_snapshot/_all"  # List all repositories
-    print("checking repo")
-    print(check_url)
-    response = requests.get(check_url, auth=awsauth, headers=headers)
-    repos = response.json()
-    for repo_name, details in repos.items():
-        print(f"- {repo_name}: {details}")
-    return response.status_code == 200
 
 def registerRepo(argList, awsauth):
 
@@ -74,34 +65,64 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    time.sleep(5)
+    time.sleep(100)
     print(r.text)
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
-  
 
-def createSnapshot(argList, awsauth):
+
+def deleteIndexes(argList, awsauth):
+  # Deleting Indexes
+  headers = {"Content-Type": "application/json"}
+  
+  if argList['indices']:
+    print("deleting the listed indices")
+    indice_arr = argList['indices'].split(",")
+    for i in indice_arr:
+      check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
+      if check.status_code==200:
+        try:
+          r = requests.delete(argList['oshost'] + i, auth=awsauth, headers=headers)
+          print(r.text)
+        except requests.exceptions.RequestException as e:
+          raise SystemExit(e)
+  else:
+    print("no listed indices - deleting all indices")
+    try:
+      r = requests.delete(argList['oshost'] + '*', auth=awsauth, headers=headers)
+      print(r.text)
+    except requests.exceptions.RequestException as e:
+     raise SystemExit(e)
+
+  print("finished deleting the indices, waiting 2 mins for the deletion to complete")
+  time.sleep(120)
+
+
+def restoreIndexes(argList, awsauth):
+
+  # Restoring Indexes
+  print("started restore the indices")
+  
   # Create Index list to exclude hidden (default) indices
   if argList['indices']:
-    print("setting backup to use listed indices")
+    print("setting restore to use listed indices")
     indices = '-.*,' + argList['indices']
   else:
-    print("setting backup to use all indices")
+    print("setting restore to use all indices")
     indices = '*,-.*'
   
-  # Create Snapshot
-  snapshot_url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/'
-  #print(snapshot_url)
-
   headers = {"Content-Type": "application/json"}
+
   payload = {
     "indices": indices,
-    "include_global_state": False
+    "include_global_state": False,
   }
+  path = '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/_restore'
 
-  print("taking opensearch snapshot")
-  print(snapshot_url, payload)
-  result = requests.put(snapshot_url, auth=awsauth, json=payload, headers=headers)
+  try:
+    result = requests.post(argList['oshost'] + path, auth=awsauth, json=payload, headers=headers)
+  except requests.exceptions.RequestException as e:
+     raise SystemExit(e)
 
   return result
 
@@ -111,18 +132,18 @@ if __name__ == "__main__":
    awsauth = osAuth(argList)
    registerRepo(argList, awsauth)
 
-   result = createSnapshot(argList, awsauth)
+   deleteIndexes(argList, awsauth)
+   result = restoreIndexes(argList, awsauth)
    print(result.text)
    if result.status_code!=200:
     raise Exception("Sorry, pipeline does not run successfully")
 
-# entrance for Prefect
-def opensearch_backup(argList):
+def opensearch_restore(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
-    check_repository(argList, awsauth)
 
-    result = createSnapshot(argList, awsauth)
+    deleteIndexes(argList, awsauth)
+    result = restoreIndexes(argList, awsauth)
     print(result.text)
     if result.status_code!=200:
         raise Exception("Sorry, pipeline does not run successfully")

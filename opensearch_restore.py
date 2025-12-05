@@ -142,7 +142,7 @@ def opensearch_restore(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
 
-    deleteIndexes(argList, awsauth)
+    #deleteIndexes(argList, awsauth)
     result = restoreIndexes(argList, awsauth)
     print(result.text)
     if result.status_code!=200:

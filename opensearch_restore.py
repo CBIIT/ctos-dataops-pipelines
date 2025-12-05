@@ -132,7 +132,7 @@ if __name__ == "__main__":
    awsauth = osAuth(argList)
    registerRepo(argList, awsauth)
 
-   deleteIndexes(argList, awsauth)
+   #deleteIndexes(argList, awsauth)
    result = restoreIndexes(argList, awsauth)
    print(result.text)
    if result.status_code!=200:

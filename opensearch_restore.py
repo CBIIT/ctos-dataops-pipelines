@@ -118,7 +118,7 @@ def restoreIndexes(argList, awsauth):
     "include_global_state": False,
   }
   path = '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/_restore'
-
+  print(argList['oshost'] + path, payload)
   try:
     result = requests.post(argList['oshost'] + path, auth=awsauth, json=payload, headers=headers)
   except requests.exceptions.RequestException as e:
@@ -132,7 +132,7 @@ if __name__ == "__main__":
    awsauth = osAuth(argList)
    registerRepo(argList, awsauth)
 
-   #deleteIndexes(argList, awsauth)
+   deleteIndexes(argList, awsauth)
    result = restoreIndexes(argList, awsauth)
    print(result.text)
    if result.status_code!=200:
@@ -142,7 +142,7 @@ def opensearch_restore(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
 
-    #deleteIndexes(argList, awsauth)
+    deleteIndexes(argList, awsauth)
     result = restoreIndexes(argList, awsauth)
     print(result.text)
     if result.status_code!=200:

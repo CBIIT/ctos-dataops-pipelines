@@ -27,10 +27,10 @@ gc_stage:
   env: stage
 gc_prod:
   memgraph_summary_secret: "gc_memgraph_secret_name_prod"
-  env: prod
+  env: stage
 gc_stage_cdk:
   memgraph_summary_secret: "gc_memgraph_secret_name_stage_cdk"
   env: stage
 gc_prod_cdk:
   memgraph_summary_secret: "gc_memgraph_secret_name_prod_cdk"
-  env: prod
+  env: stage

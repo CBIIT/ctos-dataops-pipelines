@@ -212,7 +212,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Loading, Neo4j Summary Generator"
 
-  - name: gc-ctos-dataops-opensearch-backup
+  - name: ctdc-ctos-dataops-opensearch-backup
     version: null
     tags: []
     description: null
@@ -224,13 +224,13 @@ deployments:
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
 
-  - name: gc-ctos-dataops-opensearch-restore
+  - name: ctdc-ctos-dataops-opensearch-restore
     version: null
     tags: []
     description: null
@@ -242,13 +242,13 @@ deployments:
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
   
-  - name: gc-ctos-dataops-opensearch-restore-prod
+  - name: ctdc-ctos-dataops-opensearch-restore-prod
     version: null
     tags: []
     description: null
@@ -260,7 +260,7 @@ deployments:
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
     work_pool:
-      name: prod-cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:

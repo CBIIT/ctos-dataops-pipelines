@@ -11,7 +11,7 @@ import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
 ES_HOST = "es_host"
-PROJECT_NAME  = "gen"
+PROJECT_NAME  = "ctdc"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 

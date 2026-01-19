@@ -1,0 +1,46 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: S3 Archiving
+prefect-version: null
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+pull:
+  - prefect.deployments.steps.git_clone:
+      id: clone-step
+      repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
+      branch: dataops_ctdc_pipelines
+      include_submodules: True
+  - prefect.deployments.steps.pip_install_requirements:
+      requirements_file: requirements.txt
+      directory: "{{ clone-step.directory }}"
+      stream_output: False
+
+deployments:
+  - name: ctdc-dataops-s3-archiving
+    version: null
+    tags: []
+    description: "Create zip archive from S3 files and upload to target location. Maintains folder structure and cleans up temporary files automatically."
+    schedule: {}
+    flow_name: null
+    entrypoint: s3_archiving_prefect.py:s3_archiving_prefect
+    parameters:
+      source_bucket: ""
+      source_prefix: ""
+      target_bucket: ""
+      target_prefix: ""
+      zip_filename: ""
+    work_pool:
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "S3 Archiving, S3 Bucket, Bento Config"

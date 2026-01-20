@@ -219,7 +219,8 @@ def upload_zip_to_s3(s3_bucket, s3_folder, zip_file_path, log):
         file_size = os.path.getsize(zip_file_path)
 
         # Upload to S3 using Bento utility
-        upload_log_file(f"s3://{s3_bucket}/{s3_folder}", zip_file_path)
+        # Strip trailing slash to prevent double slash (e.g., "folder//file.zip") which creates "/" folder
+        upload_log_file(f"s3://{s3_bucket}/{s3_folder.rstrip('/')}", zip_file_path)
 
         log.info(f'Upload complete: {dest} ({format_file_size(file_size)})')
         return dest

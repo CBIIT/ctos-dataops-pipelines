@@ -112,20 +112,46 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, exclude_patterns, lo
 
         log.info(f"Listing files from s3://{s3_bucket}/{s3_prefix}")
 
-        # List all objects under the prefix
-        response = bucket.client.list_objects_v2(Bucket=s3_bucket, Prefix=s3_prefix)
+        # List all objects under the prefix with pagination support
+        # S3 list_objects_v2 returns max 1000 objects per request, need to paginate
+        all_files = []
+        continuation_token = None
+
+        while True:
+            # Make paginated request
+            if continuation_token:
+                response = bucket.client.list_objects_v2(
+                    Bucket=s3_bucket,
+                    Prefix=s3_prefix,
+                    ContinuationToken=continuation_token
+                )
+            else:
+                response = bucket.client.list_objects_v2(Bucket=s3_bucket, Prefix=s3_prefix)
+
+            # Collect files from this page
+            if "Contents" in response:
+                all_files.extend(response["Contents"])
+                log.info(f"Retrieved {len(response['Contents'])} objects (total so far: {len(all_files)})")
+
+            # Check if there are more results to fetch
+            if response.get('IsTruncated'):
+                continuation_token = response.get('NextContinuationToken')
+                log.info(f"More objects available, fetching next page...")
+            else:
+                break
 
         # Check if any files exist
-        if "Contents" not in response:
+        if not all_files:
             log.warning(f"No files found in s3://{s3_bucket}/{s3_prefix}")
-            return 0, 0
+            return 0, 0, 0
 
-        files = response["Contents"]
+        files = all_files
+        log.info(f"Total objects found in S3: {len(files)}")
         file_count = 0
         excluded_count = 0
         total_size = 0
 
-        log.info(f"Found {len(files)} objects in S3. Starting download...")
+        log.info(f"Processing {len(files)} total objects from S3...")
 
         # Download each file
         for i, obj in enumerate(files, 1):
@@ -167,17 +193,22 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, exclude_patterns, lo
             file_count += 1
             total_size += file_size
 
-            # Log progress every 10 files or at completion
-            if i % 10 == 0 or i == len(files):
+            # Log progress every 100 files or at completion
+            if file_count % 100 == 0 or i == len(files):
                 log.info(
-                    f"Downloaded {file_count} of {len(files)} files ({format_file_size(total_size)} total)"
+                    f"Progress: {file_count} files downloaded, {excluded_count} excluded ({format_file_size(total_size)} total)"
                 )
 
-        log.info(
-            f"Download complete: {file_count} files, {format_file_size(total_size)}"
-        )
+        # Final summary
+        log.info("=" * 80)
+        log.info(f"Download Summary:")
+        log.info(f"  Total objects processed: {len(files)}")
+        log.info(f"  Files downloaded: {file_count}")
         if excluded_count > 0:
-            log.info(f"Excluded {excluded_count} files based on patterns")
+            log.info(f"  Files excluded: {excluded_count}")
+        log.info(f"  Total size downloaded: {format_file_size(total_size)}")
+        log.info("=" * 80)
+
         return file_count, total_size, excluded_count
 
     except Exception as e:

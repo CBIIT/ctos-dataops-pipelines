@@ -24,6 +24,7 @@ Usage:
 import os
 import shutil
 import zipfile
+import fnmatch
 from bento.common.s3 import S3Bucket, upload_log_file
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_time_stamp
 
@@ -45,21 +46,58 @@ def format_file_size(size_bytes):
     return f"{size_bytes:.1f} PB"
 
 
-def download_files_from_s3(s3_bucket, s3_prefix, local_dir, log):
+def should_exclude(relative_path, exclude_patterns):
+    """
+    Check if a file should be excluded based on patterns.
+
+    This function matches the relative file path against a list of glob patterns.
+    It checks both the full relative path and just the filename.
+
+    Args:
+        relative_path (str): File path relative to source prefix (e.g., "data/file.txt")
+        exclude_patterns (list): List of glob patterns (e.g., ["*.log", "temp/*"])
+
+    Returns:
+        bool: True if file should be excluded, False otherwise
+
+    Examples:
+        should_exclude("data/test.log", ["*.log"]) -> True
+        should_exclude("temp/cache.txt", ["temp/*"]) -> True
+        should_exclude("data/report.pdf", ["*.log"]) -> False
+    """
+    if not exclude_patterns:
+        return False
+
+    for pattern in exclude_patterns:
+        # Match against full relative path
+        if fnmatch.fnmatch(relative_path, pattern):
+            return True
+
+        # Match against just the filename
+        filename = os.path.basename(relative_path)
+        if fnmatch.fnmatch(filename, pattern):
+            return True
+
+    return False
+
+
+def download_files_from_s3(s3_bucket, s3_prefix, local_dir, exclude_patterns, log):
     """
     Download all files from S3 location to local directory, maintaining folder structure.
 
     This function lists all objects under the specified S3 prefix and downloads them
-    to the local directory while preserving the S3 folder hierarchy.
+    to the local directory while preserving the S3 folder hierarchy. Files matching
+    exclusion patterns are skipped.
 
     Args:
         s3_bucket (str): S3 bucket name
         s3_prefix (str): S3 prefix/folder path (e.g., "data/exports/")
         local_dir (str): Local directory path for downloads
+        exclude_patterns (list): List of glob patterns to exclude (e.g., ["*.log", "temp/*"])
         log: Logger instance for logging progress
 
     Returns:
-        tuple: (file_count, total_size_bytes) - Number of files downloaded and total size
+        tuple: (file_count, total_size_bytes, excluded_count) - Files downloaded, size, and excluded count
 
     Raises:
         Exception: If S3 download operation fails
@@ -84,6 +122,7 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, log):
 
         files = response["Contents"]
         file_count = 0
+        excluded_count = 0
         total_size = 0
 
         log.info(f"Found {len(files)} objects in S3. Starting download...")
@@ -105,6 +144,14 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, log):
 
             # Skip if relative path is empty
             if not relative_path:
+                continue
+
+            # Check if file should be excluded based on patterns
+            if should_exclude(relative_path, exclude_patterns):
+                excluded_count += 1
+                # Log excluded files (first 20, then every 10th)
+                if excluded_count <= 20 or excluded_count % 10 == 0:
+                    log.info(f"Excluding file (pattern match): {relative_path}")
                 continue
 
             # Construct local file path
@@ -129,7 +176,9 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, log):
         log.info(
             f"Download complete: {file_count} files, {format_file_size(total_size)}"
         )
-        return file_count, total_size
+        if excluded_count > 0:
+            log.info(f"Excluded {excluded_count} files based on patterns")
+        return file_count, total_size, excluded_count
 
     except Exception as e:
         log.error(f"Failed to download files from S3: {e}")
@@ -259,13 +308,13 @@ def cleanup_temp_files(temp_dir, log):
 
 
 def s3_archiving(
-    source_bucket, source_prefix, target_bucket, target_prefix, zip_filename
+    source_bucket, source_prefix, target_bucket, target_prefix, zip_filename, exclude_patterns=None
 ):
     """
     Main function to archive S3 files into a zip and upload to target location.
 
     This function orchestrates the complete archiving workflow:
-    1. Download files from source S3 location to EFS temp directory
+    1. Download files from source S3 location to EFS temp directory (excluding pattern matches)
     2. Create zip archive maintaining folder structure
     3. Upload zip file to target S3 location
     4. Clean up temporary files (always runs, even on error)
@@ -276,11 +325,13 @@ def s3_archiving(
         target_bucket (str): Target S3 bucket name
         target_prefix (str): Target S3 prefix/folder path
         zip_filename (str): Name for the zip file (with .zip extension)
+        exclude_patterns (list, optional): List of glob patterns to exclude (e.g., ["*.log", "temp/*"])
 
     Returns:
         dict: Result dictionary with keys:
             - status (str): "success" or "failed"
             - file_count (int): Number of files archived
+            - excluded_count (int): Number of files excluded
             - zip_size (int): Size of zip file in bytes
             - s3_path (str): S3 URI of uploaded zip file
             - error (str): Error message if status is "failed"
@@ -291,6 +342,10 @@ def s3_archiving(
     os.environ[APP_NAME] = "S3_Archiving"
 
     log = get_logger("S3 Archiving")
+
+    # Convert None to empty list
+    if exclude_patterns is None:
+        exclude_patterns = []
 
     # Create unique temporary directory
     # Use EFS mount in production (/usr/local/data), fallback to /tmp for local testing
@@ -313,6 +368,7 @@ def s3_archiving(
     result = {
         "status": "failed",
         "file_count": 0,
+        "excluded_count": 0,
         "zip_size": 0,
         "s3_path": "",
         "error": "",
@@ -327,12 +383,12 @@ def s3_archiving(
         download_dir = os.path.join(temp_dir, "downloads")
         os.makedirs(download_dir, exist_ok=True)
 
-        file_count, total_size = download_files_from_s3(
-            source_bucket, source_prefix, download_dir, log
+        file_count, total_size, excluded_count = download_files_from_s3(
+            source_bucket, source_prefix, download_dir, exclude_patterns, log
         )
 
         if file_count == 0:
-            raise Exception("No files found to archive")
+            raise Exception("No files found to archive (all files may be excluded)")
 
         # Step 2: Create zip archive
         log.info("Step 2/3: Creating zip archive...")
@@ -346,12 +402,15 @@ def s3_archiving(
         # Update result with success
         result["status"] = "success"
         result["file_count"] = file_count
+        result["excluded_count"] = excluded_count
         result["zip_size"] = zip_size
         result["s3_path"] = s3_path
 
         log.info("=" * 80)
         log.info("S3 Archiving Job Completed Successfully")
         log.info(f"Files archived: {file_count}")
+        if excluded_count > 0:
+            log.info(f"Files excluded: {excluded_count}")
         log.info(f"Zip size: {format_file_size(zip_size)}")
         log.info(f"Location: {s3_path}")
         log.info("=" * 80)

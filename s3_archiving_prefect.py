@@ -62,6 +62,7 @@ s3://{source_bucket}/{source_prefix}
 | Metric | Value |
 |:-------|------:|
 | Files Archived | {result.get('file_count', 0):,} |
+| Files Excluded | {result.get('excluded_count', 0):,} |
 | Zip File Size | {format_file_size(result.get('zip_size', 0))} |
 | Status | {status_text} |
 '''
@@ -84,14 +85,16 @@ def s3_archiving_prefect(
     source_prefix: str,
     target_bucket: str,
     target_prefix: str,
-    zip_filename: str = ""
+    zip_filename: str = "",
+    exclude_patterns: str = ""
 ):
     """
     Prefect flow for archiving S3 files into a zip and uploading to target location.
 
     This flow downloads files from a source S3 location, creates a zip archive
     maintaining the folder structure, and uploads it to a target S3 location.
-    Temporary files are automatically cleaned up after the operation.
+    Files matching exclusion patterns are skipped. Temporary files are automatically
+    cleaned up after the operation.
 
     Args:
         source_bucket (str): Source S3 bucket name (e.g., "my-data-bucket")
@@ -99,9 +102,10 @@ def s3_archiving_prefect(
         target_bucket (str): Target S3 bucket name (e.g., "my-archive-bucket")
         target_prefix (str): Target S3 prefix/folder path (e.g., "archives/2024/")
         zip_filename (str, optional): Name for zip file. Auto-generated if not provided.
+        exclude_patterns (str, optional): Comma-separated glob patterns to exclude (e.g., "*.log,temp/*")
 
     Returns:
-        dict: Result dictionary with status, file_count, zip_size, and s3_path
+        dict: Result dictionary with status, file_count, excluded_count, zip_size, and s3_path
     """
     print("=" * 80)
     print("Starting S3 Archiving Flow")
@@ -120,6 +124,12 @@ def s3_archiving_prefect(
         zip_filename = f"{zip_filename}.zip"
         print(f"Added .zip extension: {zip_filename}")
 
+    # Parse comma-separated exclusion patterns into list
+    pattern_list = []
+    if exclude_patterns and exclude_patterns.strip():
+        pattern_list = [p.strip() for p in exclude_patterns.split(',') if p.strip()]
+        print(f"Exclusion patterns: {', '.join(pattern_list)}")
+
     # Call core archiving function
     print("\nExecuting archiving operation...")
     result = s3_archiving(
@@ -127,7 +137,8 @@ def s3_archiving_prefect(
         source_prefix=source_prefix,
         target_bucket=target_bucket,
         target_prefix=target_prefix,
-        zip_filename=zip_filename
+        zip_filename=zip_filename,
+        exclude_patterns=pattern_list
     )
 
     # Create markdown artifact for Prefect UI
@@ -150,6 +161,8 @@ def s3_archiving_prefect(
     if result['status'] == 'success':
         print("✅ S3 Archiving Flow Completed Successfully")
         print(f"Files archived: {result['file_count']:,}")
+        if result.get('excluded_count', 0) > 0:
+            print(f"Files excluded: {result['excluded_count']:,}")
         print(f"Zip size: {format_file_size(result['zip_size'])}")
         print(f"Location: {result['s3_path']}")
     else:

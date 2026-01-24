@@ -155,13 +155,21 @@ def s3_checksum_calculator_prefect(
     )
 
     # Create markdown artifact for Prefect UI
-    summary_markdown = create_checksum_markdown(result, bucket, prefix)
+    print("\nCreating markdown artifact...")
+    try:
+        summary_markdown = create_checksum_markdown(result, bucket, prefix)
+        print(f"Markdown length: {len(summary_markdown)} characters")
 
-    create_markdown_artifact(
-        key="s3-checksum-summary",
-        markdown=summary_markdown,
-        description="S3 Checksum Calculation Summary"
-    )
+        create_markdown_artifact(
+            key="s3-checksum-summary",
+            markdown=summary_markdown,
+            description="S3 Checksum Calculation Summary"
+        )
+
+        print("✅ Markdown artifact created successfully")
+    except Exception as e:
+        print(f"⚠️  Warning: Failed to create markdown artifact: {e}")
+        print("Flow will continue, but artifact will not be available in UI")
 
     # Print completion message
     print("\n" + "=" * 80)
@@ -171,6 +179,20 @@ def s3_checksum_calculator_prefect(
         if result.get("filtered_count", 0) > 0:
             print(f"Files filtered: {result['filtered_count']:,}")
         print(f"Total size: {format_file_size(result['total_size_bytes'])}")
+
+        # Print file details
+        files = result.get("files", [])
+        if files:
+            print("\n" + "-" * 80)
+            print("FILE DETAILS:")
+            print("-" * 80)
+            for i, file_info in enumerate(files, 1):
+                print(f"\n{i}. {file_info.get('key', 'Unknown')}")
+                print(f"   Size: {file_info.get('size_formatted', 'Unknown')} ({file_info.get('size_bytes', 0):,} bytes)")
+                print(f"   MD5:  {file_info.get('md5', 'Unknown')}")
+                if "error" in file_info:
+                    print(f"   ⚠️  Error: {file_info.get('error')}")
+            print("-" * 80)
     else:
         print("❌ S3 Checksum Calculator Flow Failed")
         if result.get("error"):

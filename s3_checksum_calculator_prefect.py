@@ -73,12 +73,13 @@ def create_checksum_markdown(result, bucket, prefix):
         if has_more:
             summary += f"*(Showing first 100 of {len(files):,} files. Check flow logs for complete list.)*\n\n"
 
-        summary += "| File Path | Size | MD5 Checksum |\n"
-        summary += "|:----------|-----:|:-------------|\n"
+        summary += "| File Path | Size | Size (bytes) | MD5 Checksum |\n"
+        summary += "|:----------|-----:|-------------:|:-------------|\n"
 
         for file_info in display_files:
             file_key = file_info.get("key", "")
             file_size = file_info.get("size_formatted", "")
+            file_size_bytes = file_info.get("size_bytes", 0)
             md5 = file_info.get("md5", "")
 
             # Truncate long paths for display
@@ -90,7 +91,7 @@ def create_checksum_markdown(result, bucket, prefix):
             else:
                 md5_display = f"`{md5}`"
 
-            summary += f"| {display_key} | {file_size} | {md5_display} |\n"
+            summary += f"| {display_key} | {file_size} | {file_size_bytes:,} | {md5_display} |\n"
 
     # Add error information if failed
     if result["status"] == "failed" and result.get("error"):

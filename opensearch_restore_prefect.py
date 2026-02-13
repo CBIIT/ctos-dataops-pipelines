@@ -2,7 +2,7 @@ from prefect import flow
 from typing import Literal
 import yaml
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
-from bento.common.secret_manager import get_secret
+from get_ARN import get_secret_ARN
 import os
 import prefect.variables as Variable
 from opensearch_restore import opensearch_restore
@@ -24,26 +24,32 @@ with open(config_file, 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]
 
+config_file_for_accounts = "config/prefect_account_config.yaml"
+with open(config_file_for_accounts, 'r') as file:
+    account_config = yaml.safe_load(file)
+account_choices = Literal[tuple(list(account_config.keys()))]
+
+
+
+
 @flow(name="OpenSearch restore", log_prints=True)
 def opensearch_restore_prefect(
     environment: environment_choices, # type: ignore
+    account: account_choices, # type: ignore
     snapshot_name,
     indices,
     s3_bucket
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
-    secret = get_secret(opensearch_secret)
-    aws_account_id = get_aws_account_id(log)
-    aws_account_env = config[environment][ENVIRONMENT]
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
+    secret = get_secret_ARN(opensearch_secret,account)
+    # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,
         's3bucket': s3_bucket,
         'snapshot': snapshot_name,
         'indices': indices,
-        'rolearn': role_arn,
         'region': REGION,
         'basepath': snapshot_name
     }

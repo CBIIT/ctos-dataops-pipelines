@@ -2,7 +2,7 @@ from prefect import flow
 from typing import Literal
 from neo4j_summary import neo4j_summary
 from memgraph_restore import memgraph_restore
-from bento.common.secret_manager import get_secret
+from bento.common.secret_manager import get_secret, get_secretARN
 from neo4j_restore import downlaod_s3
 from bento.common.utils import get_time_stamp, get_logger, LOG_PREFIX, APP_NAME
 import yaml
@@ -42,7 +42,7 @@ def memgraph_data_asset_loading_prefect(
     timestamp = get_time_stamp()
     if s3_folder == None or s3_folder == "":
         s3_folder = "memgraph-assets-" + timestamp
-    secret = get_secret(memgraph_secret)
+    secret = get_secretARN(memgraph_secret)
     memgraph_host = secret[MEMGRAPH_HOST]
     memgraph_user = secret[MEMGRAPH_USER]
     memgraph_password = secret[MEMGRAPH_PASSWORD]

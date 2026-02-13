@@ -56,7 +56,6 @@ def registerRepo(argList, awsauth):
       "bucket": argList['s3bucket'],
       "base_path": argList['basepath'],
       "region": argList['region'],
-      "role_arn": argList['rolearn'],
       "canned_acl": "bucket-owner-full-control"
     }
   }

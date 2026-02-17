@@ -17,11 +17,11 @@ def get_secret_ARN(secret_name: str, account: str, region_name: str="us-east-1")
         """
         # Create a Secrets Manager client
         session = boto3.session.Session()
-        client = session.client(service_name="secretsmanager", region_name=region_name, account_id =account)
+        client = session.client(service_name="secretsmanager", region_name=region_name)
 
         try:
             # Build the full ARN for the secret
-            arn = build_arn(secret_name, region_name)
+            arn = build_arn(secret_name, account, region_name)
             # Retrieve secret using the full ARN
             response = client.get_secret_value(SecretId=arn)
             return json.loads(response["SecretString"])

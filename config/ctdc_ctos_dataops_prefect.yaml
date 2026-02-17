@@ -223,6 +223,7 @@ deployments:
       snapshot_name: ""
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
+      account_number: "account_id"
     work_pool:
       name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
@@ -241,6 +242,7 @@ deployments:
       snapshot_name: ""
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
+      account_number: "account_id"
     work_pool:
       name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
       work_queue_name: default

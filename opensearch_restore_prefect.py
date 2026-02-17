@@ -35,14 +35,14 @@ account_choices = Literal[tuple(list(account_config.keys()))]
 @flow(name="OpenSearch restore", log_prints=True)
 def opensearch_restore_prefect(
     environment: environment_choices, # type: ignore
-    account: account_choices, # type: ignore
+    account_number, # type: ignore
     snapshot_name,
     indices,
     s3_bucket
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
-    secret = get_secret_ARN(opensearch_secret,account)
+    secret = get_secret_ARN(opensearch_secret,account_number)
     # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",

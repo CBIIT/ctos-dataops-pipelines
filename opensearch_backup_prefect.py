@@ -53,12 +53,12 @@ def opensearch_backup_prefect(
     environment: environment_choices, # type: ignore
     snapshot_name,
     indices,
-    account: account_choices, # type: ignore
+    account_number, # type: ignore
     s3_bucket
 ):
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
-    secret = get_secret_ARN(opensearch_secret,account)
+    secret = get_secret_ARN(opensearch_secret,account_number)
     # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",

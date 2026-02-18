@@ -41,8 +41,7 @@ def build_arn(secret_name: str, account: str, region_name: str = "us-east-1") ->
     Returns:
         str: Full ARN string in format arn:partition:secretsmanager:region:account-id:secret:secret-name
     """
-    session = boto3.session.Session()
-    sts_client = session.client(service_name="sts", region_name=region_name)
+
     
     try:
         # account_id = sts_client.get_caller_identity()["Account"]\

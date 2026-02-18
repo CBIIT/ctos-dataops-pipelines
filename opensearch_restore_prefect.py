@@ -35,7 +35,7 @@ account_choices = Literal[tuple(list(account_config.keys()))]
 @flow(name="OpenSearch restore", log_prints=True)
 def opensearch_restore_prefect(
     environment: environment_choices, # type: ignore
-    account_number, # type: ignore
+    account_number,
     snapshot_name,
     indices,
     s3_bucket

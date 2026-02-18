@@ -53,7 +53,7 @@ def opensearch_backup_prefect(
     environment: environment_choices, # type: ignore
     snapshot_name,
     indices,
-    account_number, # type: ignore
+    account_number,
     s3_bucket
 ):
     log = get_logger('OpenSearch Backup')

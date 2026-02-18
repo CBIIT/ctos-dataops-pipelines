@@ -4,6 +4,9 @@ ctdc_dev:
 ctdc_dev2:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_dev2"
   env: dev
+ctdc_dev3:
+  memgraph_summary_secret: "ctdc_memgraph_secret_name_dev3"
+  env: dev
 ctdc_qa:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_qa"
   env: dev

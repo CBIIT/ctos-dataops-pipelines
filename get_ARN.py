@@ -30,7 +30,7 @@ def get_secret_ARN(secret_name: str, account: str, region_name: str="us-east-1")
             # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
             raise e
 
-def build_arn(secret_name: str, account_id, region_name: str = "us-east-1") -> str:
+def build_arn(secret_name: str, account: str, region_name: str = "us-east-1") -> str:
     """Constructs a full AWS ARN for a Secrets Manager secret
 
     Args:
@@ -46,7 +46,7 @@ def build_arn(secret_name: str, account_id, region_name: str = "us-east-1") -> s
     
     try:
         # account_id = sts_client.get_caller_identity()["Account"]\
-        arn = f"arn:aws:secretsmanager:{region_name}:{account_id}:secret:{secret_name}"
+        arn = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_name}"
         return arn
     except ClientError as e:
         raise e

@@ -58,8 +58,9 @@ def opensearch_backup_prefect(
 ):
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
-    print(f"account_number: {account_number}") 
+    
     secret = get_secret_ARN(opensearch_secret,account_number)
+    print(f"secret: {secret}") 
     # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
@@ -71,6 +72,7 @@ def opensearch_backup_prefect(
         'basepath': snapshot_name
     }
     opensearch_backup(argList)
+    print(f"arglist: {argList}") 
 
 if __name__ == "__main__":
     # create your first deployment

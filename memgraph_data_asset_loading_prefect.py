@@ -2,7 +2,7 @@ from prefect import flow
 from typing import Literal
 from neo4j_summary import neo4j_summary
 from memgraph_restore import memgraph_restore
-from bento.common.secret_manager import get_secret, get_secretARN
+from bento.common.secret_manager import get_secret
 from neo4j_restore import downlaod_s3
 from bento.common.utils import get_time_stamp, get_logger, LOG_PREFIX, APP_NAME
 import yaml

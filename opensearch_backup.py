@@ -11,7 +11,6 @@ def getArgs():
   parser.add_argument("--s3bucket", type=str, help="s3 bucket")
   parser.add_argument("--snapshot", type=str, help="opensearch snapshot value")
   parser.add_argument("--indices", type=str, help="indices", nargs='?', const='')
-  parser.add_argument("--rolearn", type=str, help="role arn - typically power user role")
   parser.add_argument("--basepath", type=str, help="basepath", nargs='?', const='')
   parser.add_argument("--region", type=str, help="region")
   args = parser.parse_args()
@@ -22,7 +21,6 @@ def getArgs():
   argList['s3bucket'] = args.s3bucket
   argList['snapshot'] = args.snapshot 
   argList['indices'] = args.indices
-  argList['rolearn'] = args.rolearn
   argList['region'] = args.region
 
   basepath = args.basepath
@@ -118,7 +116,6 @@ if __name__ == "__main__":
 # entrance for Prefect
 def opensearch_backup(argList):
     awsauth = osAuth(argList)
-    print(f"awsauth HEREREERERER: {awsauth}")
     registerRepo(argList, awsauth)
     check_repository(argList, awsauth)
 

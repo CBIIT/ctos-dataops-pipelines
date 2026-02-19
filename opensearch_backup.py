@@ -118,6 +118,7 @@ if __name__ == "__main__":
 # entrance for Prefect
 def opensearch_backup(argList):
     awsauth = osAuth(argList)
+    print(f"awsauth HEREREERERER: {awsauth}")
     registerRepo(argList, awsauth)
     check_repository(argList, awsauth)
 

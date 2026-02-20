@@ -34,17 +34,22 @@ def getArgs():
 
 
 def osAuth(argList):
-  # Opensearch authentication
+  # Opensearch authentication - using explicit credentials without role assumption
   service = 'es'
-  credentials = boto3.Session().get_credentials()
-  awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, argList['region'], service, session_token=credentials.token)
+  # Get credentials directly from the session without assuming any role
+  session = boto3.Session()
+  credentials = session.get_credentials()
+  
+  # Ensure we're not using assumed role credentials
+  current_credentials = credentials.get_frozen_credentials()
+  awsauth = AWS4Auth(current_credentials.access_key, current_credentials.secret_key, argList['region'], service, session_token=current_credentials.token)
 
   return awsauth
 
 
 def registerRepo(argList, awsauth):
 
-  # Registering Repo
+  # Registering Repo without role_arn to prevent role assumption
   path = '_snapshot/' + argList['repo']
   url = argList['oshost'] + path
 
@@ -55,11 +60,12 @@ def registerRepo(argList, awsauth):
       "base_path": argList['basepath'],
       "region": argList['region'],
       "canned_acl": "bucket-owner-full-control"
+      # NOTE: No role_arn specified - OpenSearch will use the node's IAM permissions directly
     }
   }
 
   headers = {"Content-Type": "application/json"}
-  print("registering repo")
+  print("registering repo without role assumption")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
     time.sleep(100)

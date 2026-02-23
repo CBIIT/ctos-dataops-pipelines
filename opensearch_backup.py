@@ -58,7 +58,7 @@ def check_repository(argList, awsauth):
 
 def registerRepo(argList, awsauth):
 
-  # Registering Repo without role_arn to prevent role assumption
+  # Registering Repo
   path = '_snapshot/' + argList['repo']
   url = argList['oshost'] + path
 
@@ -68,13 +68,13 @@ def registerRepo(argList, awsauth):
       "bucket": argList['s3bucket'],
       "base_path": argList['basepath'],
       "region": argList['region'],
+      "role_arn": argList['role_arn'],
       "canned_acl": "bucket-owner-full-control"
-      # NOTE: No role_arn specified - OpenSearch will use the node's IAM permissions directly
     }
   }
 
   headers = {"Content-Type": "application/json"}
-  print("registering repo without role assumption")
+  print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
     time.sleep(5)

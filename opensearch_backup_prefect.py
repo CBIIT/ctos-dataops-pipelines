@@ -1,7 +1,6 @@
 from prefect import flow
 from typing import Literal
 import yaml
-import re
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 from get_ARN import get_secret_ARN
 import os
@@ -29,16 +28,6 @@ with open(config_file_for_accounts, 'r') as file:
     account_config = yaml.safe_load(file)
 account_choices = Literal[tuple(list(account_config.keys()))]
 
-def get_role_arn_from_caller_identity():
-    # STS returns: arn:aws:sts::ACCOUNT:assumed-role/ROLE_NAME/SESSION
-    # OpenSearch needs: arn:aws:iam::ACCOUNT:role/ROLE_NAME
-    sts_client = boto3.client("sts")
-    caller_arn = sts_client.get_caller_identity()["Arn"]
-    match = re.match(r'arn:aws:sts::(\d+):assumed-role/([^/]+)/', caller_arn)
-    if match:
-        account_id, role_name = match.group(1), match.group(2)
-        return f"arn:aws:iam::{account_id}:role/{role_name}"
-    return caller_arn
 
 
 @flow(name="OpenSearch backup", log_prints=True)
@@ -52,7 +41,7 @@ def opensearch_backup_prefect(
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
     secret = get_secret_ARN(opensearch_secret, account_number)
-    role_arn = get_role_arn_from_caller_identity()
+    role_arn = Variable.get("ctdc_opensearch_snapshot_role_arn")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

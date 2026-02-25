@@ -36,7 +36,8 @@ def opensearch_restore_prefect(
     secret = get_secret(opensearch_secret)
     aws_account_id = get_aws_account_id(log)
     aws_account_env = config[environment][ENVIRONMENT]
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
+    # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
+    role_arn = Variable.get("ctdc_role_arn")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

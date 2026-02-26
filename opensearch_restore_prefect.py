@@ -34,10 +34,11 @@ def opensearch_restore_prefect(
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
     secret = get_secret(opensearch_secret)
-    aws_account_id = get_aws_account_id(log)
-    aws_account_env = config[environment][ENVIRONMENT]
+    # aws_account_id = get_aws_account_id(log)
+    # aws_account_env = config[environment][ENVIRONMENT]
     # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     role_arn = Variable.get("ctdc_role_arn")
+    os_role_arn = Variable.get("ctdc_os_role_arn")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,
@@ -45,6 +46,7 @@ def opensearch_restore_prefect(
         'snapshot': snapshot_name,
         'indices': indices,
         'rolearn': role_arn,
+        'osrolearn': os_role_arn,
         'region': REGION,
         'basepath': snapshot_name
     }
@@ -52,4 +54,4 @@ def opensearch_restore_prefect(
 
 if __name__ == "__main__":
     # create your first deployment
-   opensearch_restore_prefect.serve(name="opensearch_backup")
+   opensearch_restore_prefect.serve(name="opensearch_restore")

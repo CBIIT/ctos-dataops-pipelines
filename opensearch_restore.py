@@ -102,7 +102,7 @@ def registerRepo(argList, assumed_sess):
           "bucket": argList['s3bucket'],
           "base_path": argList['basepath'],
           "region": argList['region'],
-          "role_arn": argList['rolearn'],
+          "role_arn": argList['osrolearn'],
           "canned_acl": "bucket-owner-full-control"
       }
   }
@@ -154,14 +154,21 @@ def deleteIndexes(argList, assumed_sess):
     for i in indice_arr:
       # check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
       url = urljoin(argList['oshost'], i)
-      check = sigv4_request(
-        session=assumed_sess,
-        region=argList['region'],
-        service="es",
-        method="GET",
-        url=url,
-        headers={"Content-Type": "application/json"},
-      )
+      try:
+        check = sigv4_request(
+          session=assumed_sess,
+          region=argList['region'],
+          service="es",
+          method="GET",
+          url=url,
+          headers={"Content-Type": "application/json"},
+        )
+      except requests.HTTPError as e:
+        resp = e.response
+        print("Status:", resp.status_code)
+        print("Headers:", dict(resp.headers))
+        print("Body:", resp.text)
+        raise
       # print(check.status_code)
       # print(check.text)
       if check.status_code==200:
@@ -179,8 +186,12 @@ def deleteIndexes(argList, assumed_sess):
           )
           print(r.status_code)
           print(r.text)
-        except requests.exceptions.RequestException as e:
-          raise SystemExit(e)
+        except requests.HTTPError as e:
+          resp = e.response
+          print("Status:", resp.status_code)
+          print("Headers:", dict(resp.headers))
+          print("Body:", resp.text)
+          raise
   else:
     print("no listed indices - deleting all indices")
     try:
@@ -197,8 +208,12 @@ def deleteIndexes(argList, assumed_sess):
       )
       print(r.status_code)
       print(r.text)
-    except requests.exceptions.RequestException as e:
-      raise SystemExit(e)
+    except requests.HTTPError as e:
+      resp = e.response
+      print("Status:", resp.status_code)
+      print("Headers:", dict(resp.headers))
+      print("Body:", resp.text)
+      raise
 
   print("finished deleting the indices, waiting 2 mins for the deletion to complete")
   time.sleep(120)
@@ -237,15 +252,22 @@ def restoreIndexes(argList, assumed_sess):
     "include_global_state": False,
   }
   url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'] + "/" + argList['snapshot'] + "/_restore")
-  result = sigv4_request(
-    session=assumed_sess,
-    region=argList['region'],
-    service="es",
-    method="POST",
-    url=url,
-    body=body,
-    headers={"Content-Type": "application/json"},
-  )
+  try:
+    result = sigv4_request(
+      session=assumed_sess,
+      region=argList['region'],
+      service="es",
+      method="POST",
+      url=url,
+      body=body,
+      headers={"Content-Type": "application/json"},
+    )
+  except requests.HTTPError as e:
+    resp = e.response
+    print("Status:", resp.status_code)
+    print("Headers:", dict(resp.headers))
+    print("Body:", resp.text)
+    raise
   print(result.status_code)
   # print(result.text)
 

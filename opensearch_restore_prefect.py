@@ -6,10 +6,9 @@ from bento.common.secret_manager import get_secret
 import os
 import prefect.variables as Variable
 from opensearch_restore import opensearch_restore
-from opensearch_backup_prefect import get_aws_account_id
-import boto3
 
-SUMARY_SECRET = "memgraph_summary_secret"
+
+SUMMARY_SECRET = "memgraph_summary_secret"
 ES_HOST = "es_host"
 PROJECT_NAME  = "ctdc"
 REGION = "us-east-1"
@@ -32,11 +31,8 @@ def opensearch_restore_prefect(
     s3_bucket
 ):
     log = get_logger('OpenSearch Restore')
-    opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
+    opensearch_secret = Variable.get(config[environment][SUMMARY_SECRET])
     secret = get_secret(opensearch_secret)
-    # aws_account_id = get_aws_account_id(log)
-    # aws_account_env = config[environment][ENVIRONMENT]
-    # role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
     role_arn = Variable.get("ctdc_role_arn")
     os_role_arn = Variable.get("ctdc_os_role_arn")
     argList = {
@@ -53,5 +49,4 @@ def opensearch_restore_prefect(
     opensearch_restore(argList)
 
 if __name__ == "__main__":
-    # create your first deployment
    opensearch_restore_prefect.serve(name="opensearch_restore")

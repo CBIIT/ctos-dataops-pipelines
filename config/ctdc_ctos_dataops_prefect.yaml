@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: dataops_ctdc_pipelines
+      branch: dataops_ctdc_pipelines_v2
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
@@ -247,7 +247,25 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
-  
+
+  - name: ctdc-ctos-dataops-opensearch-restore-v2
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_restore_prefect.py:opensearch_restore_prefect
+    parameters:
+      snapshot_name: ""
+      s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
+      indices: ""
+    work_pool:
+      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+
   - name: ctdc-ctos-dataops-opensearch-restore-prod
     version: null
     tags: []

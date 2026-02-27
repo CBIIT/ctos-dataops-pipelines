@@ -5,7 +5,7 @@ import requests
 from urllib.parse import urljoin
 import time
 
-from opensearch_operations import sigv4_request
+from opensearch_utils import sigv4_request
 
 # def getArgs():
 

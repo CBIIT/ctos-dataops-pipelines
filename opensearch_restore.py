@@ -106,22 +106,15 @@ def registerRepo(argList, assumed_sess):
           "canned_acl": "bucket-owner-full-control"
       }
   }
-  try:
-    r = sigv4_request(
-        session=assumed_sess,
-        region=argList['region'],
-        service="es",
-        method="PUT",
-        url=url,
-        body=body,
-        headers={"Content-Type": "application/json"},
-    )
-  except requests.HTTPError as e:
-    resp = e.response
-    print("Status:", resp.status_code)
-    print("Headers:", dict(resp.headers))
-    print("Body:", resp.text)
-    raise
+  r = sigv4_request(
+      session=assumed_sess,
+      region=argList['region'],
+      service="es",
+      method="PUT",
+      url=url,
+      body=body,
+      headers={"Content-Type": "application/json"},
+  )
   print(r.status_code, r.text)
 
 
@@ -154,66 +147,45 @@ def deleteIndexes(argList, assumed_sess):
     for i in indice_arr:
       # check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
       url = urljoin(argList['oshost'], i)
-      try:
-        check = sigv4_request(
-          session=assumed_sess,
-          region=argList['region'],
-          service="es",
-          method="GET",
-          url=url,
-          headers={"Content-Type": "application/json"},
-        )
-      except requests.HTTPError as e:
-        resp = e.response
-        print("Status:", resp.status_code)
-        print("Headers:", dict(resp.headers))
-        print("Body:", resp.text)
-        raise
-      # print(check.status_code)
-      # print(check.text)
-      if check.status_code==200:
-        try:
-          # r = requests.delete(argList['oshost'] + i, auth=awsauth, headers=headers)
-          # print(r.text)
-          url = urljoin(argList['oshost'], i)
-          r = sigv4_request(
-            session=assumed_sess,
-            region=argList['region'],
-            service="es",
-            method="DELETE",
-            url=url,
-            headers={"Content-Type": "application/json"},
-          )
-          print(r.status_code)
-          print(r.text)
-        except requests.HTTPError as e:
-          resp = e.response
-          print("Status:", resp.status_code)
-          print("Headers:", dict(resp.headers))
-          print("Body:", resp.text)
-          raise
-  else:
-    print("no listed indices - deleting all indices")
-    try:
-      # r = requests.delete(argList['oshost'] + '*', auth=awsauth, headers=headers)
-      # print(r.text)
-      url = urljoin(argList['oshost'], '*')
-      r = sigv4_request(
+      check = sigv4_request(
         session=assumed_sess,
         region=argList['region'],
         service="es",
-        method="DELETE",
+        method="GET",
         url=url,
         headers={"Content-Type": "application/json"},
       )
-      print(r.status_code)
-      print(r.text)
-    except requests.HTTPError as e:
-      resp = e.response
-      print("Status:", resp.status_code)
-      print("Headers:", dict(resp.headers))
-      print("Body:", resp.text)
-      raise
+      # print(check.status_code)
+      # print(check.text)
+      if check.status_code==200:
+        # r = requests.delete(argList['oshost'] + i, auth=awsauth, headers=headers)
+        # print(r.text)
+        url = urljoin(argList['oshost'], i)
+        r = sigv4_request(
+          session=assumed_sess,
+          region=argList['region'],
+          service="es",
+          method="DELETE",
+          url=url,
+          headers={"Content-Type": "application/json"},
+        )
+        print(r.status_code)
+        print(r.text)
+  else:
+    print("no listed indices - deleting all indices")
+    # r = requests.delete(argList['oshost'] + '*', auth=awsauth, headers=headers)
+    # print(r.text)
+    url = urljoin(argList['oshost'], '*')
+    r = sigv4_request(
+      session=assumed_sess,
+      region=argList['region'],
+      service="es",
+      method="DELETE",
+      url=url,
+      headers={"Content-Type": "application/json"},
+    )
+    print(r.status_code)
+    print(r.text)
 
   print("finished deleting the indices, waiting 2 mins for the deletion to complete")
   time.sleep(120)
@@ -252,22 +224,15 @@ def restoreIndexes(argList, assumed_sess):
     "include_global_state": False,
   }
   url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'] + "/" + argList['snapshot'] + "/_restore")
-  try:
-    result = sigv4_request(
-      session=assumed_sess,
-      region=argList['region'],
-      service="es",
-      method="POST",
-      url=url,
-      body=body,
-      headers={"Content-Type": "application/json"},
-    )
-  except requests.HTTPError as e:
-    resp = e.response
-    print("Status:", resp.status_code)
-    print("Headers:", dict(resp.headers))
-    print("Body:", resp.text)
-    raise
+  result = sigv4_request(
+    session=assumed_sess,
+    region=argList['region'],
+    service="es",
+    method="POST",
+    url=url,
+    body=body,
+    headers={"Content-Type": "application/json"},
+  )
   print(result.status_code)
   # print(result.text)
 

@@ -36,6 +36,7 @@ def sigv4_request(
     body: Optional[Dict[str, Any]] = None,
     headers: Optional[Dict[str, str]] = None,
     timeout: int = 30,
+    raise_for_status: bool = True,
 ):
     """
     Make a SigV4-signed HTTP request using creds from the provided boto3 session.
@@ -63,7 +64,15 @@ def sigv4_request(
         headers=dict(prepared.headers),
         timeout=timeout,
     )
-    resp.raise_for_status()
+    # resp.raise_for_status()
+    # return resp
+    if raise_for_status and not resp.ok:
+        print("=== OpenSearch HTTP Error ===")
+        print("Status:", resp.status_code)
+        print("URL:", resp.url)
+        print("Body:", resp.text)
+        resp.raise_for_status()
+
     return resp
 
 

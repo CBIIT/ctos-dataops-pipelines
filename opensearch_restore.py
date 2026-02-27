@@ -95,7 +95,7 @@ def registerRepo(argList, assumed_sess):
 
   # === Example: register a repository (PUT _snapshot/<repo>) ===
   # repo_name = argList['repo']
-  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/" + argList['repo'])
+  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'])
   body = {
       "type": "s3",
       "settings": {
@@ -146,7 +146,7 @@ def deleteIndexes(argList, assumed_sess):
     indice_arr = argList['indices'].split(",")
     for i in indice_arr:
       # check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
-      url = urljoin(argList['oshost'] + i)
+      url = urljoin(argList['oshost'], i)
       check = sigv4_request(
         session=assumed_sess,
         region=argList['region'],
@@ -161,7 +161,7 @@ def deleteIndexes(argList, assumed_sess):
         try:
           # r = requests.delete(argList['oshost'] + i, auth=awsauth, headers=headers)
           # print(r.text)
-          url = urljoin(argList['oshost'] + i)
+          url = urljoin(argList['oshost'], i)
           r = sigv4_request(
             session=assumed_sess,
             region=argList['region'],
@@ -179,7 +179,7 @@ def deleteIndexes(argList, assumed_sess):
     try:
       # r = requests.delete(argList['oshost'] + '*', auth=awsauth, headers=headers)
       # print(r.text)
-      url = urljoin(argList['oshost'] + '*')
+      url = urljoin(argList['oshost'], '*')
       r = sigv4_request(
         session=assumed_sess,
         region=argList['region'],
@@ -229,7 +229,7 @@ def restoreIndexes(argList, assumed_sess):
     "indices": indices,
     "include_global_state": False,
   }
-  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/" + argList['repo'] + "/" + argList['snapshot'] + "/_restore")
+  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'] + "/" + argList['snapshot'] + "/_restore")
   result = sigv4_request(
     session=assumed_sess,
     region=argList['region'],

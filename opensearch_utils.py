@@ -2,7 +2,7 @@ import os
 import json
 import boto3
 import requests
-from urllib.parse import urljoin
+# from urllib.parse import urljoin
 
 from botocore.awsrequest import AWSRequest
 from botocore.auth import SigV4Auth

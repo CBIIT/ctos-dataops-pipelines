@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import time
 
 from opensearch_utils import sigv4_request
+from typing import Optional, Dict, Any
 
 # def getArgs():
 
@@ -49,7 +50,7 @@ from opensearch_utils import sigv4_request
 #   return awsauth
 
 
-def assume_role(role_arn: str, session_name: str = "snapshot-ops", external_id: str | None = None):
+def assume_role(role_arn: str, session_name: str = "snapshot-ops", external_id: Optional[Dict[str, Any]] = None):
     """Assume a role and return a boto3.Session using the temporary creds."""
     sts = boto3.client("sts")
     params = {"RoleArn": role_arn, "RoleSessionName": session_name}

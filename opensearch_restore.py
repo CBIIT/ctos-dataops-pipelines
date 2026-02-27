@@ -106,15 +106,22 @@ def registerRepo(argList, assumed_sess):
           "canned_acl": "bucket-owner-full-control"
       }
   }
-  r = sigv4_request(
-      session=assumed_sess,
-      region=argList['region'],
-      service="es",
-      method="PUT",
-      url=url,
-      body=body,
-      headers={"Content-Type": "application/json"},
-  )
+  try:
+    r = sigv4_request(
+        session=assumed_sess,
+        region=argList['region'],
+        service="es",
+        method="PUT",
+        url=url,
+        body=body,
+        headers={"Content-Type": "application/json"},
+    )
+  except requests.HTTPError as e:
+    resp = e.response
+    print("Status:", resp.status_code)
+    print("Headers:", dict(resp.headers))
+    print("Body:", resp.text)
+    raise
   print(r.status_code, r.text)
 
 
@@ -271,6 +278,7 @@ def opensearch_restore(argList):
       # external_id=external_id,
       external_id=None,
     )
+    print(assumed_sess.client("sts").get_caller_identity())
     registerRepo(argList, assumed_sess)
 
     deleteIndexes(argList, assumed_sess)

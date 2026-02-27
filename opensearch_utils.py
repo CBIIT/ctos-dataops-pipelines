@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from botocore.awsrequest import AWSRequest
 from botocore.auth import SigV4Auth
 from botocore.credentials import Credentials
+from typing import Optional, Dict, Any
 
 
 # def assume_role(role_arn: str, session_name: str = "snapshot-ops", external_id: str | None = None):
@@ -32,8 +33,8 @@ def sigv4_request(
     service: str,
     method: str,
     url: str,
-    body: dict | None = None,
-    headers: dict | None = None,
+    body: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, str]] = None,
     timeout: int = 30,
 ):
     """

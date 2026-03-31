@@ -224,31 +224,13 @@ deployments:
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
     work_pool:
-      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
 
   - name: ctdc-ctos-dataops-opensearch-restore
-    version: null
-    tags: []
-    description: null
-    schedule: {}
-    flow_name: null
-    entrypoint:  opensearch_restore_prefect.py:opensearch_restore_prefect
-    parameters:
-      snapshot_name: ""
-      s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
-      indices: ""
-    work_pool:
-      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
-      work_queue_name: default
-      job_variables:
-        env:
-          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
-
-  - name: ctdc-ctos-dataops-opensearch-restore-v2
     version: null
     tags: []
     description: null
@@ -278,7 +260,7 @@ deployments:
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
     work_pool:
-      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: default
       job_variables:
         env:

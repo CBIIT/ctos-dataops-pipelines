@@ -11,3 +11,4 @@
 *.md
 *.tsv
 *_test.txt
+Dockerfile

@@ -1,106 +1,97 @@
-import argparse
 import boto3
-import requests
-from requests_aws4auth import AWS4Auth
+from urllib.parse import urljoin
 import time
 
-def getArgs():
-
-  parser = argparse.ArgumentParser(description='Opensearch Backup Script')
-  parser.add_argument("--oshost", type=str, help="opensearch host with trailing /")
-  parser.add_argument("--repo", type=str, help="opensearch snapshot repository")
-  parser.add_argument("--s3bucket", type=str, help="s3 bucket")
-  parser.add_argument("--snapshot", type=str, help="opensearch snapshot value")
-  parser.add_argument("--indices", type=str, help="indices", nargs='?', const='')
-  parser.add_argument("--rolearn", type=str, help="role arn - typically power user role")
-  parser.add_argument("--basepath", type=str, help="basepath", nargs='?', const='')
-  parser.add_argument("--region", type=str, help="region")
-  args = parser.parse_args()
-  
-  argList = {}
-  argList['oshost'] = args.oshost
-  argList['repo'] = args.repo
-  argList['s3bucket'] = args.s3bucket
-  argList['snapshot'] = args.snapshot 
-  argList['indices'] = args.indices
-  argList['rolearn'] = args.rolearn
-  argList['region'] = args.region
-
-  basepath = args.basepath
-  if basepath :
-    argList['basepath'] = basepath + '/' + argList['snapshot']
-  else:
-    argList['basepath'] = argList['snapshot']
-
-  return argList
+from opensearch_utils import sigv4_request
+from typing import Optional, Dict, Any
 
 
-def osAuth(argList):
-  # Opensearch authentication
-  service = 'es'
-  credentials = boto3.Session().get_credentials()
-  awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, argList['region'], service, session_token=credentials.token)
+def assume_role(role_arn: str, session_name: str = "snapshot-ops", external_id: Optional[Dict[str, Any]] = None):
+    """Assume a role and return a boto3.Session using the temporary creds."""
+    sts = boto3.client("sts")
+    params = {"RoleArn": role_arn, "RoleSessionName": session_name}
+    if external_id:
+        params["ExternalId"] = external_id
 
-  return awsauth
+    resp = sts.assume_role(**params)
+    c = resp["Credentials"]
+
+    return boto3.Session(
+        aws_access_key_id=c["AccessKeyId"],
+        aws_secret_access_key=c["SecretAccessKey"],
+        aws_session_token=c["SessionToken"],
+    )
 
 
-def registerRepo(argList, awsauth):
-
-  # Registering Repo
-  path = '_snapshot/' + argList['repo']
-  url = argList['oshost'] + path
-
-  payload = {
-    "type": "s3",
-    "settings": {
-      "bucket": argList['s3bucket'],
-      "base_path": argList['basepath'],
-      "region": argList['region'],
-      "role_arn": argList['rolearn'],
-      "canned_acl": "bucket-owner-full-control"
-    }
+def registerRepo(argList, assumed_sess):
+  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'])
+  body = {
+      "type": "s3",
+      "settings": {
+          "bucket": argList['s3bucket'],
+          "base_path": argList['basepath'],
+          "region": argList['region'],
+          "role_arn": argList['osrolearn'],
+          "canned_acl": "bucket-owner-full-control"
+      }
   }
+  r = sigv4_request(
+      session=assumed_sess,
+      region=argList['region'],
+      service="es",
+      method="PUT",
+      url=url,
+      body=body,
+      headers={"Content-Type": "application/json"},
+  )
+  print(r.status_code, r.text)
 
-  headers = {"Content-Type": "application/json"}
-  print("registering repo")
-  try:
-    r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    time.sleep(100)
-    print(r.text)
-  except requests.exceptions.RequestException as e:
-    raise SystemExit(e)
 
-
-def deleteIndexes(argList, awsauth):
-  # Deleting Indexes
-  headers = {"Content-Type": "application/json"}
-  
+def deleteIndexes(argList, assumed_sess):
   if argList['indices']:
     print("deleting the listed indices")
     indice_arr = argList['indices'].split(",")
     for i in indice_arr:
-      check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
+      url = urljoin(argList['oshost'], i)
+      check = sigv4_request(
+        session=assumed_sess,
+        region=argList['region'],
+        service="es",
+        method="GET",
+        url=url,
+        headers={"Content-Type": "application/json"},
+      )
       if check.status_code==200:
-        try:
-          r = requests.delete(argList['oshost'] + i, auth=awsauth, headers=headers)
-          print(r.text)
-        except requests.exceptions.RequestException as e:
-          raise SystemExit(e)
+        url = urljoin(argList['oshost'], i)
+        r = sigv4_request(
+          session=assumed_sess,
+          region=argList['region'],
+          service="es",
+          method="DELETE",
+          url=url,
+          headers={"Content-Type": "application/json"},
+        )
+        print(r.status_code)
+        print(r.text)
   else:
     print("no listed indices - deleting all indices")
-    try:
-      r = requests.delete(argList['oshost'] + '*', auth=awsauth, headers=headers)
-      print(r.text)
-    except requests.exceptions.RequestException as e:
-     raise SystemExit(e)
+    url = urljoin(argList['oshost'], '*')
+    r = sigv4_request(
+      session=assumed_sess,
+      region=argList['region'],
+      service="es",
+      method="DELETE",
+      url=url,
+      headers={"Content-Type": "application/json"},
+    )
+    print(r.status_code)
+    print(r.text)
 
   print("finished deleting the indices, waiting 2 mins for the deletion to complete")
   time.sleep(120)
 
 
-def restoreIndexes(argList, awsauth):
-
-  # Restoring Indexes
+def restoreIndexes(argList, assumed_sess):
   print("started restore the indices")
   
   # Create Index list to exclude hidden (default) indices
@@ -110,40 +101,36 @@ def restoreIndexes(argList, awsauth):
   else:
     print("setting restore to use all indices")
     indices = '*,-.*'
-  
-  headers = {"Content-Type": "application/json"}
 
-  payload = {
+  body = {
     "indices": indices,
     "include_global_state": False,
   }
-  path = '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/_restore'
-  print(argList['oshost'] + path, payload)
-  try:
-    result = requests.post(argList['oshost'] + path, auth=awsauth, json=payload, headers=headers)
-  except requests.exceptions.RequestException as e:
-     raise SystemExit(e)
-
+  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'] + "/" + argList['snapshot'] + "/_restore")
+  result = sigv4_request(
+    session=assumed_sess,
+    region=argList['region'],
+    service="es",
+    method="POST",
+    url=url,
+    body=body,
+    headers={"Content-Type": "application/json"},
+  )
+  print(result.status_code)
   return result
 
 
-if __name__ == "__main__":
-   argList = getArgs()
-   awsauth = osAuth(argList)
-   registerRepo(argList, awsauth)
-
-   deleteIndexes(argList, awsauth)
-   result = restoreIndexes(argList, awsauth)
-   print(result.text)
-   if result.status_code!=200:
-    raise Exception("Sorry, pipeline does not run successfully")
-
 def opensearch_restore(argList):
-    awsauth = osAuth(argList)
-    registerRepo(argList, awsauth)
+    assumed_sess = assume_role(
+      role_arn=argList['rolearn'],
+      session_name="repo-admin-snapshot-ops",
+      external_id=None,
+    )
+    print(assumed_sess.client("sts").get_caller_identity())
+    registerRepo(argList, assumed_sess)
 
-    deleteIndexes(argList, awsauth)
-    result = restoreIndexes(argList, awsauth)
+    deleteIndexes(argList, assumed_sess)
+    result = restoreIndexes(argList, assumed_sess)
     print(result.text)
     if result.status_code!=200:
-        raise Exception("Sorry, pipeline does not run successfully")
+      raise Exception("Sorry, pipeline does not run successfully")

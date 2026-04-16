@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: dataops_ctdc_pipelines
+      branch: dataops_popsci_pipelines
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
@@ -25,7 +25,7 @@ pull:
       stream_output: False
 
 deployments:
-  - name: ctdc-dataops-s3-archiving
+  - name: popsci-dataops-s3-archiving
     version: null
     tags: []
     description: "Create zip archive from S3 files and upload to target location. Maintains folder structure and cleans up temporary files automatically."
@@ -40,7 +40,7 @@ deployments:
       zip_filename: ""
       exclude_patterns: ""
     work_pool:
-      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: default
       job_variables:
         env:

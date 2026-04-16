@@ -10,7 +10,7 @@ import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
 ES_HOST = "es_host"
-PROJECT_NAME  = "ctdc"
+PROJECT_NAME  = "popsci"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
@@ -47,7 +47,7 @@ def opensearch_backup_prefect(
     secret = get_secret(opensearch_secret)
     aws_account_id = get_aws_account_id(log)
     aws_account_env = config[environment][ENVIRONMENT]
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-ctdc-opensearch-snapshot"
+    role_arn = f"arn:aws:iam::{aws_account_id}:role/power-user-crdc-{aws_account_env}-popsci-opensearch-snapshot"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

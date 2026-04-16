@@ -10,7 +10,7 @@ from opensearch_restore import opensearch_restore
 
 SUMMARY_SECRET = "memgraph_summary_secret"
 ES_HOST = "es_host"
-PROJECT_NAME  = "ctdc"
+PROJECT_NAME  = "popsci"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
@@ -33,8 +33,8 @@ def opensearch_restore_prefect(
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(config[environment][SUMMARY_SECRET])
     secret = get_secret(opensearch_secret)
-    role_arn = Variable.get("ctdc_role_arn")
-    os_role_arn = Variable.get("ctdc_os_role_arn")
+    role_arn = Variable.get("popsci_role_arn")
+    os_role_arn = Variable.get("popsci_os_role_arn")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

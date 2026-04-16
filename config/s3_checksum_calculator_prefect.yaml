@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: dataops_ctdc_pipelines
+      branch: dataops_popsci_pipelines
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
@@ -25,7 +25,7 @@ pull:
       stream_output: False
 
 deployments:
-  - name: ctdc-dataops-s3-checksum-calculator
+  - name: popsci-dataops-s3-checksum-calculator
     version: null
     tags: []
     description: "Calculate file sizes and MD5 checksums for S3 objects. Supports single files, directories, and include/exclude pattern filtering. Downloads files temporarily to calculate true MD5 checksums."
@@ -38,7 +38,7 @@ deployments:
       include_patterns: ""
       exclude_patterns: ""
     work_pool:
-      name: crdc-ctdc-16gb-prefect-3.4.18-python3.12
+      name: crdc-popsci-16gb-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:

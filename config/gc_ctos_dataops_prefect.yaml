@@ -264,3 +264,24 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+  
+  - name: universal-dataops-opensearch-backup
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_backup_universal_prefect.py:opensearch_backup_prefect
+    parameters:
+      snapshot_name: ""
+      secrect_prefect_variable: ""
+      aws_role_env: "{{ prefect.variables.gc_opensearch_lowertier_role_env }}"
+      opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
+      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      indices: ""
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"

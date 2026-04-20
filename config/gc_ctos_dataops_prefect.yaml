@@ -274,8 +274,8 @@ deployments:
     entrypoint:  opensearch_backup_universal_prefect.py:opensearch_backup_prefect
     parameters:
       snapshot_name: ""
-      secrect_prefect_variable: ""
-      aws_role_env: "{{ prefect.variables.gc_opensearch_lowertier_role_env }}"
+      secrect_name_prefect_variable: ""
+      aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
@@ -295,8 +295,8 @@ deployments:
     entrypoint:  opensearch_restore_universal_prefect.py:opensearch_restore_prefect
     parameters:
       snapshot_name: ""
-      secrect_prefect_variable: ""
-      aws_role_env: "{{ prefect.variables.gc_opensearch_lowertier_role_env }}"
+      secrect_name_prefect_variable: ""
+      aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""

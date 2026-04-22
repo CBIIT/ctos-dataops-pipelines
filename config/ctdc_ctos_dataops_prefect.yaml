@@ -157,8 +157,9 @@ deployments:
     entrypoint:  memgraph_data_asset_generation_prefect.py:memgraph_data_asset_generation_prefect
     parameters:
       s3_folder: ""
-      s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
+      s3_bucket: "ctdc-nonprod-prefect-dedicated-bucket"
       tmp_folder: "/tmp"
+      environment: "{{ prefect.variables.ctdc-memgraph }}"
       data_model_version: "{{ prefect.variables.cds_model_version }}"
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
       memgraph_summary_file_name: memgraph_summary.json

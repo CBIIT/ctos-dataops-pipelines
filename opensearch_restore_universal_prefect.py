@@ -26,14 +26,14 @@ environment_choices = Literal[tuple(list(config.keys()))]
 @flow(name="OpenSearch restore", log_prints=True)
 def opensearch_restore_prefect(
     snapshot_name,
-    secrect_name_prefect_variable,
+    secret_name_prefect_variable,
     aws_role_prefect_variable,
     opensearch_repo,
     indices,
     s3_bucket
 ):
     log = get_logger('OpenSearch Restore')
-    opensearch_secret = Variable.get(secrect_name_prefect_variable)
+    opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
     aws_account_id = get_aws_account_id(log)
     role_arn = f"arn:aws:iam::{aws_account_id}:role/"+ Variable.get(aws_role_prefect_variable)

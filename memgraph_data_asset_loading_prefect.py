@@ -43,9 +43,9 @@ def memgraph_data_asset_loading_prefect(
     if s3_folder == None or s3_folder == "":
         s3_folder = "memgraph-assets-" + timestamp
     secret = get_secret(memgraph_secret)
-    memgraph_host = secret[MEMGRAPH_HOST]
-    memgraph_user = secret[MEMGRAPH_USER]
-    memgraph_password = secret[MEMGRAPH_PASSWORD]
+    memgraph_host = MEMGRAPH_HOST
+    memgraph_user = MEMGRAPH_USER
+    memgraph_password = MEMGRAPH_PASSWORD
     #generate memgraph database dump file
     memgraph_restore(memgraph_host, MEMGRAPH_PORT, memgraph_user, memgraph_password, tmp_folder, s3_bucket, s3_folder, memgraph_dump_file_name, log)
     #validate the memgraph restoring

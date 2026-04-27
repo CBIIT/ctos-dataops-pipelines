@@ -7,6 +7,9 @@ ctdc_dev2:
 memgraph_dev:
   memgraph_summary_secret: "ctdc-memgraph"
   env: dev
+ctdc_memgraph:
+  memgraph_summary_secret: "ctdc-memgraph"
+  env: dev
 ctdc_qa:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_qa"
   env: dev

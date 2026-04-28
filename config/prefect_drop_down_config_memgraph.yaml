@@ -10,6 +10,10 @@ ctdc_qa:
 ctdc_qa2:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_qa2"
   env: dev
+
+memgraph_dev:
+  memgraph_summary_secret: "memgraph_dev"
+  env: dev
 ctdc_stage:
   memgraph_summary_secret: "ctdc_memgraph_secret_name_stage"
   env: stage

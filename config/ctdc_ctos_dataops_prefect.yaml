@@ -113,7 +113,6 @@ deployments:
     flow_name: null
     entrypoint:  data_asset_generation_prefect.py:data_asset_generation_prefect
     parameters:
-      environment: ""
       data_model_version: "{{ prefect.variables.cds_model_version }}"
       s3_folder: ""
       neo4j_summary_file_name: neo4j_summary.json
@@ -135,7 +134,6 @@ deployments:
     flow_name: null
     entrypoint:  data_asset_loading_prefect.py:data_asset_loading_prefect
     parameters:
-      environment: ""
       s3_folder: ""
       dump_file_name: "neo4j_dump.dump"
       validation_summary_file_name: "neo4j_summary.json"

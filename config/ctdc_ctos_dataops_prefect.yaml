@@ -179,6 +179,7 @@ deployments:
     flow_name: null
     entrypoint:  memgraph_data_asset_loading_prefect.py:memgraph_data_asset_loading_prefect
     parameters:
+      environment: "{{ prefect.variables.ctdc-memgraph }}"
       s3_folder: ""
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
       tmp_folder: "/tmp"
@@ -200,6 +201,7 @@ deployments:
     flow_name: null
     entrypoint:  memgraph_data_asset_loading_prefect.py:memgraph_data_asset_loading_prefect
     parameters:
+      environment: "{{ prefect.variables.ctdc-memgraph }}"
       s3_folder: ""
       s3_bucket: "{{ prefect.variables.gc_prod_bucket }}"
       tmp_folder: "/tmp"

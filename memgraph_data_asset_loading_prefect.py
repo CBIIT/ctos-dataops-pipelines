@@ -13,8 +13,8 @@ import sys
 import subprocess
 
 MEMGRAPH_HOST = "memgraph_endpoint"
-MEMGRAPH_USER = "MEMGRAPH_USER"
-MEMGRAPH_PASSWORD = "MEMGRAPH_PASS"
+MEMGRAPH_USER = "memgraph_user"
+MEMGRAPH_PASSWORD = "memgraph_pass"
 SUMARY_SECRET = "memgraph_summary_secret"
 MEMGRAPH_PORT = "7687"
 

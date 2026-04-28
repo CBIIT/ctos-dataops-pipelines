@@ -12,9 +12,9 @@ import json
 import sys
 import subprocess
 
-MEMGRAPH_HOST = "MEMGRAPH_HOST"
+MEMGRAPH_HOST = "memgraph_endpoint"
 MEMGRAPH_USER = "MEMGRAPH_USER"
-MEMGRAPH_PASSWORD = "MEMGRAPH_PASSWORD"
+MEMGRAPH_PASSWORD = "MEMGRAPH_PASS"
 SUMARY_SECRET = "memgraph_summary_secret"
 MEMGRAPH_PORT = "7687"
 

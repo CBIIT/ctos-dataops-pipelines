@@ -306,3 +306,21 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+  
+  - name: gc-ctos-dataops-s3-file-metadata-generator
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  s3_file_metadata_generator_prefect.py:s3_file_metadata_generator_prefect
+    parameters:
+      bucket_name: ""
+      s3_subfolder: ""
+      tsv_filename: "s3_object_metadata.tsv"
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "S3 File Metadata Generator"

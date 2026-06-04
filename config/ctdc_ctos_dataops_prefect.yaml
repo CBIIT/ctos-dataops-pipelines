@@ -264,7 +264,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
   
-  - name: universal-dataops-opensearch-backup
+  - name: universal-dataops-opensearch-backup-ctdc
     version: null
     tags: []
     description: null
@@ -276,16 +276,16 @@ deployments:
       secret_name_prefect_variable: ""
       aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
-      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
   
-  - name: universal-dataops-opensearch-restore
+  - name: universal-dataops-opensearch-restore-ctdc
     version: null
     tags: []
     description: null
@@ -297,10 +297,10 @@ deployments:
       secret_name_prefect_variable: ""
       aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
-      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
     work_pool:
-      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: default
       job_variables:
         env:

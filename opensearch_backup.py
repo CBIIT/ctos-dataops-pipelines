@@ -72,6 +72,7 @@ def registerRepo(argList, awsauth):
 
   headers = {"Content-Type": "application/json"}
   print("registering repo")
+  print("herere payload url " + str(payload) + "url" + url)
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
     time.sleep(5)

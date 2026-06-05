@@ -33,7 +33,8 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
     s3_client = boto3.client('s3')
     s3_bucket = S3Bucket(bucket_name)
     paginator = s3_client.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=bucket_name, Prefix=directory_prefix+FILE_SEP)
+    prefix = directory_prefix + FILE_SEP if directory_prefix else ""
+    pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
     tsv_s3_key = os.path.join(directory_prefix, METADATA_DIR, tsv_filename)
     tsv_s3_url = f"{S3_PREFIX}{bucket_name}{FILE_SEP}{tsv_s3_key}"
     tsv_s3_folder = os.path.join(directory_prefix, METADATA_DIR)
@@ -142,6 +143,6 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
 if __name__ == "__main__":
     bucket_name = ""  # Replace with your S3 bucket name
     s3_directory_prefix = "" # e.g., 'images/' or '' for the whole bucket
-    tsv_filename = ""
+    tsv_filename = ""  # Local filename for the TSV output
     log = get_logger('S3 File Metadata Generator')
     result = get_all_files_and_metadata(bucket_name, s3_directory_prefix, tsv_filename, log)

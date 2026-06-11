@@ -274,7 +274,6 @@ deployments:
     parameters:
       snapshot_name: ""
       secret_name_prefect_variable: ""
-      aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
@@ -284,6 +283,9 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
+          AWS_ACCESS_KEY_ID: "{{ prefect.variables.gc_opensearch_aws_access_key_id }}"
+          AWS_SECRET_ACCESS_KEY: "{{ prefect.variables.gc_opensearch_aws_secret_access_key }}"
+          AWS_SESSION_TOKEN: "{{ prefect.variables.gc_opensearch_aws_session_token }}"
   
   - name: universal-dataops-opensearch-restore-ctdc
     version: null
@@ -295,7 +297,6 @@ deployments:
     parameters:
       snapshot_name: ""
       secret_name_prefect_variable: ""
-      aws_role_prefect_variable: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""
@@ -305,6 +306,9 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+          AWS_ACCESS_KEY_ID: "{{ prefect.variables.gc_opensearch_aws_access_key_id }}"
+          AWS_SECRET_ACCESS_KEY: "{{ prefect.variables.gc_opensearch_aws_secret_access_key }}"
+          AWS_SESSION_TOKEN: "{{ prefect.variables.gc_opensearch_aws_session_token }}"
   
   - name: gc-ctos-dataops-s3-file-metadata-generator
     version: null

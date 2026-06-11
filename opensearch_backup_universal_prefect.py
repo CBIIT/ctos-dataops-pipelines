@@ -20,7 +20,8 @@ def opensearch_backup_prefect(
     secret_name_prefect_variable,
     opensearch_repo,
     s3_bucket,
-    indices
+    indices,
+    aws_role_prefect_variable=None
 ):
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(secret_name_prefect_variable)

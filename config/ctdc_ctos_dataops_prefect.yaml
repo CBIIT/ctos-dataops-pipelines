@@ -264,7 +264,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
   
-  - name: universal-dataops-opensearch-backup-ctdc
+  - name: universal-dataops-opensearch-backup-ctdc-1
     version: null
     tags: []
     description: null

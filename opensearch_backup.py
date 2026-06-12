@@ -80,6 +80,7 @@ def registerRepo(argList, session):
       "bucket": argList['s3bucket'],
       "base_path": argList['basepath'],
       "region": argList['region'],
+      "role_arn": argList['osrolearn'],
       "canned_acl": "bucket-owner-full-control"
     }
   }

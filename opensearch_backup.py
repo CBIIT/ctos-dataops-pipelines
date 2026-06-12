@@ -1,8 +1,28 @@
 import argparse
 import boto3
-import requests
-from requests_aws4auth import AWS4Auth
 import time
+from urllib.parse import urljoin
+from typing import Optional, Dict, Any
+
+from opensearch_utils import sigv4_request
+
+
+def assume_role(role_arn: str, session_name: str = "snapshot-ops", external_id: Optional[Dict[str, Any]] = None):
+    """Assume a role and return a boto3.Session using the temporary creds."""
+    sts = boto3.client("sts")
+    params = {"RoleArn": role_arn, "RoleSessionName": session_name}
+    if external_id:
+        params["ExternalId"] = external_id
+
+    resp = sts.assume_role(**params)
+    c = resp["Credentials"]
+
+    return boto3.Session(
+        aws_access_key_id=c["AccessKeyId"],
+        aws_secret_access_key=c["SecretAccessKey"],
+        aws_session_token=c["SessionToken"],
+    )
+
 
 def getArgs():
   parser = argparse.ArgumentParser(description='Opensearch Backup Script')
@@ -11,7 +31,6 @@ def getArgs():
   parser.add_argument("--s3bucket", type=str, help="s3 bucket")
   parser.add_argument("--snapshot", type=str, help="opensearch snapshot value")
   parser.add_argument("--indices", type=str, help="indices", nargs='?', const='')
-  parser.add_argument("--rolearn", type=str, help="role arn - typically power user role")
   parser.add_argument("--basepath", type=str, help="basepath", nargs='?', const='')
   parser.add_argument("--region", type=str, help="region")
   args = parser.parse_args()
@@ -22,7 +41,6 @@ def getArgs():
   argList['s3bucket'] = args.s3bucket
   argList['snapshot'] = args.snapshot 
   argList['indices'] = args.indices
-  argList['rolearn'] = args.rolearn
   argList['region'] = args.region
 
   basepath = args.basepath
@@ -34,30 +52,27 @@ def getArgs():
   return argList
 
 
-def osAuth(argList):
-  # Opensearch authentication
-  service = 'es'
-  credentials = boto3.Session().get_credentials()
-  awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, argList['region'], service, session_token=credentials.token)
-
-  return awsauth
-
-def check_repository(argList, awsauth):
-    headers = {"Content-Type": "application/json"}
-    check_url = f"{argList['oshost']}_snapshot/_all"  # List all repositories
+def check_repository(argList, session):
+    check_url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", "_all")
     print("checking repo")
     print(check_url)
-    response = requests.get(check_url, auth=awsauth, headers=headers)
+    response = sigv4_request(
+        session=session,
+        region=argList['region'],
+        service="es",
+        method="GET",
+        url=check_url,
+        headers={"Content-Type": "application/json"},
+    )
     repos = response.json()
     for repo_name, details in repos.items():
         print(f"- {repo_name}: {details}")
     return response.status_code == 200
 
-def registerRepo(argList, awsauth):
+def registerRepo(argList, session):
 
   # Registering Repo
-  path = '_snapshot/' + argList['repo']
-  url = argList['oshost'] + path
+  url = urljoin(argList['oshost'].rstrip("/") + "/_snapshot/", argList['repo'])
 
   payload = {
     "type": "s3",
@@ -65,23 +80,26 @@ def registerRepo(argList, awsauth):
       "bucket": argList['s3bucket'],
       "base_path": argList['basepath'],
       "region": argList['region'],
-      "role_arn": argList['rolearn'],
       "canned_acl": "bucket-owner-full-control"
     }
   }
 
-  headers = {"Content-Type": "application/json"}
   print("registering repo")
   print("herere payload url " + str(payload) + "url" + url)
-  try:
-    r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    time.sleep(5)
-    print(r.text)
-  except requests.exceptions.RequestException as e:
-    raise SystemExit(e)
+  r = sigv4_request(
+      session=session,
+      region=argList['region'],
+      service="es",
+      method="PUT",
+      url=url,
+      body=payload,
+      headers={"Content-Type": "application/json"},
+  )
+  time.sleep(5)
+  print(r.text)
   
 
-def createSnapshot(argList, awsauth):
+def createSnapshot(argList, session):
   # Create Index list to exclude hidden (default) indices
   if argList['indices']:
     print("setting backup to use listed indices")
@@ -91,10 +109,11 @@ def createSnapshot(argList, awsauth):
     indices = '*,-.*'
   
   # Create Snapshot
-  snapshot_url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/'
-  #print(snapshot_url)
+  snapshot_url = urljoin(
+    argList['oshost'].rstrip("/") + "/_snapshot/",
+    argList['repo'] + '/' + argList['snapshot'] + '/'
+  )
 
-  headers = {"Content-Type": "application/json"}
   payload = {
     "indices": indices,
     "include_global_state": False
@@ -102,28 +121,43 @@ def createSnapshot(argList, awsauth):
 
   print("taking opensearch snapshot")
   print(snapshot_url, payload)
-  result = requests.put(snapshot_url, auth=awsauth, json=payload, headers=headers)
+  result = sigv4_request(
+      session=session,
+      region=argList['region'],
+      service="es",
+      method="PUT",
+      url=snapshot_url,
+      body=payload,
+      headers={"Content-Type": "application/json"},
+  )
 
   return result
 
 
 if __name__ == "__main__":
    argList = getArgs()
-   awsauth = osAuth(argList)
-   registerRepo(argList, awsauth)
+   session = boto3.Session()
+   registerRepo(argList, session)
 
-   result = createSnapshot(argList, awsauth)
+   result = createSnapshot(argList, session)
    print(result.text)
    if result.status_code!=200:
     raise Exception("Sorry, pipeline does not run successfully")
 
 # entrance for Prefect
 def opensearch_backup(argList):
-    awsauth = osAuth(argList)
-    registerRepo(argList, awsauth)
-    check_repository(argList, awsauth)
+    # Assume role if provided
+    if 'rolearn' in argList and argList['rolearn']:
+        print(f"Assuming role: {argList['rolearn']}")
+        session = assume_role(argList['rolearn'])
+    else:
+        session = boto3.Session()
+    
+    print(session.client("sts").get_caller_identity())
+    registerRepo(argList, session)
+    check_repository(argList, session)
 
-    result = createSnapshot(argList, awsauth)
+    result = createSnapshot(argList, session)
     print(result.text)
     if result.status_code!=200:
         raise Exception("Sorry, pipeline does not run successfully")

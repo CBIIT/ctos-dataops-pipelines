@@ -218,6 +218,7 @@ deployments:
     flow_name: null
     entrypoint:  opensearch_backup_prefect.py:opensearch_backup_prefect
     parameters:
+      environment: "ctdc_stage"
       snapshot_name: ""
       s3_bucket: "crdc-stage-ctdc-opensearch-snapshot-bucket"
       indices: ""

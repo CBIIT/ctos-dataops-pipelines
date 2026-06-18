@@ -1,7 +1,7 @@
 import boto3
 from bento.common.utils import get_logger, get_time_stamp
-from cliuploader.src.common.md5_calculator import calculate_file_md5
-from cliuploader.src.common.s3util import S3Bucket
+from common.md5_calculator import calculate_file_md5
+from common.s3util import S3Bucket
 from bento.common.s3 import upload_log_file
 import os
 import pandas as pd

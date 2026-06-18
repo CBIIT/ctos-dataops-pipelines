@@ -1,7 +1,8 @@
 import boto3
-import csv
-from bento.common.utils import get_stream_md5, get_logger, get_time_stamp
-from bento.common.s3 import S3Bucket, upload_log_file
+from bento.common.utils import get_logger, get_time_stamp
+from cliuploader.src.common.md5_calculator import calculate_file_md5
+from cliuploader.src.common.s3util import S3Bucket
+from bento.common.s3 import upload_log_file
 import os
 import pandas as pd
 import time
@@ -14,6 +15,7 @@ FILE_NAME = "file_name"
 FILE_SIZE = "file_size"
 FILE_TYPE = "file_type"
 METADATA_DIR = "metadata"
+TEMP_DOWNLOAD_DIR = "tmp/download"
 timestamp = get_time_stamp()
 
 def upload_s3(s3_prefix, s3_bucket, file_key, log):
@@ -63,6 +65,8 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
     failed_files_df = pd.DataFrame(columns=[FILE_URL_IN_CDS])
     failed_files_count = 0
     failed_files_name = f"{tsv_filename}_error_files_{timestamp}.tsv"
+    # create temp download directory if not exists
+    os.makedirs(TEMP_DOWNLOAD_DIR, exist_ok=True)
 
     try:
         for page in pages:
@@ -81,16 +85,37 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
                     log.info(f"Retrieving metadata for: {object_key}")
                     try:
                         metadata_response = s3_client.head_object(Bucket=bucket_name, Key=object_key)
-                        s3_file = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-                        s3_file_content = s3_file['Body']
-                        s3_hash = get_stream_md5(s3_file_content)
+                        file_size = metadata_response.get('ContentLength')
+                        # download file from s3 bucket to local file
+                        local_file_path = os.path.join(TEMP_DOWNLOAD_DIR, os.path.basename(object_key))
+                        try:
+                            result, msg = s3_bucket.download_object(object_key, local_file_path)
+                            if not result:
+                                log.error(f"Failed to download file {object_key} from s3 bucket: {msg}")
+                                failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
+                                failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
+                                failed_files_count += 1
+                                continue
+                            else:
+                                log.info(f"Downloading file {object_key} from s3 bucket succeeded!")
+                                s3_hash = calculate_file_md5(local_file_path, file_size, log)
+                                log.info(f"Calculating file {object_key} md5 succeeded!")
+                        except Exception as e:
+                            log.error(f"Failed to download file {object_key} from s3 bucket: {e}")
+                            failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
+                            failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
+                            failed_files_count += 1
+                            continue
+                        # no matter success or failed, delete local file
+                        if os.path.exists(local_file_path):
+                            os.remove(local_file_path)
                         # Extract common useful fields
                         extracted_data = {
                             FILE_URL_IN_CDS: file_url,
                             MD5SUM: s3_hash,
                             #'Key': object_key,
                             FILE_NAME: object_key if directory_prefix == "" else object_key.replace(directory_prefix+FILE_SEP,""),
-                            FILE_SIZE: metadata_response.get('ContentLength'),
+                            FILE_SIZE: file_size,
                             FILE_TYPE: os.path.splitext(object_key)[1].lstrip('.').upper()
                             #'LastModified': metadata_response.get('LastModified'),
                             #'ETag': metadata_response.get('ETag').strip('"'), # Remove quotes from ETag

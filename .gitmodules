@@ -1,3 +1,6 @@
 [submodule "bento"]
 	path = bento
 	url = https://github.com/CBIIT/bento-common.git
+[submodule "cliuploader"]
+	path = cliuploader
+	url = https://github.com/CBIIT/crdc-datahub-cli-uploader.git

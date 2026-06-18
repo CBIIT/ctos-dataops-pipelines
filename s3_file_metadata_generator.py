@@ -1,8 +1,7 @@
 import boto3
 from bento.common.utils import get_logger, get_time_stamp
 from common.md5_calculator import calculate_file_md5
-from common.s3util import S3Bucket
-from bento.common.s3 import upload_log_file
+from bento.common.s3 import S3Bucket, upload_log_file
 import os
 import pandas as pd
 import time
@@ -89,7 +88,7 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
                         # download file from s3 bucket to local file
                         local_file_path = os.path.join(TEMP_DOWNLOAD_DIR, os.path.basename(object_key))
                         try:
-                            result, msg = s3_bucket.download_object(object_key, local_file_path)
+                            result, msg = s3_bucket.download_file(object_key, local_file_path)
                             if not result:
                                 log.error(f"Failed to download file {object_key} from s3 bucket: {msg}")
                                 failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])

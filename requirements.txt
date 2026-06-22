@@ -8,3 +8,4 @@ requests
 scp
 docker
 requests_aws4auth
+pandas

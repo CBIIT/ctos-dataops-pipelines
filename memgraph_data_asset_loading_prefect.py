@@ -12,9 +12,9 @@ import json
 import sys
 import subprocess
 
-MEMGRAPH_HOST = "memgraph_endpoint"
+MEMGRAPH_HOST = "memgraph_host"
 MEMGRAPH_USER = "memgraph_user"
-MEMGRAPH_PASSWORD = "memgraph_password"
+MEMGRAPH_PASSWORD = "memgraph_pass"
 SUMARY_SECRET = "memgraph_summary_secret"
 MEMGRAPH_PORT = "7687"
 
@@ -53,7 +53,7 @@ def memgraph_data_asset_loading_prefect(
     s3_validation_file_key = os.path.join(s3_folder, memgraph_validation_summary_file_name)
     validation_file_key = os.path.join(tmp_folder, memgraph_validation_summary_file_name)
     downlaod_s3(s3_bucket, s3_validation_file_key, log, validation_file_key)
-    with open(validation_file_key, 'r') as file:
+    with open(s3_validation_file_key, 'r') as file:
         memgraph_validation_summary = json.load(file)
         log.info(memgraph_validation_summary)
     if memgraph_restore_summary == memgraph_validation_summary:

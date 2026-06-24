@@ -5,6 +5,7 @@ from bento.common.s3 import S3Bucket, upload_log_file
 import os
 import pandas as pd
 import time
+import hashlib
 
 FILE_SEP = "/"
 S3_PREFIX = "s3://"
@@ -16,6 +17,31 @@ FILE_TYPE = "file_type"
 METADATA_DIR = "metadata"
 TEMP_DOWNLOAD_DIR = "/tmp/download"
 timestamp = get_time_stamp()
+
+def compute_s3_md5(s3, bucket: str, key: str, chunk_size: int = 64 * 1024 * 1024):
+    
+
+    # Get total file size
+    #s3 = boto3.client("s3", config=config)
+    head = s3.head_object(Bucket=bucket, Key=key)
+    total_size = head["ContentLength"]
+
+    md5_hash = hashlib.md5()
+    offset = 0
+
+    while offset < total_size:
+        end = min(offset + chunk_size - 1, total_size - 1)
+        range_header = f"bytes={offset}-{end}"
+
+        # Each range request is independent - retryable
+        response = s3.get_object(Bucket=bucket, Key=key, Range=range_header)
+        chunk = response["Body"].read()
+        md5_hash.update(chunk)
+
+        offset += len(chunk)
+        print(f"Progress: {offset / total_size * 100:.1f}%")
+
+    return md5_hash.hexdigest()
 
 def upload_s3(s3_prefix, s3_bucket, file_key, log):
     dest = os.path.join(f"s3://{s3_bucket}", s3_prefix)
@@ -31,7 +57,12 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
     """
     if directory_prefix.endswith(FILE_SEP):
         directory_prefix = directory_prefix[:-1]
-    s3_client = boto3.client('s3')
+    s3_config = boto3.config.Config(
+        read_timeout=300, # 5 min per chunk read
+        connect_timeout=30,
+        retries={"max_attempts": 5, "mode": "adaptive"},
+        )
+    s3_client = boto3.client('s3', config=s3_config)
     s3_bucket = S3Bucket(bucket_name)
     paginator = s3_client.get_paginator('list_objects_v2')
     prefix = directory_prefix + FILE_SEP if directory_prefix else ""
@@ -89,29 +120,30 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
                     try:
                         metadata_response = s3_client.head_object(Bucket=bucket_name, Key=object_key)
                         file_size = metadata_response.get('ContentLength')
+                        s3_hash = compute_s3_md5(s3_client, bucket_name, object_key)
                         # download file from s3 bucket to local file
-                        local_file_path = os.path.join(TEMP_DOWNLOAD_DIR, os.path.basename(object_key))
-                        try:
-                            result, msg = s3_bucket.download_file(object_key, local_file_path)
-                            if not result:
-                                log.error(f"Failed to download file {object_key} from s3 bucket: {msg}")
-                                failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
-                                failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
-                                failed_files_count += 1
-                                continue
-                            else:
-                                log.info(f"Downloading file {object_key} from s3 bucket succeeded!")
-                                s3_hash = calculate_file_md5(local_file_path, file_size, log)
-                                log.info(f"Calculating file {object_key} md5 succeeded!")
-                        except Exception as e:
-                            log.error(f"Failed to download file {object_key} from s3 bucket: {e}")
-                            failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
-                            failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
-                            failed_files_count += 1
-                            continue
+                        #local_file_path = os.path.join(TEMP_DOWNLOAD_DIR, os.path.basename(object_key))
+                        #try:
+                            #result, msg = s3_bucket.download_file(object_key, local_file_path)
+                            #if not result:
+                            #    log.error(f"Failed to download file {object_key} from s3 bucket: {msg}")
+                            #    failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
+                            #    failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
+                            #    failed_files_count += 1
+                            #    continue
+                            #else:
+                            #    log.info(f"Downloading file {object_key} from s3 bucket succeeded!")
+                            #    s3_hash = calculate_file_md5(local_file_path, file_size, log)
+                            #    log.info(f"Calculating file {object_key} md5 succeeded!")
+                            #except Exception as e:
+                            #    log.error(f"Failed to download file {object_key} from s3 bucket: {e}")
+                            #    failed_files_df_new_row = pd.DataFrame([{FILE_URL_IN_CDS: file_url}])
+                            #    failed_files_df = pd.concat([failed_files_df, failed_files_df_new_row], ignore_index=True)
+                            #    failed_files_count += 1
+                            #    continue
                         # no matter success or failed, delete local file
-                        if os.path.exists(local_file_path):
-                            os.remove(local_file_path)
+                        #if os.path.exists(local_file_path):
+                        #    os.remove(local_file_path)
                         # Extract common useful fields
                         extracted_data = {
                             FILE_URL_IN_CDS: file_url,

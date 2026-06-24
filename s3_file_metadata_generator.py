@@ -2,6 +2,7 @@ import boto3
 from bento.common.utils import get_logger, get_time_stamp
 from common.md5_calculator import calculate_file_md5
 from bento.common.s3 import S3Bucket, upload_log_file
+from botocore.config import Config as BotocoreConfig
 import os
 import pandas as pd
 import time
@@ -57,7 +58,7 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
     """
     if directory_prefix.endswith(FILE_SEP):
         directory_prefix = directory_prefix[:-1]
-    s3_config = boto3.config.Config(
+    s3_config = BotocoreConfig(
         read_timeout=300, # 5 min per chunk read
         connect_timeout=30,
         retries={"max_attempts": 5, "mode": "adaptive"},

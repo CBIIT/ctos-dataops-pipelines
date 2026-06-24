@@ -14,7 +14,7 @@ FILE_NAME = "file_name"
 FILE_SIZE = "file_size"
 FILE_TYPE = "file_type"
 METADATA_DIR = "metadata"
-TEMP_DOWNLOAD_DIR = "tmp/download"
+TEMP_DOWNLOAD_DIR = "/tmp/download"
 timestamp = get_time_stamp()
 
 def upload_s3(s3_prefix, s3_bucket, file_key, log):
@@ -66,6 +66,10 @@ def get_all_files_and_metadata(bucket_name, directory_prefix="", tsv_filename=""
     failed_files_name = f"{tsv_filename}_error_files_{timestamp}.tsv"
     # create temp download directory if not exists
     os.makedirs(TEMP_DOWNLOAD_DIR, exist_ok=True)
+    # If any files in TEMP_DOWNLOAD_DIR delete them
+    for file in os.listdir(TEMP_DOWNLOAD_DIR):
+        os.remove(os.path.join(TEMP_DOWNLOAD_DIR, file))
+        log.info(f"Deleted file {file} from {TEMP_DOWNLOAD_DIR}")
 
     try:
         for page in pages:

@@ -123,8 +123,13 @@ def collect_path(schema):
     return paths
 
 def find_path_direction(separate_path, paths):
+    all_paths = []
     for path in paths:
-        path_list = list(path.values())
+        #path_list = list(path.values())
+        # create a patch_list from path without Req as key
+        path_list = {k: v for k, v in path.items() if k != "Req"}
+        path_list = list(path_list.values())
+        all_paths.append(path_list)
         if set(path_list) == set(separate_path) and len(path_list) == len(separate_path):
             return path
     return None
@@ -173,6 +178,8 @@ def query_match_update(paths, all_paths, node):
                     query_direction = f"-->({path_diretion[DST]})"
                     diff_direction_exist = True
                     position = "right"
+                else:
+                    print(f"can not find relationship between {path_diretion[SRC]} and {path_diretion[DST]}")
             if position == "right":
                 query_update = query_update + query_direction
             else:
@@ -234,10 +241,14 @@ def create_query(config, node, schema, log):
                         query_where_list = query_where_list + [f"WHERE {prop_node}.{prop} IN {str(pv)}"] * len(query_match_update_list)
                     else:
                         log.error(f"can not find relationship between {prop_node} and {node}")
+            if query_where != "":
+                query_match = query_match + query_where
     if secondary_query_match_list:
         query_list = []
         for i in range(0, len(secondary_query_match_list)):
             query_list.append(query_match + " MATCH " + secondary_query_match_list[i] + query_where_list[i] + query_optional + query_return)
+        # remove duplicate items in query_list
+        query_list = list(set(query_list))
         query = " UNION ".join(query_list)
     else:
         query = query_match + query_where + query_optional + query_return

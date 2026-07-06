@@ -1,0 +1,138 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: ICDC DATAOPS
+prefect-version: null
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+pull:
+  - prefect.deployments.steps.git_clone:
+      id: clone-step
+      repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
+      branch: dataops_icdc_pipelines
+      include_submodules: True
+  - prefect.deployments.steps.pip_install_requirements:
+      requirements_file: requirements.txt
+      directory: "{{ clone-step.directory }}"
+      stream_output: False
+
+deployments:
+  # ---------- OpenSearch Backup ----------
+  - name: icdc-ctos-dataops-opensearch-backup-dev
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_backup_prefect.py:opensearch_backup_prefect
+    parameters:
+      environment: "icdc_dev"
+      snapshot_name: ""
+      s3_bucket: "crdc-nonprod-icdc-opensearch-snapshot-bucket"
+      indices: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
+
+  - name: icdc-ctos-dataops-opensearch-backup-qa
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_backup_prefect.py:opensearch_backup_prefect
+    parameters:
+      environment: "icdc_qa"
+      snapshot_name: ""
+      s3_bucket: "crdc-nonprod-icdc-opensearch-snapshot-bucket"
+      indices: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
+
+  # ---------- OpenSearch Restore ----------
+  - name: icdc-ctos-dataops-opensearch-restore-dev
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_restore_prefect.py:opensearch_restore_prefect
+    parameters:
+      environment: "icdc_dev"
+      snapshot_name: ""
+      s3_bucket: "crdc-nonprod-icdc-opensearch-snapshot-bucket"
+      indices: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+
+  - name: icdc-ctos-dataops-opensearch-restore-qa
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_restore_prefect.py:opensearch_restore_prefect
+    parameters:
+      environment: "icdc_qa"
+      snapshot_name: ""
+      s3_bucket: "crdc-nonprod-icdc-opensearch-snapshot-bucket"
+      indices: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+
+  # ---------- Redis Flush ----------
+  - name: icdc-ctos-dataops-redis-flush-dev
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: redis_flush_prefect.py:redis_flush_prefect
+    parameters:
+      environment: "icdc_dev"
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Redis Flush"
+
+  - name: icdc-ctos-dataops-redis-flush-qa
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: redis_flush_prefect.py:redis_flush_prefect
+    parameters:
+      environment: "icdc_qa"
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "Redis Flush"
+

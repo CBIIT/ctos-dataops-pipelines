@@ -8,9 +8,9 @@ import prefect.variables as Variable
 from opensearch_restore import opensearch_restore
 
 
-SUMMARY_SECRET = "memgraph_summary_secret"
+SECRET = "secret"
 ES_HOST = "es_host"
-PROJECT_NAME  = "ctdc"
+PROJECT_NAME  = "icdc"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
@@ -18,12 +18,12 @@ if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'OpenSearch Restore'
     os.environ[APP_NAME] = 'OpenSearch Restore'
 
-config_file = "config/prefect_drop_down_config_memgraph.yaml"
+config_file = "config/prefect_drop_down_config_icdc.yaml"
 with open(config_file, 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]
 
-@flow(name="OpenSearch restore", log_prints=True)
+@flow(name="OpenSearch Restore", log_prints=True)
 def opensearch_restore_prefect(
     environment: environment_choices, # type: ignore
     snapshot_name,
@@ -31,10 +31,10 @@ def opensearch_restore_prefect(
     s3_bucket
 ):
     log = get_logger('OpenSearch Restore')
-    opensearch_secret = Variable.get(config[environment][SUMMARY_SECRET])
-    secret = get_secret(opensearch_secret)
-    role_arn = Variable.get("ctdc_role_arn")
-    os_role_arn = Variable.get("ctdc_os_role_arn")
+    secret_name = Variable.get(config[environment][SECRET])
+    secret = get_secret(secret_name)
+    role_arn = Variable.get("icdc_role_arn")
+    os_role_arn = Variable.get("icdc_os_role_arn")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': PROJECT_NAME,

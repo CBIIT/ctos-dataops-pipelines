@@ -1,0 +1,18 @@
+icdc_dev:
+  secret: "icdc_secret_name_dev"
+  env: dev
+icdc_dev2:
+  secret: "icdc_secret_name_dev2"
+  env: dev
+icdc_qa:
+  secret: "icdc_secret_name_qa"
+  env: qa
+icdc_qa2:
+  secret: "icdc_secret_name_qa2"
+  env: qa
+icdc_stage:
+  secret: "icdc_secret_name_stage"
+  env: stage
+icdc_prod:
+  secret: "icdc_secret_name_prod"
+  env: stage

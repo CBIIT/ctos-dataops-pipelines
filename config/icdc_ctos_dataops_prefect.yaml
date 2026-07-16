@@ -135,3 +135,40 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Redis Flush"
+
+  # ---------- OpenSearch Loading ----------
+  - name: icdc-ctos-dataops-opensearch-loader-dev
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_loader_prefect.py:opensearch_loader_prefect
+    parameters:
+      environment: "icdc_dev"
+      indices_file: ""
+      indices_filter: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Loader"
+
+  - name: icdc-ctos-dataops-opensearch-loader-qa
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_loader_prefect.py:opensearch_loader_prefect
+    parameters:
+      environment: "icdc_qa"
+      indices_file: ""
+      indices_filter: ""
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Loader"

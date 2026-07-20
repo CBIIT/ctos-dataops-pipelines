@@ -40,7 +40,7 @@ def compute_s3_md5(s3, bucket: str, key: str, chunk_size: int = 64 * 1024 * 1024
         md5_hash.update(chunk)
 
         offset += len(chunk)
-        print(f"Progress: {offset / total_size * 100:.1f}%")
+        #print(f"Progress: {offset / total_size * 100:.1f}%")
 
     return md5_hash.hexdigest()
 

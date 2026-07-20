@@ -307,20 +307,31 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
   
-  - name: gc-ctos-dataops-s3-file-metadata-generator
+  
+  - name: gc-datahub-mongoDB-database-update
     version: null
     tags: []
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  s3_file_metadata_generator_prefect.py:s3_file_metadata_generator_prefect
+    entrypoint:  mongoDB_database_update_prefect.py:mongoDB_database_update_prefect
     parameters:
-      bucket_name: ""
-      s3_subfolder: ""
-      tsv_filename: "s3_object_metadata.tsv"
+      secret_name: ""
+      db_name: ""
+      collection_name: "release"
+      exported_file: "release.json"
+      updated_exported_file: "release_updated.json"
+      counter_file: "release_count.json"
+      s3_update_reference_file: "study_id_phs_accession_match.tsv"
+      old_parent_id_field: ""
+      new_parent_id_field: ""
+      node: ""
+      data_commons: "CDS"
+      s3_backup_bucket: ""
+      s3_backup_folder: ""
     work_pool:
-      name: prod-cds-general-mgconsole-prefect-3.4.18-python3.12
+      name: crdc-dh-dev-validation-ecs
       work_queue_name: default
       job_variables:
         env:
-          PREFECT_LOGGING_EXTRA_LOGGERS: "S3 File Metadata Generator"
+          PREFECT_LOGGING_EXTRA_LOGGERS: "MongoDB Database Update"

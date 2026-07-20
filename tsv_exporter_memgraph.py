@@ -63,7 +63,21 @@ def rearrange_list(lst, values_to_front):
 def update_list_value(list_value, log):
     try:
         real_list = ast.literal_eval(list_value)
-        return '|'.join(str(v) for v in real_list)
+        updated_list = []
+        for item in real_list:
+            if "[" in item:
+                # remove the square brackets
+                item = item.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+                items = item.split(",")
+                for i in items:
+                    updated_list.append(str(i).strip())
+        if len(updated_list) >0:
+            if len(updated_list) == 1 and updated_list[0] == '':
+                return None
+            else:
+                return '|'.join(str(v) for v in updated_list)
+        else:
+            return '|'.join(str(v) for v in real_list)
     except Exception as e:
         #log.info(list_value)
         return list_value

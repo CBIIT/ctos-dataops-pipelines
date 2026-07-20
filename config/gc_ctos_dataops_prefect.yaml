@@ -314,7 +314,7 @@ deployments:
     description: null
     schedule: {}
     flow_name: null
-    entrypoint:  mongoDB_database_update_prefect.py:mongoDB_database_update_prefect
+    entrypoint:  mongoDB_functions_prefect.py:mongoDB_database_update_prefect
     parameters:
       secret_name: ""
       db_name: ""
@@ -327,8 +327,8 @@ deployments:
       new_parent_id_field: ""
       node: ""
       data_commons: "CDS"
-      s3_backup_bucket: ""
-      s3_backup_folder: ""
+      s3_backup_bucket: "crdc-hub-dev-submission"
+      s3_backup_folder: "gc_study_id_update"
     work_pool:
       name: crdc-dh-dev-validation-ecs
       work_queue_name: default

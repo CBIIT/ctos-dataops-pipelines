@@ -3,6 +3,7 @@ from mongoDB_functions import import_collection, update_exported_collection, upl
 from bento.common.secret_manager import get_secret
 import pymongo
 import os
+import shutil
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 
 
@@ -61,25 +62,32 @@ def mongoDB_database_update_prefect(
         raise e
     finally:
         client.close()
-    
-    if updated_data:
-        if len(updated_data) > 0:
-            try:
-                result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, s3_backup_bucket, s3_backup_folder)
-                if result:
-                    log.info("Collection imported successfully")
-                else:
-                    log.error("Collection import failed, the backup file is loaded to restore the collection")
-            except Exception as e:
-                log.error(e)
-                log.error("Failed to restore the collection from the backup file, please check the backup file and the collection")
-                raise e
-            finally:
-                client.close()
+    try:
+        if updated_data:
+            if len(updated_data) > 0:
+                try:
+                    result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, s3_backup_bucket, s3_backup_folder)
+                    if result:
+                        log.info("Collection imported successfully")
+                    else:
+                        log.error("Collection import failed, the backup file is loaded to restore the collection")
+                except Exception as e:
+                    log.error(e)
+                    log.error("Failed to restore the collection from the backup file, please check the backup file and the collection")
+                    raise e
+                finally:
+                    client.close()
+            else:
+                log.info("The updated data is empty or the collection is not found, the collection is not updated")
         else:
             log.info("The updated data is empty or the collection is not found, the collection is not updated")
-    else:
-        log.info("The updated data is empty or the collection is not found, the collection is not updated")
+    except Exception as e:
+        log.error(e)
+        raise e
+    finally:
+        client.close()
+        if os.path.exists(DOWNLOAD_FOLDER):
+            shutil.rmtree(DOWNLOAD_FOLDER)
 
 @flow(name="MongoDB Database Export", log_prints=True)
 def mongoDB_database_export_prefect(

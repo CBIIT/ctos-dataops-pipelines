@@ -43,7 +43,7 @@ def export_collection(client, db_name, collection_name, exported_file):
         # default=str handles ObjectId and other BSON types
         json.dump(data, f, default=str, indent=2)
 
-def upload_s3(s3_prefix, s3_bucket, file_key, log):
+def upload_s3(s3_bucket, s3_prefix, file_key, log):
     
     dest = os.path.join(f"s3://{s3_bucket}", s3_prefix)
     log.info(f'Start uploading the file to {dest}')

@@ -49,7 +49,7 @@ def mongoDB_database_update_prefect(
         client.close()
     
     try:
-        updated_data, counter = update_exported_collection_prefect(exported_file, updated_exported_file, s3_update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, s3_backup_bucket, counter_file, log)
+        updated_data, counter = update_exported_collection_prefect(exported_file, updated_exported_file, s3_update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, s3_backup_bucket, log)
     except Exception as e:
         log.error(e)
         raise e
@@ -59,7 +59,7 @@ def mongoDB_database_update_prefect(
     if updated_data:
         if len(updated_data) > 0:
             try:
-                result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter)
+                result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, s3_backup_bucket, s3_backup_folder)
                 if result:
                     log.info("Collection imported successfully")
                 else:
@@ -85,7 +85,7 @@ def mongoDB_database_export_prefect(
     s3_backup_folder
 ):
     export_collection(client, db_name, collection_name, exported_file)
-    upload_s3(s3_backup_bucket, s3_backup_folder, exported_file)
+    upload_s3(s3_backup_bucket, s3_backup_folder, exported_file, log)
 
 @flow(name="Update Exported Collection", log_prints=True)
 def update_exported_collection_prefect(
@@ -97,14 +97,12 @@ def update_exported_collection_prefect(
     node,
     data_commons,
     s3_backup_bucket,
-    s3_backup_folder,
-    counter_file
+    s3_backup_folder
 ):
     update_reference_file = os.path.basename(s3_update_reference_file)
     downlaod_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
-    updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, counter_file, log)
+    updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
     upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)
-    upload_s3(s3_backup_bucket, s3_backup_folder, counter_file, log)
     return updated_data, counter
 
 @flow(name="Import Collection", log_prints=True)
@@ -114,9 +112,13 @@ def import_collection_prefect(
     collection_name,
     updated_data,
     exported_file,
-    counter
+    counter,
+    counter_file,
+    s3_backup_bucket,
+    s3_backup_folder
 ):
-    result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, log)
+    result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, log)
+    upload_s3(s3_backup_bucket, s3_backup_folder, counter_file, log)
     return result
 
 if __name__ == "__main__":

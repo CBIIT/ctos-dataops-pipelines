@@ -66,7 +66,7 @@ def add_history_item(item, update_log):
     })
     return item
 
-def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, counter_file, log):
+def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log):
     try:
         
         with open(exported_file, "r") as f:
@@ -134,7 +134,7 @@ def export_counter(counter_file, counter):
     with open(counter_file, "w") as f:
         json.dump(counter, f, default=str, indent=2)
 
-def import_collection(client, db_name, collection_name, data, backup_file, counter, log):
+def import_collection(client, db_name, collection_name, data, backup_file, counter, counter_file, log):
     try:
         with open(backup_file, "r") as f:
             backup_data = json.load(f)
@@ -162,22 +162,22 @@ def import_collection(client, db_name, collection_name, data, backup_file, count
         return False
 
 if __name__ == "__main__":
-    mongo_url = "mongodb://localhost:27017/"
-    db_name = "crdcdh"
-    collection_name = "release"
-    exported_file = "release.json"
-    update_reference_file = "config/study_id_phs_accession_match_test.tsv"
-    old_parent_id_field = "phs_accession"
-    new_parent_id_field = "study_id"
-    updated_exported_file = "release_updated.json"
-    node = "study"
-    data_commons = "CDS"
+    mongo_url = "mongoURL"
+    db_name = "test"
+    collection_name = "test"
+    exported_file = "test.json"
+    update_reference_file = "test.tsv"
+    old_parent_id_field = "old_parent_id"
+    new_parent_id_field = "new_parent_id"
+    updated_exported_file = "test_updated.json"
+    node = "test"
+    data_commons = "test"
     client = pymongo.MongoClient(mongo_url)
-    counter_file = "release_count.json"
-    #export_collection(client, db_name, collection_name, exported_file)
+    counter_file = "test_count.json"
+    export_collection(client, db_name, collection_name, exported_file)
     updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, counter_file, log)
     if updated_data:
-        result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, log)
+        result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, log)
         if result:
             print("Collection imported successfully")
         else:

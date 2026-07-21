@@ -10,6 +10,7 @@ MONGO_DB_USER = "mongo_db_user"
 MONGODB_PORT = "mongo_db_port"
 MONGO_DB_HOST = "mongo_db_host"
 MONGO_DB_PASSWORD = "mongo_db_password"
+DOWNLOAD_FOLDER = "/tmp/download_folder"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'MongoDB_Update'
@@ -40,6 +41,11 @@ def mongoDB_database_update_prefect(
     mongo_db_password = secret[MONGO_DB_PASSWORD]
     mongo_url = f"mongodb://{mongo_db_user}:{mongo_db_password}@{mongo_db_host}:{mongo_db_port}/"
     client = pymongo.MongoClient(mongo_url)
+    if not os.path.exists(DOWNLOAD_FOLDER):
+        os.makedirs(DOWNLOAD_FOLDER)
+    exported_file = os.path.join(DOWNLOAD_FOLDER, exported_file)
+    updated_exported_file = os.path.join(DOWNLOAD_FOLDER, updated_exported_file)
+    counter_file = os.path.join(DOWNLOAD_FOLDER, counter_file)
     try:
         mongoDB_database_export_prefect(client, db_name, collection_name, exported_file, s3_backup_bucket, s3_backup_folder)
     except Exception as e:
@@ -99,7 +105,7 @@ def update_exported_collection_prefect(
     s3_backup_bucket,
     s3_backup_folder
 ):
-    update_reference_file = os.path.basename(s3_update_reference_file)
+    update_reference_file = os.path.join(DOWNLOAD_FOLDER, os.path.basename(s3_update_reference_file))
     downlaod_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
     updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
     upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)

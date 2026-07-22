@@ -113,6 +113,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                         if update_dict.get(str(item[PROPS][old_parent_id_field])):      
                             item[PROPS][new_parent_id_field] = update_dict[str(item[PROPS][old_parent_id_field])]
                             item[NODE_ID] = update_dict[str(item[PROPS][old_parent_id_field])]
+                            item[UPDATED_AT] = CURRENT_TIMESTAMP
                             update_log = {
                                 UPDATE_REASON: "Add new ID property to the props",
                                 UPDATE_TIMESTAMP: CURRENT_TIMESTAMP,
@@ -128,6 +129,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                     item[PARENTS][index][PARENT_ID_PROP_NAME] = new_parent_id_field
                                     new_parent_id_value = update_dict[str(parent[PARENT_ID_VALUE])]
                                     item[PARENTS][index][PARENT_ID_VALUE] = new_parent_id_value
+                                    item[UPDATED_AT] = CURRENT_TIMESTAMP
                                     update_log = {
                                         UPDATE_REASON: "Update parent ID property and value",
                                         UPDATE_TIMESTAMP: CURRENT_TIMESTAMP,

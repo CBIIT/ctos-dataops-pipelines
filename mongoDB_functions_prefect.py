@@ -116,8 +116,12 @@ def update_exported_collection_prefect(
     update_reference_file = os.path.join(DOWNLOAD_FOLDER, os.path.basename(s3_update_reference_file))
     downlaod_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
     updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
-    upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)
-    return updated_data, counter
+    if updated_data and len(updated_data) > 0:
+        upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)
+        return updated_data, counter
+    else:
+        log.info("The updated data is empty or the collection is not found, the collection is not updated")
+        return None, None
 
 @flow(name="Import Collection", log_prints=True)
 def import_collection_prefect(

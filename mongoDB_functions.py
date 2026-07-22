@@ -59,12 +59,25 @@ def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
     log.info(f'Downloading file {os.path.basename(s3_file_key)} succeeded!')
    
 def add_history_item(item, update_log):
-    item[HISTORY].append({
-        RELEASED_AT: CURRENT_TIMESTAMP,
-        PROPS: item.get(PROPS),
-        PARENTS: item.get(PARENTS),
-        UPDATE_LOG: update_log
-    })
+    if item.get(HISTORY):
+        if isinstance(item[HISTORY], list):
+            item[HISTORY].append({
+                RELEASED_AT: CURRENT_TIMESTAMP,
+                PROPS: item.get(PROPS),
+                PARENTS: item.get(PARENTS),
+                UPDATE_LOG: update_log
+            })
+        else:
+            log.error(f'History is not a list, it is {type(item[HISTORY])}')
+            return item
+    else:
+        item[HISTORY] = [{
+            RELEASED_AT: CURRENT_TIMESTAMP,
+            PROPS: item.get(PROPS),
+            PARENTS: item.get(PARENTS),
+            UPDATE_LOG: update_log
+        }]
+
     return item
 
 def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log):

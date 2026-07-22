@@ -34,14 +34,26 @@ if LOG_PREFIX not in os.environ:
 
 log = get_logger('MongoDB_Update')
 
-def export_collection(client, db_name, collection_name, exported_file):
+def export_collection(client, db_name, collection_name, exported_file, batch_size=1000):
     db = client[db_name]
     collection = db[collection_name]
-    # find() returns a Cursor; materialize to a list for JSON serialization
-    data = list(collection.find())
+    # Stream docs to file so the full collection is never held in memory
+    cursor = collection.find().batch_size(batch_size)
     with open(exported_file, "w") as f:
-        # default=str handles ObjectId and other BSON types
-        json.dump(data, f, default=str, indent=2)
+        f.write("[\n")
+        first = True
+        count = 0
+        for doc in cursor:
+            if not first:
+                f.write(",\n")
+            # default=str handles ObjectId and other BSON types
+            json.dump(doc, f, default=str)
+            first = False
+            count += 1
+            if count % batch_size == 0:
+                log.info(f"Exported {count} documents...")
+        f.write("\n]")
+    log.info(f"Exported {count} documents to {exported_file}")
 
 def upload_s3(s3_bucket, s3_prefix, file_key, log):
     
@@ -134,16 +146,46 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
         return None, None
 
 # mongodb replace many records
-def replace_many(collection, data):
-    
-    ops = [
-        pymongo.ReplaceOne({"_id": doc["_id"]}, doc, upsert=False)
-        for doc in data
-    ]
-    if ops:
-        result = collection.bulk_write(ops)
-        return result
+#def replace_many(collection, data):
+#    ops = [
+#        pymongo.ReplaceOne({"_id": doc["_id"]}, doc, upsert=False)
+#        for doc in data
+#    ]
+#    if ops:
+#        result = collection.bulk_write(ops)
+#        return result
 
+def replace_many_in_batches(collection, data, batch_size=5000):
+    try:
+        operations = []
+        count = 0
+        for item in data: # Use a generator or iterator to avoid OOM
+            # 1. Prepare your operation
+            operation = pymongo.ReplaceOne(
+                {"_id": item["_id"]}, 
+                item,
+                upsert=False
+            )
+            operations.append(operation)
+            # 2. Flush when batch size is reached
+            if len(operations) >= batch_size:
+                collection.bulk_write(operations, ordered=False)
+                count += len(operations)
+                log.info(f"Processed {count} documents in the updated data")
+                operations.clear()
+
+
+        # 3. Flush the remaining operations
+        if operations:
+            collection.bulk_write(operations, ordered=False)
+            count += len(operations)
+            log.info(f"Processed {count} documents in the updated data")
+            operations.clear()
+        return True
+    except Exception as e:
+        log.error(e)
+        return False
+        
 def export_counter(counter_file, counter):
     counter["total_updated_nodes"] = counter["node_updated"] + sum(counter["children_updated"].values())
     with open(counter_file, "w") as f:
@@ -156,7 +198,8 @@ def import_collection(client, db_name, collection_name, data, backup_file, count
         # get total records count from the collection
         collection = client[db_name][collection_name]
         counter["total_records_before_update"] = collection.count_documents({})
-        result = replace_many(collection, data)
+        log.info("Start replacing the collection with the new data")
+        result = replace_many_in_batches(collection, data)
         counter["total_records_after_update"] = collection.count_documents({})
         export_counter(counter_file, counter)
         if counter["total_records_before_update"] != counter["total_records_after_update"]:
@@ -168,12 +211,11 @@ def import_collection(client, db_name, collection_name, data, backup_file, count
             return True
         else:
             log.error("Collection import failed")
-            result = replace_many(client, db_name, collection_name, backup_data)
+            result = replace_many_in_batches(client, db_name, collection_name, backup_data)
             return False
     except Exception as e:
         # if failed, import the backup file
-        
-        result = replace_many(client, db_name, collection_name, backup_data)
+        result = replace_many_in_batches(client, db_name, collection_name, backup_data)
         return False
 
 if __name__ == "__main__":
@@ -190,7 +232,7 @@ if __name__ == "__main__":
     client = pymongo.MongoClient(mongo_url)
     counter_file = "test_count.json"
     export_collection(client, db_name, collection_name, exported_file)
-    updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, counter_file, log)
+    updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
     if updated_data:
         result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, log)
         if result:

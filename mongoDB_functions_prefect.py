@@ -52,16 +52,13 @@ def mongoDB_database_update_prefect(
     except Exception as e:
         log.error(e)
         raise e
-    finally:
-        client.close()
     
     try:
         updated_data, counter = update_exported_collection_prefect(exported_file, updated_exported_file, s3_update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, s3_backup_bucket, s3_backup_folder)
     except Exception as e:
         log.error(e)
         raise e
-    finally:
-        client.close()
+
     try:
         if updated_data:
             if len(updated_data) > 0:
@@ -75,8 +72,6 @@ def mongoDB_database_update_prefect(
                     log.error(e)
                     log.error("Failed to restore the collection from the backup file, please check the backup file and the collection")
                     raise e
-                finally:
-                    client.close()
             else:
                 log.info("The updated data is empty or the collection is not found, the collection is not updated")
         else:

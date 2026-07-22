@@ -217,11 +217,11 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
             return True
         else:
             log.error("Collection import failed")
-            result = replace_many_in_batches(client, db_name, collection_name, backup_data)
+            result = replace_many_in_batches(collection, backup_data)
             return False
     except Exception as e:
         # if failed, import the backup file
-        result = replace_many_in_batches(client, db_name, collection_name, backup_data)
+        result = replace_many_in_batches(collection, backup_data)
         return False
 
 if __name__ == "__main__":

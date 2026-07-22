@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 from bento.common.s3 import upload_log_file, S3Bucket
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+import yaml
 
 
 NODE_TYPE = "nodeType"
@@ -140,7 +141,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
         with open(updated_exported_file, "w") as f:
             json.dump(data, f, default=str, indent=2)
         log.info(f'Updated exported collection {updated_exported_file} successfully!')
-        return data, counter
+        return updated_exported_file, counter
     except Exception as e:
         log.error(e)
         return None, None
@@ -191,13 +192,18 @@ def export_counter(counter_file, counter):
     with open(counter_file, "w") as f:
         json.dump(counter, f, default=str, indent=2)
 
-def import_collection(client, db_name, collection_name, data, backup_file, counter, counter_file, log):
+def import_collection(client, db_name, collection_name, updated_data_file, backup_file, counter, counter_file, log):
     try:
         with open(backup_file, "r") as f:
             backup_data = json.load(f)
+        with open(updated_data_file, "r") as f:
+            data = json.load(f)
         # get total records count from the collection
         collection = client[db_name][collection_name]
         counter["total_records_before_update"] = collection.count_documents({})
+        if len(data) != counter["total_records_before_update"]:
+            log.error("Total records count mismatch between the updated data and the collection")
+            return False
         log.info("Start replacing the collection with the new data")
         result = replace_many_in_batches(collection, data)
         counter["total_records_after_update"] = collection.count_documents({})
@@ -219,18 +225,21 @@ def import_collection(client, db_name, collection_name, data, backup_file, count
         return False
 
 if __name__ == "__main__":
-    mongo_url = "mongoURL"
-    db_name = "test"
-    collection_name = "test"
-    exported_file = "test.json"
-    update_reference_file = "test.tsv"
-    old_parent_id_field = "old_parent_id"
-    new_parent_id_field = "new_parent_id"
-    updated_exported_file = "test_updated.json"
-    node = "test"
-    data_commons = "test"
+    # read the config file
+    with open("config/mongodb_config_test.yaml", "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    mongo_url = config["mongo_url"]
+    db_name = config["db_name"]
+    collection_name = config["collection_name"]
+    exported_file = config["exported_file"]
+    update_reference_file = config["update_reference_file"]
+    old_parent_id_field = config["old_parent_id_field"]
+    new_parent_id_field = config["new_parent_id_field"]
+    updated_exported_file = config["updated_exported_file"]
+    node = config["node"]
+    data_commons = config["data_commons"]
     client = pymongo.MongoClient(mongo_url)
-    counter_file = "test_count.json"
+    counter_file = config["counter_file"]
     export_collection(client, db_name, collection_name, exported_file)
     updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
     if updated_data:

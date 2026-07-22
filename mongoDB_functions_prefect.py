@@ -115,10 +115,10 @@ def update_exported_collection_prefect(
 ):
     update_reference_file = os.path.join(DOWNLOAD_FOLDER, os.path.basename(s3_update_reference_file))
     downlaod_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
-    updated_data, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
-    if updated_data and len(updated_data) > 0:
+    updated_data_file, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
+    if updated_data_file:
         upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)
-        return updated_data, counter
+        return updated_data_file, counter
     else:
         log.info("The updated data is empty or the collection is not found, the collection is not updated")
         return None, None
@@ -128,14 +128,14 @@ def import_collection_prefect(
     client,
     db_name,
     collection_name,
-    updated_data,
+    updated_data_file,
     exported_file,
     counter,
     counter_file,
     s3_backup_bucket,
     s3_backup_folder
 ):
-    result = import_collection(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, log)
+    result = import_collection(client, db_name, collection_name, updated_data_file, exported_file, counter, counter_file, log)
     upload_s3(s3_backup_bucket, s3_backup_folder, counter_file, log)
     return result
 

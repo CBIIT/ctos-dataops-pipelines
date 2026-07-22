@@ -114,6 +114,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                         counter["children_updated"][item[NODE_TYPE]] = 1
         with open(updated_exported_file, "w") as f:
             json.dump(data, f, default=str, indent=2)
+        log.info(f'Updated exported collection {updated_exported_file} successfully!')
         return data, counter
     except Exception as e:
         log.error(e)

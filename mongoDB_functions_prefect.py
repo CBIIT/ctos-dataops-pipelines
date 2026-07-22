@@ -56,7 +56,7 @@ def mongoDB_database_update_prefect(
         client.close()
     
     try:
-        updated_data, counter = update_exported_collection_prefect(exported_file, updated_exported_file, s3_update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, s3_backup_bucket, log)
+        updated_data, counter = update_exported_collection_prefect(exported_file, updated_exported_file, s3_update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, s3_backup_bucket, s3_backup_folder)
     except Exception as e:
         log.error(e)
         raise e

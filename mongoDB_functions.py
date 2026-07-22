@@ -35,7 +35,7 @@ if LOG_PREFIX not in os.environ:
 
 log = get_logger('MongoDB_Update')
 
-def export_collection(client, db_name, collection_name, exported_file, batch_size=1000):
+def export_collection(client, db_name, collection_name, exported_file, batch_size=5000):
     db = client[db_name]
     collection = db[collection_name]
     # Stream docs to file so the full collection is never held in memory
@@ -71,25 +71,43 @@ def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
     bucket.download_file(s3_file_key, file_key)
     log.info(f'Downloading file {os.path.basename(s3_file_key)} succeeded!')
    
-def add_history_item(item, update_log):
+def add_history_item(item, update_log, is_node_updated=False):
     if item.get(HISTORY):
         if isinstance(item[HISTORY], list):
-            item[HISTORY].append({
-                RELEASED_AT: CURRENT_TIMESTAMP,
-                PROPS: item.get(PROPS),
-                PARENTS: item.get(PARENTS),
-                UPDATE_LOG: update_log
-            })
+            if is_node_updated:
+                item[HISTORY].append({
+                    RELEASED_AT: CURRENT_TIMESTAMP,
+                    PROPS: item.get(PROPS),
+                    PARENTS: item.get(PARENTS),
+                    NODE_ID: item.get(NODE_ID),
+                    UPDATE_LOG: update_log
+                })
+            else:
+                item[HISTORY].append({
+                    RELEASED_AT: CURRENT_TIMESTAMP,
+                    PROPS: item.get(PROPS),
+                    PARENTS: item.get(PARENTS),
+                    UPDATE_LOG: update_log
+                })
         else:
             log.error(f'History is not a list, it is {type(item[HISTORY])}')
             return item
     else:
-        item[HISTORY] = [{
-            RELEASED_AT: CURRENT_TIMESTAMP,
-            PROPS: item.get(PROPS),
-            PARENTS: item.get(PARENTS),
-            UPDATE_LOG: update_log
-        }]
+        if is_node_updated:
+            item[HISTORY] = [{
+                RELEASED_AT: CURRENT_TIMESTAMP,
+                PROPS: item.get(PROPS),
+                PARENTS: item.get(PARENTS),
+                NODE_ID: item.get(NODE_ID),
+                UPDATE_LOG: update_log
+            }]
+        else:
+            item[HISTORY] = [{
+                RELEASED_AT: CURRENT_TIMESTAMP,
+                PROPS: item.get(PROPS),
+                PARENTS: item.get(PARENTS),
+                UPDATE_LOG: update_log
+            }]
 
     return item
 
@@ -118,7 +136,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                 UPDATE_REASON: "Add new ID property to the props",
                                 UPDATE_TIMESTAMP: CURRENT_TIMESTAMP,
                             }
-                            item = add_history_item(item, update_log)
+                            item = add_history_item(item, update_log, True)
                             counter["node_updated"] += 1
                             log.info(f"Updated node {{{old_parent_id_field} : {item[PROPS][old_parent_id_field]}}}  with new ID {{{new_parent_id_field} : {update_dict[str(item[PROPS][old_parent_id_field])]}}}.")
                 else:
@@ -134,7 +152,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                         UPDATE_REASON: "Update parent ID property and value",
                                         UPDATE_TIMESTAMP: CURRENT_TIMESTAMP,
                                     }
-                                    item = add_history_item(item, update_log)
+                                    item = add_history_item(item, update_log, False)
                                     log.info(f"Updated child node {{type: {item[NODE_TYPE]}, node_id: {item[NODE_ID]}}} with new parent ID {{{new_parent_id_field} : {new_parent_id_value}}}.")
                                     if counter.get("children_updated").get(item[NODE_TYPE]):
                                         counter["children_updated"][item[NODE_TYPE]] += 1

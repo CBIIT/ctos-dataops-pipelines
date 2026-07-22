@@ -322,7 +322,7 @@ deployments:
       exported_file: "release.json"
       updated_exported_file: "release_updated.json"
       counter_file: "release_count.json"
-      s3_update_reference_file: "study_id_phs_accession_match.tsv"
+      s3_update_reference_file: "gc_study_id_update/study_id_phs_accession_match.tsv"
       old_parent_id_field: ""
       new_parent_id_field: ""
       node: ""

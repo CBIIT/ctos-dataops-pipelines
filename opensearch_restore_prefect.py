@@ -9,7 +9,7 @@ from opensearch_restore import opensearch_restore
 
 
 SUMMARY_SECRET = "memgraph_summary_secret"
-ES_HOST = "es_host"
+ES_HOST = "ES_HOST"
 PROJECT_NAME  = "popsci"
 REGION = "us-east-1"
 ENVIRONMENT = "env"

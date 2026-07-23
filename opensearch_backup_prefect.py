@@ -8,7 +8,7 @@ import prefect.variables as Variable
 from opensearch_backup import opensearch_backup
 
 SUMMARY_SECRET = "memgraph_summary_secret"
-ES_HOST = "es_host"
+es_host = "es_host"
 PROJECT_NAME  = "popsci"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
@@ -35,7 +35,7 @@ def opensearch_backup_prefect(
     role_arn = Variable.get("popsci_role_arn")
     os_role_arn = Variable.get("popsci_os_role_arn")
     argList = {
-        'oshost': "https://" + secret[ES_HOST] + "/",
+        'oshost': "https://" + secret[es_host] + "/",
         'repo': PROJECT_NAME,
         's3bucket': s3_bucket,
         'snapshot': snapshot_name,

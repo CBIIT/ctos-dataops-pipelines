@@ -8,6 +8,7 @@ import pandas as pd
 from bento.common.s3 import upload_log_file, S3Bucket
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 import yaml
+import copy
 
 
 NODE_TYPE = "nodeType"
@@ -28,6 +29,7 @@ UPDATE_TIMESTAMP = "updateTimestamp"
 NODE_ID = "nodeID"
 UPDATED_AT = "updatedAt"
 CURRENT_TIMESTAMP = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+INTENTION = "intention"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'MongoDB_Update'
@@ -70,45 +72,39 @@ def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
         os.makedirs(os.path.dirname(file_key))
     bucket.download_file(s3_file_key, file_key)
     log.info(f'Downloading file {os.path.basename(s3_file_key)} succeeded!')
+
+def add_initial_history_item(item):
+    props = copy.deepcopy(item.get(PROPS))
+    parents = copy.deepcopy(item.get(PARENTS))
+    updated_at = copy.deepcopy(item.get(UPDATED_AT))
+    item[HISTORY] = [{
+        RELEASED_AT: updated_at,
+        INTENTION: "New/Update",
+        PROPS: props,
+        PARENTS: parents,
+    }]
+    return item
    
 def add_history_item(item, update_log, is_node_updated=False):
-    if item.get(HISTORY):
-        if isinstance(item[HISTORY], list):
-            if is_node_updated:
-                item[HISTORY].append({
-                    RELEASED_AT: CURRENT_TIMESTAMP,
-                    PROPS: item.get(PROPS),
-                    PARENTS: item.get(PARENTS),
-                    NODE_ID: item.get(NODE_ID),
-                    UPDATE_LOG: update_log
-                })
-            else:
-                item[HISTORY].append({
-                    RELEASED_AT: CURRENT_TIMESTAMP,
-                    PROPS: item.get(PROPS),
-                    PARENTS: item.get(PARENTS),
-                    UPDATE_LOG: update_log
-                })
-        else:
-            log.error(f'History is not a list, it is {type(item[HISTORY])}')
-            return item
-    else:
+    if isinstance(item[HISTORY], list):
         if is_node_updated:
-            item[HISTORY] = [{
+            item[HISTORY].append({
                 RELEASED_AT: CURRENT_TIMESTAMP,
                 PROPS: item.get(PROPS),
                 PARENTS: item.get(PARENTS),
                 NODE_ID: item.get(NODE_ID),
                 UPDATE_LOG: update_log
-            }]
+            })
         else:
-            item[HISTORY] = [{
+            item[HISTORY].append({
                 RELEASED_AT: CURRENT_TIMESTAMP,
                 PROPS: item.get(PROPS),
                 PARENTS: item.get(PARENTS),
                 UPDATE_LOG: update_log
-            }]
-
+            })
+    else:
+        log.error(f'History is not a list, it is {type(item[HISTORY])}')
+        return item
     return item
 
 def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log):
@@ -128,7 +124,9 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
             if item[DATA_COMMONS] == data_commons:
                 if item.get(NODE_TYPE) and item.get(NODE_TYPE) == node:
                     if item.get(PROPS).get(old_parent_id_field) and not item.get(PROPS).get(new_parent_id_field):
-                        if update_dict.get(str(item[PROPS][old_parent_id_field])):      
+                        if update_dict.get(str(item[PROPS][old_parent_id_field])):
+                            if not item.get(HISTORY):
+                                item = add_initial_history_item(item)
                             item[PROPS][new_parent_id_field] = update_dict[str(item[PROPS][old_parent_id_field])]
                             item[NODE_ID] = update_dict[str(item[PROPS][old_parent_id_field])]
                             item[UPDATED_AT] = CURRENT_TIMESTAMP
@@ -143,7 +141,9 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                     if item.get(PARENTS):
                         for index, parent in enumerate(item[PARENTS]):
                             if parent.get(PARENT_TYPE) and parent.get(PARENT_TYPE) == node:
-                                if update_dict.get(str(parent[PARENT_ID_VALUE])):  
+                                if update_dict.get(str(parent[PARENT_ID_VALUE])):
+                                    if not item.get(HISTORY):
+                                        item = add_initial_history_item(item)
                                     item[PARENTS][index][PARENT_ID_PROP_NAME] = new_parent_id_field
                                     new_parent_id_value = update_dict[str(parent[PARENT_ID_VALUE])]
                                     item[PARENTS][index][PARENT_ID_VALUE] = new_parent_id_value

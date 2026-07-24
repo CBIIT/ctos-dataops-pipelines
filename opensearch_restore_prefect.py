@@ -29,7 +29,8 @@ def opensearch_restore_prefect(
     environment: environment_choices, # type: ignore
     snapshot_name,
     indices,
-    s3_bucket
+    s3_bucket,
+    s3_folder
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(config[environment][SUMARY_SECRET])
@@ -45,7 +46,7 @@ def opensearch_restore_prefect(
         'indices': indices,
         'rolearn': role_arn,
         'region': REGION,
-        'basepath': snapshot_name
+        'basepath': os.path.join(s3_folder, snapshot_name)
     }
     opensearch_restore(argList)
 

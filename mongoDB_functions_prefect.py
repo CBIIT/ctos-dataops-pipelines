@@ -1,5 +1,5 @@
 from prefect import flow
-from mongoDB_functions import import_collection, update_exported_collection, upload_s3, export_collection, downlaod_s3
+from mongoDB_functions import import_collection, update_exported_collection, upload_s3, export_collection, download_s3
 from bento.common.secret_manager import get_secret
 import pymongo
 import os
@@ -61,19 +61,16 @@ def mongoDB_database_update_prefect(
 
     try:
         if updated_data:
-            if len(updated_data) > 0:
-                try:
-                    result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, s3_backup_bucket, s3_backup_folder)
-                    if result:
-                        log.info("Collection imported successfully")
-                    else:
-                        log.error("Collection import failed, the backup file is loaded to restore the collection")
-                except Exception as e:
-                    log.error(e)
-                    log.error("Failed to restore the collection from the backup file, please check the backup file and the collection")
-                    raise e
-            else:
-                log.info("The updated data is empty or the collection is not found, the collection is not updated")
+            try:
+                result = import_collection_prefect(client, db_name, collection_name, updated_data, exported_file, counter, counter_file, s3_backup_bucket, s3_backup_folder)
+                if result:
+                    log.info("Collection imported successfully")
+                else:
+                    log.error("Collection import failed, the backup file is loaded to restore the collection")
+            except Exception as e:
+                log.error(e)
+                log.error("Failed to restore the collection from the backup file, please check the backup file and the collection")
+                raise e
         else:
             log.info("The updated data is empty or the collection is not found, the collection is not updated")
     except Exception as e:
@@ -109,7 +106,7 @@ def update_exported_collection_prefect(
     s3_backup_folder
 ):
     update_reference_file = os.path.join(DOWNLOAD_FOLDER, os.path.basename(s3_update_reference_file))
-    downlaod_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
+    download_s3(s3_backup_bucket, s3_update_reference_file, log, update_reference_file)
     updated_data_file, counter = update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log)
     if updated_data_file:
         upload_s3(s3_backup_bucket, s3_backup_folder, updated_exported_file, log)

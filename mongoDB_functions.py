@@ -63,9 +63,9 @@ def upload_s3(s3_bucket, s3_prefix, file_key, log):
     dest = os.path.join(f"s3://{s3_bucket}", s3_prefix)
     log.info(f'Start uploading the file to {dest}')
     upload_log_file(dest, file_key)
-    log.info(f'Uploading the memgraph export file {os.path.basename(file_key)} succeeded!')
+    log.info(f'Uploading the MongoDB export file {os.path.basename(file_key)} succeeded!')
 
-def downlaod_s3(s3_bucket, s3_file_key, log, file_key):
+def download_s3(s3_bucket, s3_file_key, log, file_key):
     log.info(f'Downloading file {os.path.basename(s3_file_key)} from {s3_bucket} to {file_key}')
     bucket = S3Bucket(s3_bucket)
     if not os.path.exists(os.path.dirname(file_key)):

@@ -247,7 +247,7 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
 if __name__ == "__main__":
     # read the config file
     with open("config/mongodb_config_test.yaml", "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f)
     mongo_url = config["mongo_url"]
     db_name = config["db_name"]
     collection_name = config["collection_name"]

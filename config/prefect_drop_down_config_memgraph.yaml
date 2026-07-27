@@ -1,12 +1,36 @@
+gc_dev_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_dev_cdk"
+  env: dev
+gc_dev2_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_dev2_cdk"
+  env: dev
+gc_qa_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_qa_cdk"
+  env: dev
+gc_qa2_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_qa2_cdk"
+  env: dev
 gc_dev:
   memgraph_summary_secret: "gc_memgraph_secret_name_dev"
+  env: dev
 gc_dev2:
   memgraph_summary_secret: "gc_memgraph_secret_name_dev2"
+  env: dev
 gc_qa:
   memgraph_summary_secret: "gc_memgraph_secret_name_qa"
+  env: dev
 gc_qa2:
   memgraph_summary_secret: "gc_memgraph_secret_name_qa2"
+  env: dev
 gc_stage:
   memgraph_summary_secret: "gc_memgraph_secret_name_stage"
+  env: stage
 gc_prod:
   memgraph_summary_secret: "gc_memgraph_secret_name_prod"
+  env: stage
+gc_stage_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_stage_cdk"
+  env: stage
+gc_prod_cdk:
+  memgraph_summary_secret: "gc_memgraph_secret_name_prod_cdk"
+  env: stage

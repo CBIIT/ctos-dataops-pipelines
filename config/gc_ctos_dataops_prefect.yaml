@@ -4,7 +4,7 @@
 
 # Generic metadata about this project
 name: CTOS DATAOPS
-prefect-version: 2.14.10
+prefect-version: null
 
 # build section allows you to manage and build docker images
 build: null
@@ -17,7 +17,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       id: clone-step
       repository: https://github.com/CBIIT/ctos-dataops-pipelines.git
-      branch: main
+      branch: dataops_gc_pipelines
       include_submodules: True
   - prefect.deployments.steps.pip_install_requirements:
       requirements_file: requirements.txt
@@ -120,8 +120,8 @@ deployments:
       data_model_repo_url: "{{ prefect.variables.cds_model_repo_url }}"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-curation-ecs
-      work_queue_name: cds-curation-queue
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Data Model Archiving, Neo4j Dump Generator, S3 Bucket, Bento Config"
@@ -141,8 +141,8 @@ deployments:
       restore_summary_file_name: "neo4j_restore_summary.json"
       s3_bucket: "{{ prefect.variables.cds_dataops_bucket }}"
     work_pool:
-      name: cds-curation-ecs
-      work_queue_name: cds-curation-queue
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Neo4j Summary Generator, Neo4j Data Asset Loading, Neo4j Restore, S3 Bucket, Bento Config"
@@ -163,7 +163,7 @@ deployments:
       memgraph_summary_file_name: memgraph_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
@@ -184,7 +184,7 @@ deployments:
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-curation-mgconsole-prefect-2.14.19-python3.9
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
@@ -205,8 +205,135 @@ deployments:
       memgraph_restore_summary_file_name: memgraph_restore_summary.json
       memgraph_dump_file_name: memgraph_dump.cypherl
     work_pool:
-      name: cds-mgconsole-prefect-2.14.19-python3.9
+      name: prod-cds-general-mgconsole-prefect-3.4.18-python3.12
       work_queue_name: default
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "Memgraph Data Asset Loading, Neo4j Summary Generator"
+
+  - name: gc-ctos-dataops-opensearch-backup
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_backup_prefect.py:opensearch_backup_prefect
+    parameters:
+      snapshot_name: ""
+      s3_bucket: "crdc-dev-cds-opensearch-snapshot-bucket"
+      s3_folder: "opensearch"
+      indices: ""
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
+
+  - name: gc-ctos-dataops-opensearch-restore
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_restore_prefect.py:opensearch_restore_prefect
+    parameters:
+      snapshot_name: ""
+      s3_bucket: "crdc-dev-cds-opensearch-snapshot-bucket"
+      s3_folder: "opensearch"
+      indices: ""
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+  
+  - name: gc-ctos-dataops-opensearch-restore-prod
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_restore_prefect.py:opensearch_restore_prefect
+    parameters:
+      snapshot_name: ""
+      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      indices: ""
+    work_pool:
+      name: prod-cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+  
+  - name: universal-dataops-opensearch-backup
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_backup_universal_prefect.py:opensearch_backup_prefect
+    parameters:
+      snapshot_name: ""
+      secret_name_prefect_variable: ""
+      aws_role_prefect_variable: ""
+      opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
+      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      indices: ""
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
+  
+  - name: universal-dataops-opensearch-restore
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  opensearch_restore_universal_prefect.py:opensearch_restore_prefect
+    parameters:
+      snapshot_name: ""
+      secret_name_prefect_variable: ""
+      aws_role_prefect_variable: ""
+      opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
+      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      indices: ""
+    work_pool:
+      name: cds-general-mgconsole-prefect-3.4.18-python3.12
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+  
+  
+  - name: gc-datahub-mongoDB-database-update
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint:  mongoDB_functions_prefect.py:mongoDB_database_update_prefect
+    parameters:
+      secret_name: ""
+      db_name: ""
+      collection_name: "release"
+      exported_file: "release.json"
+      updated_exported_file: "release_updated.json"
+      counter_file: "release_count.json"
+      s3_update_reference_file: "gc_study_id_update/study_id_phs_accession_match.tsv"
+      old_parent_id_field: ""
+      new_parent_id_field: ""
+      node: ""
+      data_commons: "CDS"
+      s3_backup_bucket: "crdc-hub-dev-submission"
+      s3_backup_folder: "gc_study_id_update"
+    work_pool:
+      name: crdc-dh-dev-validation-ecs
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "MongoDB_Update"

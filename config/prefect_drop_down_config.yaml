@@ -1,3 +1,15 @@
+dev_cdk:
+  neo4j_summary_secret: "gc_memgraph_secret_name_dev_cdk"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+dev2_cdk:
+  neo4j_summary_secret: "gc_memgraph_secret_name_dev2_cdk"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+qa_cdk:
+  neo4j_summary_secret: "gc_memgraph_secret_name_qa_cdk"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
+qa2_cdk:
+  neo4j_summary_secret: "gc_memgraph_secret_name_qa2_cdk"
+  neo4j_ssh_secret: "cds_secret_name_ssh"
 dev:
   neo4j_summary_secret: "cds_secret_name_dev"
   neo4j_ssh_secret: "cds_secret_name_ssh"

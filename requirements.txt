@@ -7,3 +7,6 @@ subprocess.run
 requests
 scp
 docker
+requests_aws4auth
+pandas
+pymongo

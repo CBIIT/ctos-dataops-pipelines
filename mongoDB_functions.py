@@ -123,7 +123,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
             
             if item[DATA_COMMONS] == data_commons:
                 if item.get(NODE_TYPE) and item.get(NODE_TYPE) == node:
-                    if item.get(PROPS).get(old_parent_id_field) and not item.get(PROPS).get(new_parent_id_field):
+                    if item.get(PROPS).get(old_parent_id_field):
                         if update_dict.get(str(item[PROPS][old_parent_id_field])):
                             if not item.get(HISTORY):
                                 item = add_initial_history_item(item)

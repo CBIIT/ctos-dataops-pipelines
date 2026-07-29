@@ -229,7 +229,6 @@ def export_counter(counter_file, counter):
 
 def import_collection(client, db_name, collection_name, updated_data_file, backup_file, counter, counter_file, log):
     try:
-        backup_data = read_json_lines(backup_file)
         data = read_json_lines(updated_data_file)
         # get total records count from the collection
         collection = client[db_name][collection_name]
@@ -241,6 +240,8 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
         result = replace_many_in_batches(collection, data)
         counter["total_records_after_update"] = collection.count_documents({})
         export_counter(counter_file, counter)
+        # remove the data object from the memory
+        del data
         if counter["total_records_before_update"] != counter["total_records_after_update"]:
             log.error("Total records count mismatch before and after update")
             result = False
@@ -249,11 +250,13 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
         if result:
             return True
         else:
+            backup_data = read_json_lines(backup_file)
             log.error("Collection import failed")
             result = replace_many_in_batches(collection, backup_data)
             return False
     except Exception as e:
         # if failed, import the backup file
+        backup_data = read_json_lines(backup_file)
         result = replace_many_in_batches(collection, backup_data)
         return False
 

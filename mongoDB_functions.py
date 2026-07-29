@@ -105,6 +105,7 @@ def add_initial_history_item(item):
     parents = copy.deepcopy(item.get(PARENTS))
     updated_at = copy.deepcopy(item.get(UPDATED_AT))
     item[HISTORY] = [{
+        SUBMISSION_ID: item.get(SUBMISSION_ID),
         RELEASED_AT: updated_at,
         INTENTION: "New/Update",
         PROPS: props,

@@ -5,11 +5,12 @@ import json
 import os
 from datetime import datetime
 import pandas as pd
+from bson import json_util
 from bento.common.s3 import upload_log_file, S3Bucket
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 import yaml
 import copy
-
+import pandas as pd
 
 NODE_TYPE = "nodeType"
 PARENTS = "parents"
@@ -28,7 +29,10 @@ UPDATE_REASON = "updateReason"
 UPDATE_TIMESTAMP = "updateTimestamp"
 NODE_ID = "nodeID"
 UPDATED_AT = "updatedAt"
-CURRENT_TIMESTAMP = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+CURRENT_TIMESTAMP = datetime.strptime(
+    datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+    "%Y-%m-%d %H:%M:%S.%f",
+)
 INTENTION = "intention"
 
 if LOG_PREFIX not in os.environ:
@@ -37,25 +41,48 @@ if LOG_PREFIX not in os.environ:
 
 log = get_logger('MongoDB_Update')
 
+def read_json_lines(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = []
+        for line in f:
+            # json_util restores BSON types (datetime, ObjectId, etc.)
+            data.append(json_util.loads(line))
+    log.info(f"Read {len(data)} items from {file_path}")
+    return data
+
+def split_dump_json(json_list, output_file, chunk_size=5000):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        chunk = []
+        count = 0
+        for item in json_list:
+            chunk.append(item)
+            if len(chunk) >= chunk_size:
+                f.write('\n'.join(
+                    json_util.dumps(obj, ensure_ascii=False) for obj in chunk
+                ) + '\n')
+                count += len(chunk)
+                chunk.clear()
+        if chunk:
+            f.write('\n'.join(
+                json_util.dumps(obj, ensure_ascii=False) for obj in chunk
+            ) + '\n')
+            count += len(chunk)
+        log.info(f"Dumped {count} items to {output_file}")
+
 def export_collection(client, db_name, collection_name, exported_file, batch_size=5000):
     db = client[db_name]
     collection = db[collection_name]
     # Stream docs to file so the full collection is never held in memory
     cursor = collection.find().batch_size(batch_size)
     with open(exported_file, "w") as f:
-        f.write("[\n")
-        first = True
         count = 0
         for doc in cursor:
-            if not first:
-                f.write(",\n")
-            # default=str handles ObjectId and other BSON types
-            json.dump(doc, f, default=str)
-            first = False
+            # Extended JSON keeps BSON types (datetime as {"$date": ...}, not str())
+            f.write(json_util.dumps(doc, ensure_ascii=False))
+            f.write("\n")
             count += 1
             if count % batch_size == 0:
                 log.info(f"Exported {count} documents...")
-        f.write("\n]")
     log.info(f"Exported {count} documents to {exported_file}")
 
 def upload_s3(s3_bucket, s3_prefix, file_key, log):
@@ -78,13 +105,14 @@ def add_initial_history_item(item):
     parents = copy.deepcopy(item.get(PARENTS))
     updated_at = copy.deepcopy(item.get(UPDATED_AT))
     item[HISTORY] = [{
+        SUBMISSION_ID: item.get(SUBMISSION_ID),
         RELEASED_AT: updated_at,
         INTENTION: "New/Update",
         PROPS: props,
         PARENTS: parents,
     }]
     return item
-   
+
 def add_history_item(item, update_log, is_node_updated=False):
     if isinstance(item[HISTORY], list):
         if is_node_updated:
@@ -109,9 +137,7 @@ def add_history_item(item, update_log, is_node_updated=False):
 
 def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log):
     try:
-        
-        with open(exported_file, "r") as f:
-            data = json.load(f)
+        data = read_json_lines(exported_file)
         with open(update_reference_file, "r") as f:
             update_reference = pd.read_csv(f, sep="\t")
         counter = {"node_updated": 0, "children_updated": {}, "total_records_before_update": 0, "total_records_after_update": 0}
@@ -158,23 +184,13 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                         counter["children_updated"][item[NODE_TYPE]] += 1
                                     else:
                                         counter["children_updated"][item[NODE_TYPE]] = 1
-        with open(updated_exported_file, "w") as f:
-            json.dump(data, f, default=str, indent=2)
+        split_dump_json(data, updated_exported_file)
         log.info(f'Updated exported collection {updated_exported_file} successfully!')
         return updated_exported_file, counter
     except Exception as e:
         log.error(e)
         return None, None
 
-# mongodb replace many records
-#def replace_many(collection, data):
-#    ops = [
-#        pymongo.ReplaceOne({"_id": doc["_id"]}, doc, upsert=False)
-#        for doc in data
-#    ]
-#    if ops:
-#        result = collection.bulk_write(ops)
-#        return result
 
 def replace_many_in_batches(collection, data, batch_size=5000):
     try:
@@ -214,10 +230,7 @@ def export_counter(counter_file, counter):
 
 def import_collection(client, db_name, collection_name, updated_data_file, backup_file, counter, counter_file, log):
     try:
-        with open(backup_file, "r") as f:
-            backup_data = json.load(f)
-        with open(updated_data_file, "r") as f:
-            data = json.load(f)
+        data = read_json_lines(updated_data_file)
         # get total records count from the collection
         collection = client[db_name][collection_name]
         counter["total_records_before_update"] = collection.count_documents({})
@@ -228,6 +241,8 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
         result = replace_many_in_batches(collection, data)
         counter["total_records_after_update"] = collection.count_documents({})
         export_counter(counter_file, counter)
+        # remove the data object from the memory
+        del data
         if counter["total_records_before_update"] != counter["total_records_after_update"]:
             log.error("Total records count mismatch before and after update")
             result = False
@@ -236,11 +251,13 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
         if result:
             return True
         else:
+            backup_data = read_json_lines(backup_file)
             log.error("Collection import failed")
             result = replace_many_in_batches(collection, backup_data)
             return False
     except Exception as e:
         # if failed, import the backup file
+        backup_data = read_json_lines(backup_file)
         result = replace_many_in_batches(collection, backup_data)
         return False
 

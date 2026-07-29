@@ -45,6 +45,7 @@ def stream_read_json(file_path):
         records = ijson.items(f, "item")
         for record in records:
             data.append(record)
+    log.info(f"Read {len(data)} items from {file_path}")
     return data
 
 def split_dump_json(json_list, output_file, chunk_size=5000):

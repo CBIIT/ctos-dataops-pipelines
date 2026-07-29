@@ -9,6 +9,8 @@ from bento.common.s3 import upload_log_file, S3Bucket
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 import yaml
 import copy
+import ijson
+
 
 
 NODE_TYPE = "nodeType"
@@ -36,6 +38,37 @@ if LOG_PREFIX not in os.environ:
     os.environ[APP_NAME] = 'MongoDB_Update'
 
 log = get_logger('MongoDB_Update')
+
+def stream_read_json(file_path):
+    with open(file_path, "r") as f:
+        data = []
+        records = ijson.items(f, "item")
+        for record in records:
+            data.append(record)
+    return data
+
+def split_dump_json(json_list, output_file, chunk_size=5000):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('[')
+        first_chunk = True
+        chunk = []
+        for item in json_list:
+            chunk.append(item)
+            if len(chunk) >= chunk_size:
+                if not first_chunk:
+                    f.write(',')
+                # Serialize the chunk as a JSON array, then write without outer brackets
+                f.write(json.dumps(chunk, ensure_ascii=False, default=str)[1:-1])
+                first_chunk = False
+                chunk.clear()
+                #log.info(f"Dumped {len(chunk)} items to {output_file}")
+        if chunk:
+            if not first_chunk:
+                f.write(',')
+            f.write(json.dumps(chunk, ensure_ascii=False, default=str)[1:-1])
+            #log.info(f"Dumped {len(chunk)} items to {output_file}")
+        f.write(']')
+        log.info(f"Dumped {len(json_list)} items to {output_file}")
 
 def export_collection(client, db_name, collection_name, exported_file, batch_size=5000):
     db = client[db_name]
@@ -84,7 +117,7 @@ def add_initial_history_item(item):
         PARENTS: parents,
     }]
     return item
-   
+
 def add_history_item(item, update_log, is_node_updated=False):
     if isinstance(item[HISTORY], list):
         if is_node_updated:
@@ -110,8 +143,9 @@ def add_history_item(item, update_log, is_node_updated=False):
 def update_exported_collection(exported_file, updated_exported_file, update_reference_file, old_parent_id_field, new_parent_id_field, node, data_commons, log):
     try:
         
-        with open(exported_file, "r") as f:
-            data = json.load(f)
+        #with open(exported_file, "r") as f:
+        #    data = json.load(f)
+        data = stream_read_json(exported_file)
         with open(update_reference_file, "r") as f:
             update_reference = pd.read_csv(f, sep="\t")
         counter = {"node_updated": 0, "children_updated": {}, "total_records_before_update": 0, "total_records_after_update": 0}
@@ -158,23 +192,13 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                         counter["children_updated"][item[NODE_TYPE]] += 1
                                     else:
                                         counter["children_updated"][item[NODE_TYPE]] = 1
-        with open(updated_exported_file, "w") as f:
-            json.dump(data, f, default=str, indent=2)
+        split_dump_json(data, updated_exported_file)
         log.info(f'Updated exported collection {updated_exported_file} successfully!')
         return updated_exported_file, counter
     except Exception as e:
         log.error(e)
         return None, None
 
-# mongodb replace many records
-#def replace_many(collection, data):
-#    ops = [
-#        pymongo.ReplaceOne({"_id": doc["_id"]}, doc, upsert=False)
-#        for doc in data
-#    ]
-#    if ops:
-#        result = collection.bulk_write(ops)
-#        return result
 
 def replace_many_in_batches(collection, data, batch_size=5000):
     try:
@@ -214,10 +238,12 @@ def export_counter(counter_file, counter):
 
 def import_collection(client, db_name, collection_name, updated_data_file, backup_file, counter, counter_file, log):
     try:
-        with open(backup_file, "r") as f:
-            backup_data = json.load(f)
-        with open(updated_data_file, "r") as f:
-            data = json.load(f)
+        #with open(backup_file, "r") as f:
+        #    backup_data = json.load(f)
+        backup_data = stream_read_json(backup_file)
+        #with open(updated_data_file, "r") as f:
+        #    data = json.load(f)
+        data = stream_read_json(updated_data_file)
         # get total records count from the collection
         collection = client[db_name][collection_name]
         counter["total_records_before_update"] = collection.count_documents({})

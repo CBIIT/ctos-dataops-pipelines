@@ -150,7 +150,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
             if item[DATA_COMMONS] == data_commons:
                 if item.get(NODE_TYPE) and item.get(NODE_TYPE) == node:
                     if item.get(PROPS).get(old_parent_id_field):
-                        if update_dict.get(str(item[PROPS][old_parent_id_field])):
+                        if update_dict.get(str(item[PROPS][old_parent_id_field])) and new_parent_id_field not in item[PROPS].keys():
                             if not item.get(HISTORY):
                                 item = add_initial_history_item(item)
                             item[PROPS][new_parent_id_field] = update_dict[str(item[PROPS][old_parent_id_field])]
@@ -167,7 +167,8 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                     if item.get(PARENTS):
                         for index, parent in enumerate(item[PARENTS]):
                             if parent.get(PARENT_TYPE) and parent.get(PARENT_TYPE) == node:
-                                if update_dict.get(str(parent[PARENT_ID_VALUE])):
+                                #check if the parent ID property name is already the new parent ID property name, if so, skip the update
+                                if update_dict.get(str(parent[PARENT_ID_VALUE])) and new_parent_id_field != item[PARENTS][index][PARENT_ID_PROP_NAME]:
                                     if not item.get(HISTORY):
                                         item = add_initial_history_item(item)
                                     item[PARENTS][index][PARENT_ID_PROP_NAME] = new_parent_id_field

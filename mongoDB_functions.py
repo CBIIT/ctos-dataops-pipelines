@@ -167,6 +167,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                     if item.get(PARENTS):
                         for index, parent in enumerate(item[PARENTS]):
                             if parent.get(PARENT_TYPE) and parent.get(PARENT_TYPE) == node:
+                                #check if the parent ID property name is already the new parent ID property name, if so, skip the update
                                 if update_dict.get(str(parent[PARENT_ID_VALUE])) and new_parent_id_field != item[PARENTS][index][PARENT_ID_PROP_NAME]:
                                     if not item.get(HISTORY):
                                         item = add_initial_history_item(item)

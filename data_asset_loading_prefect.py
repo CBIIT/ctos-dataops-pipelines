@@ -12,7 +12,7 @@ from typing import Literal
 import yaml
 
 NEO4J_IP = "neo4j_ip"
-NEO4J_USER = "neo4j_user"
+NEO4J_USER = "neo4j_prefect_user"
 NEO4J_KEY = "neo4j_key"
 NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
@@ -66,4 +66,3 @@ def data_asset_loading_prefect(
 if __name__ == "__main__":
     # create your first deployment
    data_asset_loading_prefect.serve(name="neo4j_restore")
-

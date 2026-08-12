@@ -4,7 +4,7 @@ from neo4j_dump import neo4j_dump
 from bento.common.utils import get_time_stamp
 
 NEO4J_IP = "neo4j_ip"
-NEO4J_USER = "neo4j_user"
+NEO4J_USER = "neo4j_prefect_user"
 NEO4J_KEY = "neo4j_key"
 
 @flow(name="neo4j dump", log_prints=True)
@@ -29,4 +29,3 @@ def neo4j_dump_prefect(
 if __name__ == "__main__":
     # create your first deployment
     neo4j_dump_prefect.serve(name="neo4j_dump")
-

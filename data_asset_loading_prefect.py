@@ -12,7 +12,8 @@ from typing import Literal
 import yaml
 
 NEO4J_IP = "neo4j_ip"
-NEO4J_USER = "neo4j_prefect_user"
+NEO4J_DB_USER = "neo4j_user"
+NEO4J_SSH_USER = "neo4j_prefect_user"
 NEO4J_KEY = "neo4j_key"
 NEO4J_PASSWORD = "neo4j_password"
 TMP = "/tmp/"
@@ -43,13 +44,13 @@ def data_asset_loading_prefect(
     secret = get_secret(neo4j_summary_secret)
     secret_ssh = get_secret(neo4j_restore_secrect)
     neo4j_ip = secret[NEO4J_IP]
-    neo4j_user = secret_ssh[NEO4J_USER]
+    neo4j_user = secret_ssh[NEO4J_SSH_USER]
     neo4j_key = secret_ssh[NEO4J_KEY]
     s3_dump_file_key = os.path.join(s3_folder, dump_file_name)
     s3_summary_file_key = os.path.join(s3_folder, validation_summary_file_name)
     neo4j_restore(neo4j_ip, neo4j_user, neo4j_key, s3_bucket, s3_dump_file_key)
 
-    neo4j_summary_user = secret[NEO4J_USER]
+    neo4j_summary_user = secret[NEO4J_DB_USER]
     neo4j_summary_password = secret[NEO4J_PASSWORD]
     restore_neo4j_summary = neo4j_summary(neo4j_ip, neo4j_summary_user, neo4j_summary_password, restore_summary_file_name, s3_bucket, s3_folder)
     summary_file_key = os.path.join(TMP, os.path.basename(s3_summary_file_key))

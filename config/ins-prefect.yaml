@@ -5,7 +5,8 @@
 #     AWS Secrets Manager secret name containing neo4j_ip, neo4j_user,
 #     neo4j_password, and es_host.
 #   ins_neo4j_ssh_secret_name
-#     AWS Secrets Manager secret name containing neo4j_user and neo4j_key.
+#     AWS Secrets Manager secret name containing neo4j_prefect_user and
+#     neo4j_key.
 #   ins_dataops_backup_bucket
 #     S3 bucket used for Neo4j dumps.
 #   ins_opensearch_backup_bucket

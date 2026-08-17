@@ -18,6 +18,7 @@
 
 name: INS Data Backup and Restore
 prefect-version: null
+data_model_repo_url: https://github.com/CBIIT/ins-model
 
 build: null
 push: null
@@ -43,11 +44,7 @@ deployments:
     entrypoint: data_asset_generation_prefect.py:data_asset_generation_prefect
     parameters:
       environment: dev
-      data_model_version: ""
-      s3_folder: ""
-      neo4j_summary_file_name: neo4j_summary.json
-      neo4j_dump_file_name: neo4j_dump.dump
-      data_model_repo_url: ""
+      s3_folder: dump_files
       s3_bucket: "{{ prefect.variables.ins_dataops_backup_bucket }}"
     work_pool:
       name: ccdi-dcc-8gb-prefect-3.4.19-python3.13

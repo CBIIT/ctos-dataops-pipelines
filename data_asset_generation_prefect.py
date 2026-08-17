@@ -2,7 +2,8 @@ from prefect import flow
 from neo4j_dump_prefect import neo4j_dump_prefect
 from neo4j_summary_prefect import neo4j_secret_summary_prefect
 from data_model_archiving_prefect import data_model_archiving_prefect
-from bento.common.utils import get_time_stamp
+from datetime import datetime
+from github_refs import get_github_refs
 import prefect.variables as Variable
 from typing import Literal
 import yaml
@@ -11,24 +12,38 @@ config_file = "config/prefect_drop_down_config.yaml"
 with open(config_file, 'r') as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]
+prefect_config_file = "config/ins-prefect.yaml"
+with open(prefect_config_file, 'r') as file:
+    prefect_config = yaml.safe_load(file) or {}
+data_model_repo_url_default = (
+    prefect_config.get("data_model_repo_url")
+    or "https://github.com/CBIIT/ins-model"
+)
+data_model_version_choices = Literal[
+    tuple(get_github_refs(data_model_repo_url_default, include_tags=True))
+]
 SUMARY_SECRET = "neo4j_summary_secret"
 DUMP_SECRET = "neo4j_ssh_secret"
 
 @flow(name="data asset generation", log_prints=True)
 def data_asset_generation_prefect(
         environment: environment_choices, # type: ignore
-        data_model_version,
-        s3_folder,
-        neo4j_summary_file_name,
-        neo4j_dump_file_name,
-        data_model_repo_url,
-        s3_bucket
+        data_model_version: data_model_version_choices, # type: ignore
+        s3_bucket,
+        s3_folder="dump_files",
+        neo4j_summary_file_name=None,
+        neo4j_dump_file_name=None,
+        data_model_repo_url=data_model_repo_url_default,
     ):
     neo4j_summary_secret = Variable.get(config[environment][SUMARY_SECRET])
     neo4j_dump_secret = Variable.get(config[environment][DUMP_SECRET])
-    timestamp = get_time_stamp()
-    if s3_folder == None or s3_folder == "":
-        s3_folder = "neo4j-assets-" + timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+    if not s3_folder:
+        s3_folder = "dump_files"
+    if not neo4j_summary_file_name:
+        neo4j_summary_file_name = f"DevDump_{timestamp}.json"
+    if not neo4j_dump_file_name:
+        neo4j_dump_file_name = f"DevDump_{timestamp}.dump"
     neo4j_secret_summary_prefect(neo4j_summary_secret, s3_bucket, s3_folder, neo4j_summary_file_name)
     data_model_archiving_prefect(data_model_repo_url, data_model_version, s3_bucket, s3_folder)
     neo4j_dump_prefect(neo4j_dump_secret, neo4j_summary_secret, s3_bucket, s3_folder, neo4j_dump_file_name)

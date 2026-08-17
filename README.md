@@ -1,72 +1,10 @@
 # CTOS data operations pipelines
 
-## INS Prefect configuration and Neo4j backup/restore
+## Prefect Flows
 
-This guide explains how `config/ins-prefect.yaml` customizes the repository's Prefect deployments for INS and how to run the INS Neo4j backup and restore flows from Prefect Cloud.
-
-## INS Prefect YAML
-
-The INS deployment configuration is stored in `config/ins-prefect.yaml`. It differs from the repository's other Prefect configurations in the following ways:
-
-- The pull step clones `https://github.com/CBIIT/ctos-dataops-pipelines.git` at the `ins-pipelines` branch.
-- Deployments run in the `ccdi-dcc-8gb-prefect-3.4.19-python3.13` work pool and its `default` queue.
-- Deployment names are prefixed with `ins-`.
-- Environment-specific Neo4j secrets are selected through `config/prefect_drop_down_config.yaml`.
-- S3 bucket names are resolved from Prefect variables rather than being hardcoded in the deployment.
-- The file also defines INS deployments for the universal OpenSearch snapshot flows. Those flows are outside the scope of the operating instructions below.
-
-The Neo4j deployments are:
-
-| Deployment | Entrypoint | Purpose |
-|---|---|---|
-| `ins-neo4j-backup` | `data_asset_generation_prefect.py:data_asset_generation_prefect` | Generate a database summary, archive the data model, create a Neo4j dump, and upload the assets to S3. |
-| `ins-neo4j-restore` | `data_asset_loading_prefect.py:data_asset_loading_prefect` | Download a dump, replace the Neo4j database, create a new summary, and compare it with the backup summary. |
-
-`flow_name: null` is intentional. Prefect reads each flow's name from its Python `@flow` decorator, while the YAML `name` identifies the deployment.
-
-## Required Prefect variables and AWS secrets
-
-Create these variables in the same Prefect Cloud workspace in which the deployments run:
-
-| Prefect variable | Value |
-|---|---|
-| `ins_dataops_backup_bucket` | Plain S3 bucket name, for example `ccdi-nonprod-ins-neo4j-datadump-bucket`. Do not use an ARN or an `s3://` URI. |
-| `ins_secret_name_dev` | Name or ARN of the AWS Secrets Manager secret containing the development Neo4j endpoint and database credentials. |
-| `ins_neo4j_ssh_secret_name` | Name or ARN of the AWS Secrets Manager secret containing the operating-system SSH username and private key. |
-
-`config/prefect_drop_down_config.yaml` maps the flow's `environment` parameter to Prefect variable names:
-
-```yaml
-dev:
-  neo4j_summary_secret: ins_secret_name_dev
-  neo4j_ssh_secret: ins_neo4j_ssh_secret_name
-```
-
-The database secret referenced by `ins_secret_name_dev` must contain:
-
-```json
-{
-  "neo4j_ip": "10.0.0.10",
-  "neo4j_user": "neo4j",
-  "neo4j_password": "REDACTED"
-}
-```
-
-The SSH secret referenced by `ins_neo4j_ssh_secret_name` must contain:
-
-```json
-{
-  "neo4j_prefect_user": "ccdi-docker",
-  "neo4j_key": "-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----\n"
-}
-```
-
-The `neo4j_key` value is the private key itself, not a filename or public key. In the raw JSON, line breaks are represented by `\n`. After JSON parsing, the value must contain actual newline characters; it must not contain literal backslash-plus-`n` characters. The current SSH loader expects an unencrypted RSA private key.
-
-The database user and SSH user are deliberately separate:
-
-- `neo4j_user` authenticates to the Neo4j Bolt endpoint for summary queries.
-- `neo4j_prefect_user` authenticates to the host over SSH to stop Neo4j and run `neo4j-admin`.
+Before proceeding, if you're the one who will deploy or run these Prefect flows,
+then submit a request to be added to the FNL Prefect developers mailing list. Being
+on the mailing list will let you log in to Prefect Cloud and deploy/run flows.
 
 ## AWS and network prerequisites
 
@@ -86,108 +24,110 @@ The ECS task must have network access to:
 
 The SSH user must have passwordless `sudo` access for the commands used by the flows, including stopping and starting Neo4j and running `neo4j-admin`. Its public key must be installed in the user's `authorized_keys` file on the Neo4j host.
 
-## Deploy or update the deployments
+### Configuration
 
-Authenticate the local Prefect CLI to the intended Prefect Cloud workspace:
+Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's needs:
+
+- [`config/ins-prefect.yaml`](./config/ins-prefect.yaml)
+  - Name the project in `name`, up top.
+  - Set `data_model_repo_url` to the GitHub repository whose branches and tags should populate the Neo4j backup's `data_model_version` dropdown.
+  - Specify the INS branch `ins-pipelines` of `ctos-dataops-pipelines` in the `pull` section.
+  - Specify `name`, `parameters`, and `work_pool` for the following deployments:
+    - `ins-neo4j-backup`
+    - `ins-neo4j-restore`
+- [`config/prefect_drop_down_config.yaml`](./config/prefect_drop_down_config.yaml)
+  - Specify parameters for the `dev` and `qa` environments.
+  - The values of these parameters are the names of Prefect variables.
+  - We don't plan to use Neo4j backup/restore in the QA environment, but the YAML needs an entry in addition to `dev`.
+
+### Prefect Cloud Workspace Variables
+
+Define the following Workspace Variables (Settings -> Variables) in Prefect Cloud:
+
+- `ins_secret_name_dev`
+  - The value of this variable should be the key of the key-value pair in AWS Secrets Manager for the INS Dev
+    environment secrets.
+  - Eg: suppose AWS Secrets Manager is set up like so:
+
+    ```json
+    {
+      ..., // Other projects' secrets
+      "super_secret_ins_stuff": {
+        "neo4j_host": "123.456.7.890",
+        "neo4j_user": "my_username",
+        ... // Other INS secrets
+      },
+      ... // Other projects' secrets
+    }
+    ```
+
+    Then `ins_secret_name_dev` should be set to `"super_secret_ins_stuff"`.
+- `ins_dataops_backup_bucket`
+  - The value of this variable should be the short name (i.e. not ARN) of the S3 bucket in which to store Neo4j dumps.
+- `ins_neo4j_ssh_secret_name`
+  - The value of this variable should be the key of the key-value pair in AWS Secrets Manager for the INS Dev
+    environment Neo4j SSH secrets.
+  - It could be the same value as for `ins_secret_name_dev`, depending on where you chose to store the Neo4j SSH secrets.
+  - Eg: suppose AWS Secrets Manager is set up like so:
+
+    ```json
+    {
+      ..., // Other projects' secrets
+      "super_secret_ins_ssh_stuff": {
+        "neo4j_prefect_user": "my_username", // Name of user who can SSH into the Neo4j instance
+        "neo4j_key": "...", // SSH key for my_username in the Neo4j instance
+        ... // Other INS secrets
+      },
+      ... // Other projects' secrets
+    }
+    ```
+
+    Then `ins_neo4j_ssh_secret_name` should be set to `"super_secret_ins_ssh_stuff"`.
+  - The SSH key needs to be formatted precisely. Paste the SSH key into the secret by using the Plaintext editor.
+    - Eg:
+
+      ```json
+      {
+        "neo4j_prefect_user": "my_username", // Name of user who can SSH into the Neo4j instance
+        "neo4j_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nABC123\n...\nXYZ890\n-----END OPENSSH PRIVATE KEY-----\n"
+      }
+      ```
+
+    - Pay **close** attention to the newline characters!
+
+### Deployment
+
+To deploy a flow to Prefect Cloud, install Prefect in your local environment (eg: `pip install prefect`)
+and run the command
 
 ```bash
-prefect cloud login
-prefect variable get ins_dataops_backup_bucket
+prefect deploy --prefect-file config/prefect-ins.yaml
 ```
 
-From the repository root, create or update the deployments:
+Select the flow you want to deploy, and choose "No" for all the options that follow.
 
-```bash
-prefect deploy \
-  --prefect-file config/ins-prefect.yaml \
-  --name ins-neo4j-backup
+### Execution
 
-prefect deploy \
-  --prefect-file config/ins-prefect.yaml \
-  --name ins-neo4j-restore
-```
+To run a Prefect flow:
 
-Running the same command again with the same deployment and flow names updates the existing deployment; it does not require deleting it first.
+1. Log in to Prefect Cloud, and make sure that you're in the `ccdi-workspace` workspace.
+2. Search "Deployments" for the flow you're trying to run. Eg:
+    - `ins-opensearch-loader`
+    - `ins-metadata-loading-dev`
 
-Because each flow run clones `ins-pipelines`, Python-only changes take effect after they are committed and pushed to that branch. Redeploy when deployment configuration in `config/ins-prefect.yaml` changes.
-
-## Run a Neo4j backup in Prefect Cloud
-
-1. In Prefect Cloud, open **Deployments** and select `ins-neo4j-backup`.
-2. Select **Run**, then configure a custom run.
-3. Set the parameters described below.
-4. Start the run and follow its logs until the parent flow and all subflows complete.
-5. Verify the expected files in the configured S3 bucket and folder.
-
-Backup parameters:
-
-| Parameter | Description |
-|---|---|
-| `environment` | Environment key from `config/prefect_drop_down_config.yaml`, normally `dev`. |
-| `data_model_version` | Git branch, tag, or commit to check out from the data-model repository. |
-| `data_model_repo_url` | Clone URL for the data-model repository. |
-| `s3_folder` | S3 key prefix that groups all assets from this backup, such as `dump_files`. If blank, the flow generates a timestamped `neo4j-assets-*` folder. |
-| `neo4j_summary_file_name` | Backup-time inventory JSON name, such as `DevDump_2026-08-13-13-50.json`. |
-| `neo4j_dump_file_name` | Dump filename, such as `DevDump_2026-08-13-13-50.dump`. |
-| `s3_bucket` | Resolved from `ins_dataops_backup_bucket`; normally leave the configured value unchanged. |
-
-The backup executes in this order:
-
-1. Query Neo4j and save counts for all nodes and relationships in the summary JSON.
-2. Archive the selected data-model files.
-3. Connect to the Neo4j host over SSH.
-4. Stop Neo4j and run `neo4j-admin dump`.
-5. Restart Neo4j, copy the dump to the Prefect task, and upload it to S3.
-
-Use the same S3 folder for the dump and its summary. Record their exact names; the restore flow needs both.
-
-## Run a Neo4j restore in Prefect Cloud
-
-> **Warning:** This is a destructive operation. It stops Neo4j and replaces the current `neo4j` database with the selected dump. Confirm the target environment, S3 folder, and dump name before starting the run.
-
-1. In Prefect Cloud, open **Deployments** and select `ins-neo4j-restore`.
-2. Select **Run**, then configure a custom run.
-3. Enter the exact S3 folder and filenames produced by the backup.
-4. Give the new restore summary a distinct filename.
-5. Start the run and monitor it through validation.
-
-Restore parameters:
-
-| Parameter | Description |
-|---|---|
-| `environment` | Target environment, normally `dev`. |
-| `s3_folder` | Folder containing the selected dump and backup summary. |
-| `dump_file_name` | Existing dump object's basename. Do not include `s3://`, the bucket, or the folder. |
-| `validation_summary_file_name` | Existing backup-time summary JSON stored next to the dump. |
-| `restore_summary_file_name` | Name for a new post-restore summary, such as `DevDump_2026-08-13-14-43_restore.json`. |
-| `s3_bucket` | Resolved from `ins_dataops_backup_bucket`; normally leave the configured value unchanged. |
-
-For example:
-
-```text
-s3_folder:                     dump_files
-dump_file_name:                DevDump_2026-08-13-13-50.dump
-validation_summary_file_name:  DevDump_2026-08-13-13-50.json
-restore_summary_file_name:     DevDump_2026-08-13-14-43_restore.json
-```
-
-The restore executes in this order:
-
-1. Download the dump from S3 to the Prefect task.
-2. Upload it to the Neo4j host over SSH.
-3. Stop Neo4j, run `neo4j-admin load --force`, fix data ownership, and restart Neo4j.
-4. Connect to Neo4j over Bolt and generate `restore_summary_file_name`.
-5. Upload the restore summary to the same S3 folder.
-6. Download `validation_summary_file_name` and compare the two summary objects.
-
-The summary contains total node and relationship counts plus counts grouped by node label and relationship type. A successful validated restore logs:
-
-```text
-Data asset loading successfully
-Finished in state Completed()
-```
-
-Immediately after `systemctl start neo4j`, the first Bolt connection can receive `Connection refused` while Neo4j starts. The summary code retries up to three times with a 20-second delay. If a later attempt logs `Connect to the neo4j database successfully` and the flow completes its summary comparison, the temporary first failure is harmless.
+    and click on the deployment.
+3. Click on "Run", and choose "Quick run" or "Custom run" - whichever floats your boat.
+    - Custom runs are nice, because you can name the run something meaningful.
+4. Select or fill in each parameter for the run.
+    - For `ins-neo4j-backup`, make sure to choose a value for `data_model_version`.
+      The remaining default parameters should be good enough.
+      Even the summary and dump filenames are prefilled with the time!
+    - For `ins-neo4j-restore`, copy the summary and dump filenames from the `ins-neo4j-backup` run whose
+      dump you want to restore. Then paste those filenames into the following parameters, but don't
+      overwrite the file extensions of course:
+        - `dump_file_name`
+        - `validation_summary_file_name`
+        - `restore_summary_file_name`
 
 ## Troubleshooting
 

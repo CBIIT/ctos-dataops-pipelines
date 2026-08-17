@@ -127,7 +127,9 @@ To run a Prefect flow:
       overwrite the file extensions of course:
         - `dump_file_name`
         - `validation_summary_file_name`
+          - I recommend adding the text `"validation_summary"` to distinguish this file from the restore summary JSON.
         - `restore_summary_file_name`
+          - I recommend adding the text `"restore_summary"` to distinguish this file from the validation summary JSON.
 
 ## Troubleshooting
 

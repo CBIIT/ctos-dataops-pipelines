@@ -2,11 +2,6 @@ from prefect import flow
 import os
 import sys
 import json
-from bento.common.secret_manager import get_secret
-from neo4j_restore import neo4j_restore, downlaod_s3
-from neo4j_summary import neo4j_summary
-from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
-from bento.common.utils import get_time_stamp
 import prefect.variables as Variable
 from typing import Literal
 import yaml
@@ -23,19 +18,25 @@ with open(config_file, 'r') as file:
 environment_choices = Literal[tuple(list(config.keys()))]
 SUMARY_SECRET = "neo4j_summary_secret"
 RESTORE_SECRET = "neo4j_ssh_secret"
-if LOG_PREFIX not in os.environ:
-    os.environ[LOG_PREFIX] = 'Neo4j_Restore'
-    os.environ[APP_NAME] = 'Neo4j_Restore'
 
 @flow(name="data asset loading", log_prints=True)
 def data_asset_loading_prefect(
         environment: environment_choices, # type: ignore
-        s3_folder,
-        dump_file_name,
-        validation_summary_file_name,
-        restore_summary_file_name,
-        s3_bucket
-):  
+        s3_folder: str,
+        dump_file_name: str,
+        validation_summary_file_name: str,
+        restore_summary_file_name: str,
+        s3_bucket: str,
+):
+    from bento.common.secret_manager import get_secret
+    from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
+    from neo4j_restore import neo4j_restore, downlaod_s3
+    from neo4j_summary import neo4j_summary
+
+    if LOG_PREFIX not in os.environ:
+        os.environ[LOG_PREFIX] = 'Neo4j_Restore'
+        os.environ[APP_NAME] = 'Neo4j_Restore'
+
     log = get_logger('Neo4j Data Asset Loading')
 
     neo4j_restore_secrect = Variable.get(config[environment][RESTORE_SECRET])

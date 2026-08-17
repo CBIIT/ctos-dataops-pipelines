@@ -62,7 +62,7 @@ deployments:
     entrypoint: data_asset_loading_prefect.py:data_asset_loading_prefect
     parameters:
       environment: dev
-      s3_folder: ""
+      s3_folder: dump_files
       dump_file_name: neo4j_dump.dump
       validation_summary_file_name: neo4j_summary.json
       restore_summary_file_name: neo4j_restore_summary.json

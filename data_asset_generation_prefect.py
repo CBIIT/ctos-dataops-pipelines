@@ -2,7 +2,7 @@ from prefect import flow
 from datetime import datetime
 from github_refs import get_github_refs
 import prefect.variables as Variable
-from typing import Literal, Optional
+from typing import Literal
 import yaml
 
 config_file = "config/prefect_drop_down_config.yaml"
@@ -25,6 +25,9 @@ data_model_version_choices = (
     if data_model_versions
     else str
 )
+default_file_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+neo4j_summary_file_name_default = f"DevDump_{default_file_timestamp}.json"
+neo4j_dump_file_name_default = f"DevDump_{default_file_timestamp}.dump"
 SUMARY_SECRET = "neo4j_summary_secret"
 DUMP_SECRET = "neo4j_ssh_secret"
 
@@ -34,8 +37,8 @@ def data_asset_generation_prefect(
         data_model_version: data_model_version_choices, # type: ignore
         s3_bucket: str,
         s3_folder: str="dump_files",
-        neo4j_summary_file_name: Optional[str]=None,
-        neo4j_dump_file_name: Optional[str]=None,
+        neo4j_summary_file_name: str=neo4j_summary_file_name_default,
+        neo4j_dump_file_name: str=neo4j_dump_file_name_default,
         data_model_repo_url: str=data_model_repo_url_default,
     ):
     from data_model_archiving_prefect import data_model_archiving_prefect

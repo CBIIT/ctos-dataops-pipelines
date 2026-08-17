@@ -26,7 +26,7 @@ The SSH user must have passwordless `sudo` access for the commands used by the f
 
 ### Configuration
 
-Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's needs:
+Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's needs:
 
 - [`config/ins-prefect.yaml`](./config/ins-prefect.yaml)
   - Name the project in `name`, up top.

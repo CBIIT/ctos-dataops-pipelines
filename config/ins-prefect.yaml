@@ -12,7 +12,8 @@
 #   ins_opensearch_backup_bucket
 #     S3 bucket used by the OpenSearch snapshot repository.
 #   ins_opensearch_snapshot_role
-#     IAM role name supplied when registering the S3 repository.
+#     Dedicated IAM role name supplied when registering the S3 repository. The
+#     role must trust es.amazonaws.com and must not be the Prefect ECS task role.
 #   ins_opensearch_repo
 #     OpenSearch snapshot repository name.
 
@@ -89,7 +90,7 @@ deployments:
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""
     work_pool:
-      name: ccdi-ins-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: default
       job_variables:
         env:
@@ -110,7 +111,7 @@ deployments:
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""
     work_pool:
-      name: ccdi-ins-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: default
       job_variables:
         env:

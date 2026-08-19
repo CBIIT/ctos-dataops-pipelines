@@ -29,6 +29,16 @@ def get_aws_account_id(log):
 
 
 
+def resolve_role(role_or_variable, log):
+  # Accepts a full ARN, a Prefect variable name, or a bare role name.
+  if not role_or_variable:
+    return ""
+  role = role_or_variable if role_or_variable.startswith("arn:") else Variable.get(role_or_variable)
+  if role.startswith("arn:"):
+    return role
+  return f"arn:aws:iam::{get_aws_account_id(log)}:role/{role}"
+
+
 @flow(name="OpenSearch backup", log_prints=True)
 def opensearch_backup_prefect(
     snapshot_name,
@@ -36,21 +46,14 @@ def opensearch_backup_prefect(
     aws_role_prefect_variable,
     opensearch_repo,
     s3_bucket,
-    indices
+    indices,
+    aws_operations_role=""
 ):
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
-    snapshot_role = (
-        aws_role_prefect_variable
-        if aws_role_prefect_variable.startswith("arn:")
-        else Variable.get(aws_role_prefect_variable)
-    )
-    if snapshot_role.startswith("arn:"):
-        role_arn = snapshot_role
-    else:
-        aws_account_id = get_aws_account_id(log)
-        role_arn = f"arn:aws:iam::{aws_account_id}:role/{snapshot_role}"
+    snapshot_role = resolve_role(aws_role_prefect_variable, log)
+    role_arn = snapshot_role
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,
@@ -58,6 +61,7 @@ def opensearch_backup_prefect(
         'snapshot': snapshot_name,
         'indices': indices,
         'rolearn': role_arn,
+        'operationsrolearn': resolve_role(aws_operations_role, log),
         'region': REGION,
         'basepath': snapshot_name
     }

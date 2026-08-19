@@ -41,8 +41,12 @@ def opensearch_backup_prefect(
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
-    aws_account_id = get_aws_account_id(log)
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/"+ Variable.get(aws_role_prefect_variable)
+    snapshot_role = Variable.get(aws_role_prefect_variable)
+    if snapshot_role.startswith("arn:"):
+        role_arn = snapshot_role
+    else:
+        aws_account_id = get_aws_account_id(log)
+        role_arn = f"arn:aws:iam::{aws_account_id}:role/{snapshot_role}"
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,

@@ -65,10 +65,22 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    time.sleep(100)
-    print(r.text)
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
+
+  print(f"repository registration returned {r.status_code}: {r.text}")
+  if not r.ok:
+    raise Exception(
+      f"Unable to register snapshot repository '{argList['repo']}': "
+      f"HTTP {r.status_code}: {r.text}"
+    )
+
+  repository = requests.get(url, auth=awsauth, headers=headers)
+  if not repository.ok or argList['repo'] not in repository.json():
+    raise Exception(
+      f"Snapshot repository '{argList['repo']}' was not available after registration: "
+      f"HTTP {repository.status_code}: {repository.text}"
+    )
 
 
 def deleteIndexes(argList, awsauth):

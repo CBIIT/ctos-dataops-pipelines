@@ -42,7 +42,7 @@ def opensearch_backup_prefect(
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
     aws_account_id = get_aws_account_id(log)
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/"+ Variable.get(aws_role_prefect_variable)
+    role_arn = Variable.get(aws_role_prefect_variable)
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,

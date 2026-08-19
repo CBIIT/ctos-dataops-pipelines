@@ -35,7 +35,11 @@ def opensearch_restore_prefect(
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
-    snapshot_role = Variable.get(aws_role_prefect_variable)
+    snapshot_role = (
+        aws_role_prefect_variable
+        if aws_role_prefect_variable.startswith("arn:")
+        else Variable.get(aws_role_prefect_variable)
+    )
     if snapshot_role.startswith("arn:"):
         role_arn = snapshot_role
     else:

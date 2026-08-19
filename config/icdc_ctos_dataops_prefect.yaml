@@ -172,3 +172,48 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Loader"
+
+  # ---------- ICDC Data Loading (Neo4j) ----------
+  - name: icdc-ctos-dataops-data-loading-dev
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: icdc_dataloading_prefect.py:icdc_dataloading_prefect
+    parameters:
+      environment: "icdc_dev"
+      s3_bucket: "icdc-nonprod-metadata"
+      s3_folder: ""
+      mode: "upsert"
+      cheat_mode: false
+      dry_run: false
+      wipe_db: false
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "ICDC Data Loader"
+
+  - name: icdc-ctos-dataops-data-loading-qa
+    version: null
+    tags: []
+    description: null
+    schedule: {}
+    flow_name: null
+    entrypoint: icdc_dataloading_prefect.py:icdc_dataloading_prefect
+    parameters:
+      environment: "icdc_qa"
+      s3_bucket: "icdc-nonprod-metadata"
+      s3_folder: ""
+      mode: "upsert"
+      cheat_mode: false
+      dry_run: false
+      wipe_db: false
+    work_pool:
+      name: crdc-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "ICDC Data Loader"

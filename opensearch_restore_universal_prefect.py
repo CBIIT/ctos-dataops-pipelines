@@ -38,6 +38,9 @@ def opensearch_restore_prefect(
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
     role_arn = resolve_role(aws_role_prefect_variable, log)
+    operations_role_arn = resolve_role(aws_operations_role, log)
+    print(f"snapshot role: {role_arn or '<empty>'}")
+    print(f"operations role: {operations_role_arn or '<empty - using task credentials>'}")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,
@@ -45,7 +48,7 @@ def opensearch_restore_prefect(
         'snapshot': snapshot_name,
         'indices': indices,
         'rolearn': role_arn,
-        'operationsrolearn': resolve_role(aws_operations_role, log),
+        'operationsrolearn': operations_role_arn,
         'region': REGION,
         'basepath': snapshot_name
     }

@@ -38,7 +38,6 @@ def resolve_role(role_or_variable, log):
     return role
   return f"arn:aws:iam::{get_aws_account_id(log)}:role/{role}"
 
-
 @flow(name="OpenSearch backup", log_prints=True)
 def opensearch_backup_prefect(
     snapshot_name,
@@ -54,6 +53,9 @@ def opensearch_backup_prefect(
     secret = get_secret(opensearch_secret)
     snapshot_role = resolve_role(aws_role_prefect_variable, log)
     role_arn = snapshot_role
+    operations_role_arn = resolve_role(aws_operations_role, log)
+    print(f"snapshot role: {role_arn or '<empty>'}")
+    print(f"operations role: {operations_role_arn or '<empty - using task credentials>'}")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,
@@ -61,7 +63,7 @@ def opensearch_backup_prefect(
         'snapshot': snapshot_name,
         'indices': indices,
         'rolearn': role_arn,
-        'operationsrolearn': resolve_role(aws_operations_role, log),
+        'operationsrolearn': operations_role_arn,
         'region': REGION,
         'basepath': snapshot_name
     }

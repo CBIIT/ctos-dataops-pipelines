@@ -34,10 +34,29 @@ def getArgs():
   return argList
 
 
+def osSession(argList):
+  # Cross-account access requires assuming a role in the OpenSearch/S3 account.
+  operations_role = argList.get('operationsrolearn')
+  if not operations_role:
+    return boto3.Session()
+
+  print(f"assuming operations role {operations_role}")
+  assumed = boto3.client('sts').assume_role(
+    RoleArn=operations_role,
+    RoleSessionName='PrefectOpenSearchSession'
+  )['Credentials']
+
+  return boto3.Session(
+    aws_access_key_id=assumed['AccessKeyId'],
+    aws_secret_access_key=assumed['SecretAccessKey'],
+    aws_session_token=assumed['SessionToken']
+  )
+
+
 def osAuth(argList):
   # Opensearch authentication
   service = 'es'
-  credentials = boto3.Session().get_credentials()
+  credentials = osSession(argList).get_credentials()
   awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, argList['region'], service, session_token=credentials.token)
 
   return awsauth

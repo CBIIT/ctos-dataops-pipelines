@@ -35,10 +35,29 @@ def getArgs():
   return argList
 
 
+def osSession(argList):
+  # Cross-account access requires assuming a role in the OpenSearch/S3 account.
+  operations_role = argList.get('operationsrolearn')
+  if not operations_role:
+    return boto3.Session()
+
+  print(f"assuming operations role {operations_role}")
+  assumed = boto3.client('sts').assume_role(
+    RoleArn=operations_role,
+    RoleSessionName='PrefectOpenSearchSession'
+  )['Credentials']
+
+  return boto3.Session(
+    aws_access_key_id=assumed['AccessKeyId'],
+    aws_secret_access_key=assumed['SecretAccessKey'],
+    aws_session_token=assumed['SessionToken']
+  )
+
+
 def osAuth(argList):
   # Opensearch authentication
   service = 'es'
-  credentials = boto3.Session().get_credentials()
+  credentials = osSession(argList).get_credentials()
   awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, argList['region'], service, session_token=credentials.token)
 
   return awsauth
@@ -65,10 +84,22 @@ def registerRepo(argList, awsauth):
   print("registering repo")
   try:
     r = requests.put(url, auth=awsauth, json=payload, headers=headers)
-    time.sleep(100)
-    print(r.text)
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
+
+  print(f"repository registration returned {r.status_code}: {r.text}")
+  if not r.ok:
+    raise Exception(
+      f"Unable to register snapshot repository '{argList['repo']}': "
+      f"HTTP {r.status_code}: {r.text}"
+    )
+
+  repository = requests.get(url, auth=awsauth, headers=headers)
+  if not repository.ok or argList['repo'] not in repository.json():
+    raise Exception(
+      f"Snapshot repository '{argList['repo']}' was not available after registration: "
+      f"HTTP {repository.status_code}: {repository.text}"
+    )
 
 
 def deleteIndexes(argList, awsauth):

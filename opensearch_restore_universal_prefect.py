@@ -7,6 +7,7 @@ import os
 import prefect.variables as Variable
 from opensearch_restore import opensearch_restore
 from opensearch_backup_prefect import get_aws_account_id
+from opensearch_backup_universal_prefect import resolve_role, resolve_operations_role
 import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
@@ -30,13 +31,16 @@ def opensearch_restore_prefect(
     aws_role_prefect_variable,
     opensearch_repo,
     indices,
-    s3_bucket
+    s3_bucket,
+    aws_operations_role=""
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
-    aws_account_id = get_aws_account_id(log)
-    role_arn = f"arn:aws:iam::{aws_account_id}:role/"+ Variable.get(aws_role_prefect_variable)
+    role_arn = resolve_role(aws_role_prefect_variable, log)
+    operations_role_arn = resolve_operations_role(aws_operations_role, log)
+    print(f"snapshot role: {role_arn or '<empty>'}")
+    print(f"operations role: {operations_role_arn or '<empty - using task credentials>'}")
     argList = {
         'oshost': "https://" + secret[ES_HOST] + "/",
         'repo': opensearch_repo,
@@ -44,6 +48,7 @@ def opensearch_restore_prefect(
         'snapshot': snapshot_name,
         'indices': indices,
         'rolearn': role_arn,
+        'operationsrolearn': operations_role_arn,
         'region': REGION,
         'basepath': snapshot_name
     }

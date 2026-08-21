@@ -102,14 +102,26 @@ def registerRepo(argList, awsauth):
     )
 
 
+def selectedIndices(indices):
+  if not indices:
+    return []
+  if isinstance(indices, str):
+    values = indices.split(',')
+  elif isinstance(indices, (list, tuple)):
+    values = indices
+  else:
+    raise ValueError("indices must be a comma-separated string or a list")
+  return [str(index).strip() for index in values if str(index).strip()]
+
+
 def deleteIndexes(argList, awsauth):
   # Deleting Indexes
   headers = {"Content-Type": "application/json"}
-  
-  if argList['indices']:
+  selected_indices = selectedIndices(argList.get('indices'))
+
+  if selected_indices:
     print("deleting the listed indices")
-    indice_arr = argList['indices'].split(",")
-    for i in indice_arr:
+    for i in selected_indices:
       check = requests.get(argList['oshost'] + i, auth=awsauth, headers=headers)
       if check.status_code==200:
         try:
@@ -134,10 +146,10 @@ def restoreIndexes(argList, awsauth):
   # Restoring Indexes
   print("started restore the indices")
   
-  # Create Index list to exclude hidden (default) indices
-  if argList['indices']:
+  selected_indices = selectedIndices(argList.get('indices'))
+  if selected_indices:
     print("setting restore to use listed indices")
-    indices = '-.*,' + argList['indices']
+    indices = ','.join(selected_indices)
   else:
     print("setting restore to use all indices")
     indices = '*,-.*'

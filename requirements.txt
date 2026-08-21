@@ -10,3 +10,5 @@ docker
 requests_aws4auth
 pandas
 redis
+opensearch-py
+xlsxwriter

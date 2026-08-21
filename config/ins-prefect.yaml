@@ -86,6 +86,7 @@ deployments:
       snapshot_name: ""
       secret_name_prefect_variable: ins_secret_name_dev
       aws_role_prefect_variable: ins_opensearch_snapshot_role
+      aws_operations_role: "arn:aws:iam::082604052123:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""
@@ -107,6 +108,7 @@ deployments:
       snapshot_name: ""
       secret_name_prefect_variable: ins_secret_name_dev
       aws_role_prefect_variable: ins_opensearch_snapshot_role
+      aws_operations_role: "arn:aws:iam::082604052123:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""

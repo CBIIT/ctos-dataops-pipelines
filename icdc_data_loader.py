@@ -75,7 +75,7 @@ def get_btree_indexes(session):
     result = session.run(command)
     indexes = set()
     for r in result:
-        if r["type"] == "BTREE":
+        if "BTREE" in r["type"]:
             indexes.add(format_as_tuple(r["labelsOrTypes"][0], r["properties"]))
     return indexes
 

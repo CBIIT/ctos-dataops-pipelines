@@ -36,8 +36,8 @@ deployments:
     parameters:
       snapshot_name: ""
       secret_name_prefect_variable: ""
-      aws_role_prefect_variable: "arn:aws:iam::893402228433:role/ccdi-id-prod-opensearch-snapshot-role"
-      aws_operations_role: "arn:aws:iam::893402228433:role/ccdi-id-prod-prefect-operations"
+      aws_role_prefect_variable: ""
+      aws_operations_role: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
@@ -58,8 +58,8 @@ deployments:
     parameters:
       snapshot_name: ""
       secret_name_prefect_variable: ""
-      aws_role_prefect_variable: "arn:aws:iam::893402228433:role/ccdi-id-prod-opensearch-snapshot-role"
-      aws_operations_role: "arn:aws:iam::893402228433:role/ccdi-id-prod-prefect-operations"
+      aws_role_prefect_variable: ""
+      aws_operations_role: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
@@ -80,8 +80,8 @@ deployments:
     parameters:
       snapshot_name: ""
       secret_name_prefect_variable: ""
-      aws_role_prefect_variable: "arn:aws:iam::893402228433:role/ccdi-id-prod-opensearch-snapshot-role"
-      aws_operations_role: "arn:aws:iam::893402228433:role/ccdi-id-prod-prefect-operations"
+      aws_role_prefect_variable: ""
+      aws_operations_role: ""
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""

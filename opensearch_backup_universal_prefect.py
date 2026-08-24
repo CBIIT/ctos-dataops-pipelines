@@ -12,7 +12,6 @@ ES_HOST = "es_host"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 OPERATIONS_ROLE_VARIABLE = "aws_operations_role"
-DEFAULT_OPERATIONS_ROLE_ARN = "arn:aws:iam::893402228433:role/ccdi-id-prod-prefect-operations"
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'OpenSearch Backup'
@@ -42,7 +41,7 @@ def resolve_role(role_or_variable, log):
 
 
 def resolve_operations_role(aws_operations_role, log):
-  # Falls back to a Prefect variable, then a hardcoded default, so runs work even without run-time parameter delivery.
+  # Empty means "use task credentials"; only look up the Prefect variable when no explicit value was passed.
   if not aws_operations_role:
     try:
       aws_operations_role = Variable.get(OPERATIONS_ROLE_VARIABLE) or ""
@@ -50,7 +49,7 @@ def resolve_operations_role(aws_operations_role, log):
       log.info(f"No {OPERATIONS_ROLE_VARIABLE} Prefect variable found: {e}")
       aws_operations_role = ""
   if not aws_operations_role:
-    aws_operations_role = DEFAULT_OPERATIONS_ROLE_ARN
+    return ""
   return resolve_role(aws_operations_role, log)
 
 @flow(name="OpenSearch backup", log_prints=True)

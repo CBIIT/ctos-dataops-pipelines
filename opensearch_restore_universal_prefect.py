@@ -11,6 +11,7 @@ from opensearch_backup_universal_prefect import resolve_role, resolve_operations
 import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
+INS_SECRET = "neo4j_summary_secret"
 ES_HOST = "es_host"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
@@ -19,20 +20,24 @@ if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'OpenSearch Restore'
     os.environ[APP_NAME] = 'OpenSearch Restore'
 
-config_file = "config/prefect_drop_down_config_memgraph.yaml"
-with open(config_file, 'r') as file:
-    config = yaml.safe_load(file)
-environment_choices = Literal[tuple(list(config.keys()))]
+INS_DROPDOWN_CONFIG_FILE = "config/prefect_drop_down_config.yaml"
+INS_PREFECT_CONFIG_FILE = "config/ins-prefect.yaml"
+with open(INS_DROPDOWN_CONFIG_FILE, 'r') as file:
+    ins_dropdown_config = yaml.safe_load(file)
+with open(INS_PREFECT_CONFIG_FILE, 'r') as file:
+    ins_prefect_config = yaml.safe_load(file) or {}
 
-@flow(name="OpenSearch restore", log_prints=True)
-def opensearch_restore_prefect(
+environment_choices = Literal[tuple(ins_dropdown_config.keys())]
+
+
+def run_opensearch_restore(
     snapshot_name,
     secret_name_prefect_variable,
     aws_role_prefect_variable,
     opensearch_repo,
     indices,
     s3_bucket,
-    aws_operations_role=""
+    aws_operations_role,
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
@@ -54,6 +59,58 @@ def opensearch_restore_prefect(
     }
     opensearch_restore(argList)
 
+@flow(name="OpenSearch restore", log_prints=True)
+def opensearch_restore_prefect(
+    snapshot_name: str,
+    secret_name_prefect_variable: str,
+    aws_role_prefect_variable: str,
+    opensearch_repo: str,
+    s3_bucket: str,
+    indices: str = "",
+    aws_operations_role: str = "",
+):
+    run_opensearch_restore(
+        snapshot_name,
+        secret_name_prefect_variable,
+        aws_role_prefect_variable,
+        opensearch_repo,
+        indices,
+        s3_bucket,
+        aws_operations_role,
+    )
+
+
+@flow(name="INS OpenSearch restore", log_prints=True)
+def ins_opensearch_restore_prefect(
+    environment: environment_choices,  # type: ignore
+    snapshot_name: str,
+    s3_bucket: str,
+    opensearch_repo: str,
+    indices: str = "",
+):
+    """Restore an INS OpenSearch snapshot.
+
+    The environment selects the correct AWS secret containing ``es_host``.
+    Leaving indices blank restores every non-hidden index in the snapshot.
+
+    Args:
+        environment: INS environment whose OpenSearch endpoint will be restored.
+        snapshot_name: Exact name of the snapshot to restore.
+        s3_bucket: S3 bucket containing the snapshot.
+        opensearch_repo: Snapshot repository name.
+        indices: Comma-separated index names. Leave blank to restore all
+            non-hidden indices.
+    """
+    run_opensearch_restore(
+        snapshot_name,
+        ins_dropdown_config[environment][INS_SECRET],
+        ins_prefect_config["opensearch_snapshot_role_prefect_variable"],
+        opensearch_repo,
+        indices,
+        s3_bucket,
+        ins_prefect_config["opensearch_operations_role"],
+    )
+
 if __name__ == "__main__":
     # create your first deployment
-   opensearch_restore_prefect.serve(name="opensearch_backup")
+   opensearch_restore_prefect.serve(name="opensearch_restore")

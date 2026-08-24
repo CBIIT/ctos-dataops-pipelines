@@ -97,13 +97,25 @@ def registerRepo(argList, awsauth):
     print(r.text)
   except requests.exceptions.RequestException as e:
     raise SystemExit(e)
-  
+
+
+def selectedIndices(indices):
+  if not indices:
+    return []
+  if isinstance(indices, str):
+    values = indices.split(',')
+  elif isinstance(indices, (list, tuple)):
+    values = indices
+  else:
+    raise ValueError("indices must be a comma-separated string or a list")
+  return [str(index).strip() for index in values if str(index).strip()]
+
 
 def createSnapshot(argList, awsauth):
-  # Create Index list to exclude hidden (default) indices
-  if argList['indices']:
+  selected_indices = selectedIndices(argList.get('indices'))
+  if selected_indices:
     print("setting backup to use listed indices")
-    indices = '-.*,' + argList['indices']
+    indices = ','.join(selected_indices)
   else:
     print("setting backup to use all indices")
     indices = '*,-.*'

@@ -35,6 +35,8 @@ Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's 
   - Specify `name`, `parameters`, and `work_pool` for the following deployments:
     - `ins-neo4j-backup`
     - `ins-neo4j-restore`
+    - `ins-opensearch-backup`
+    - `ins-opensearch-restore`
 - [`config/prefect_drop_down_config.yaml`](./config/prefect_drop_down_config.yaml)
   - Specify parameters for the `dev` and `qa` environments.
   - The values of these parameters are the names of Prefect variables.
@@ -101,7 +103,7 @@ To deploy a flow to Prefect Cloud, install Prefect in your local environment (eg
 and run the command
 
 ```bash
-prefect deploy --prefect-file config/prefect-ins.yaml
+prefect deploy --prefect-file config/ins-prefect.yaml
 ```
 
 Select the flow you want to deploy, and choose "No" for all the options that follow.
@@ -130,6 +132,13 @@ To run a Prefect flow:
           - I recommend adding the text `"validation_summary"` to distinguish this file from the restore summary JSON.
         - `restore_summary_file_name`
           - I recommend adding the text `"restore_summary"` to distinguish this file from the validation summary JSON.
+    - For `ins-opensearch-backup`, choose `dev` or `qa`, enter a unique
+      `snapshot_name`, and optionally enter comma-separated index names in
+      `indices`. Leave `indices` blank to snapshot all non-hidden indices.
+    - For `ins-opensearch-restore`, choose the target `dev` or `qa` environment,
+      enter the exact existing `snapshot_name`, and optionally enter
+      comma-separated index names in `indices`. Leave `indices` blank to restore
+      all non-hidden indices from the snapshot.
 
 ## Troubleshooting
 

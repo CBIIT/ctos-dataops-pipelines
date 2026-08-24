@@ -20,6 +20,8 @@
 name: INS Data Backup and Restore
 prefect-version: null
 data_model_repo_url: https://github.com/CBIIT/ins-model
+opensearch_snapshot_role_prefect_variable: ins_opensearch_snapshot_role
+opensearch_operations_role: arn:aws:iam::082604052123:role/power-user-prefect-operations
 
 build: null
 push: null
@@ -81,12 +83,10 @@ deployments:
     description: Create an OpenSearch snapshot.
     schedule: {}
     flow_name: null
-    entrypoint: opensearch_backup_universal_prefect.py:opensearch_backup_prefect
+    entrypoint: opensearch_backup_universal_prefect.py:ins_opensearch_backup_prefect
     parameters:
+      environment: dev
       snapshot_name: ""
-      secret_name_prefect_variable: ins_secret_name_dev
-      aws_role_prefect_variable: ins_opensearch_snapshot_role
-      aws_operations_role: "arn:aws:iam::082604052123:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""
@@ -103,12 +103,10 @@ deployments:
     description: Replace selected OpenSearch indexes from an S3 snapshot.
     schedule: {}
     flow_name: null
-    entrypoint: opensearch_restore_universal_prefect.py:opensearch_restore_prefect
+    entrypoint: opensearch_restore_universal_prefect.py:ins_opensearch_restore_prefect
     parameters:
+      environment: dev
       snapshot_name: ""
-      secret_name_prefect_variable: ins_secret_name_dev
-      aws_role_prefect_variable: ins_opensearch_snapshot_role
-      aws_operations_role: "arn:aws:iam::082604052123:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: ""
@@ -118,4 +116,3 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
-

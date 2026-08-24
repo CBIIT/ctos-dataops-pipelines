@@ -5,14 +5,26 @@ import os
 import prefect.variables as Variable
 from opensearch_backup import opensearch_backup
 import boto3
+from typing import Literal
+import yaml
 
 SUMARY_SECRET = "memgraph_summary_secret"
+INS_SECRET = "neo4j_summary_secret"
 ES_HOST = "es_host"
 #PROJECT_NAME  = "gen"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 OPERATIONS_ROLE_VARIABLE = "aws_operations_role"
 DEFAULT_OPERATIONS_ROLE_ARN = "arn:aws:iam::893402228433:role/ccdi-id-prod-prefect-operations"
+INS_DROPDOWN_CONFIG_FILE = "config/prefect_drop_down_config.yaml"
+INS_PREFECT_CONFIG_FILE = "config/ins-prefect.yaml"
+
+with open(INS_DROPDOWN_CONFIG_FILE, 'r') as file:
+    ins_dropdown_config = yaml.safe_load(file)
+with open(INS_PREFECT_CONFIG_FILE, 'r') as file:
+    ins_prefect_config = yaml.safe_load(file) or {}
+
+environment_choices = Literal[tuple(ins_dropdown_config.keys())]
 
 if LOG_PREFIX not in os.environ:
     os.environ[LOG_PREFIX] = 'OpenSearch Backup'
@@ -53,21 +65,20 @@ def resolve_operations_role(aws_operations_role, log):
     aws_operations_role = DEFAULT_OPERATIONS_ROLE_ARN
   return resolve_role(aws_operations_role, log)
 
-@flow(name="OpenSearch backup", log_prints=True)
-def opensearch_backup_prefect(
+
+def run_opensearch_backup(
     snapshot_name,
     secret_name_prefect_variable,
     aws_role_prefect_variable,
     opensearch_repo,
     s3_bucket,
     indices,
-    aws_operations_role=""
+    aws_operations_role,
 ):
     log = get_logger('OpenSearch Backup')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
     secret = get_secret(opensearch_secret)
-    snapshot_role = resolve_role(aws_role_prefect_variable, log)
-    role_arn = snapshot_role
+    role_arn = resolve_role(aws_role_prefect_variable, log)
     operations_role_arn = resolve_operations_role(aws_operations_role, log)
     print(f"snapshot role: {role_arn or '<empty>'}")
     print(f"operations role: {operations_role_arn or '<empty - using task credentials>'}")
@@ -83,6 +94,59 @@ def opensearch_backup_prefect(
         'basepath': snapshot_name
     }
     opensearch_backup(argList)
+
+@flow(name="OpenSearch backup", log_prints=True)
+def opensearch_backup_prefect(
+    snapshot_name: str,
+    secret_name_prefect_variable: str,
+    aws_role_prefect_variable: str,
+    opensearch_repo: str,
+    s3_bucket: str,
+    indices: str = "",
+    aws_operations_role: str = "",
+):
+    run_opensearch_backup(
+        snapshot_name,
+        secret_name_prefect_variable,
+        aws_role_prefect_variable,
+        opensearch_repo,
+        s3_bucket,
+        indices,
+        aws_operations_role,
+    )
+
+
+@flow(name="INS OpenSearch backup", log_prints=True)
+def ins_opensearch_backup_prefect(
+    environment: environment_choices,  # type: ignore
+    snapshot_name: str,
+    s3_bucket: str,
+    opensearch_repo: str,
+    indices: str = "",
+):
+    """Create an INS OpenSearch snapshot.
+
+    The environment selects the correct AWS secret containing ``es_host``.
+    The snapshot and operations roles remain deployment configuration rather
+    than run-time operator inputs.
+
+    Args:
+        environment: INS environment whose OpenSearch endpoint will be backed up.
+        snapshot_name: Unique name to assign to the OpenSearch snapshot.
+        s3_bucket: S3 bucket used by the snapshot repository.
+        opensearch_repo: Registered snapshot repository name.
+        indices: Comma-separated index names. Leave blank to back up all
+            non-hidden indices.
+    """
+    run_opensearch_backup(
+        snapshot_name,
+        ins_dropdown_config[environment][INS_SECRET],
+        ins_prefect_config["opensearch_snapshot_role_prefect_variable"],
+        opensearch_repo,
+        s3_bucket,
+        indices,
+        ins_prefect_config["opensearch_operations_role"],
+    )
 
 if __name__ == "__main__":
     # create your first deployment

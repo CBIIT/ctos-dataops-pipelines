@@ -181,6 +181,12 @@ def icdc_dataloading(argList: dict):
                         )
                     )
                 else:
+                    # No validation report (e.g. index creation or another
+                    # non-validation error caused the failure) - still zip
+                    # and upload the log so the failure reason is visible.
+                    zip_file_key = log_file.replace(".log", ".zip")
+                    with zipfile.ZipFile(zip_file_key, "w") as zipf:
+                        zipf.write(log_file, os.path.basename(log_file))
                     logger.error("Data loading failed")
             else:
                 zip_file_key = log_file.replace(".log", ".zip")

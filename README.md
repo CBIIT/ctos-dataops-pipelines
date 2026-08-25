@@ -133,8 +133,8 @@ To run a Prefect flow:
         - `restore_summary_file_name`
           - I recommend adding the text `"restore_summary"` to distinguish this file from the validation summary JSON.
     - For `ins-opensearch-backup`, choose `dev` or `qa`, enter a unique
-      `snapshot_name`, and optionally enter comma-separated index names in
-      `indices`. Leave `indices` blank to snapshot all non-hidden indices.
+      `snapshot_name`, and optionally add index names to the `indices` array.
+      Leave the array empty to snapshot all non-hidden indices.
     - For `ins-opensearch-restore`, choose the target `dev` or `qa` environment,
       enter the exact existing `snapshot_name`, and optionally enter
       comma-separated index names in `indices`. Leave `indices` blank to restore

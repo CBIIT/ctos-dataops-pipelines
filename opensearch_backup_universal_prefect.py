@@ -5,7 +5,7 @@ import os
 import prefect.variables as Variable
 from opensearch_backup import opensearch_backup
 import boto3
-from typing import Literal
+from typing import List, Literal
 import yaml
 
 SUMARY_SECRET = "memgraph_summary_secret"
@@ -122,7 +122,7 @@ def ins_opensearch_backup_prefect(
     snapshot_name: str,
     s3_bucket: str,
     opensearch_repo: str,
-    indices: str = "",
+    indices: List[str] = [],
 ):
     """Create an INS OpenSearch snapshot.
 
@@ -135,7 +135,7 @@ def ins_opensearch_backup_prefect(
         snapshot_name: Unique name to assign to the OpenSearch snapshot.
         s3_bucket: S3 bucket used by the snapshot repository.
         opensearch_repo: Registered snapshot repository name.
-        indices: Comma-separated index names. Leave blank to back up all
+        indices: Index names to back up. Leave the array empty to back up all
             non-hidden indices.
     """
     run_opensearch_backup(

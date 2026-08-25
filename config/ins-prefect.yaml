@@ -89,7 +89,7 @@ deployments:
       snapshot_name: ""
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
-      indices: ""
+      indices: []
     work_pool:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: default

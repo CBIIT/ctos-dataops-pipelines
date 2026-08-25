@@ -24,7 +24,7 @@ def test_backup_uses_only_explicitly_selected_indices():
     response = Mock(status_code=200, text='{"accepted":true}')
     with patch("opensearch_backup.requests.put", return_value=response) as put:
         result = createSnapshot(
-            backup_arguments("home_stats,datasets,files,resources"),
+            backup_arguments(["home_stats", "datasets", "files", "resources"]),
             Mock(),
         )
 
@@ -37,6 +37,6 @@ def test_backup_uses_only_explicitly_selected_indices():
 def test_blank_indices_back_up_all_non_hidden_indices():
     response = Mock(status_code=200, text='{"accepted":true}')
     with patch("opensearch_backup.requests.put", return_value=response) as put:
-        createSnapshot(backup_arguments(""), Mock())
+        createSnapshot(backup_arguments([]), Mock())
 
     assert put.call_args.kwargs["json"]["indices"] == "*,-.*"

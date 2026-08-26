@@ -116,7 +116,7 @@ def opensearch_backup_prefect(
     )
 
 
-@flow(name="INS OpenSearch backup", log_prints=True)
+@flow(name="OpenSearch backup", log_prints=True)
 def ins_opensearch_backup_prefect(
     environment: environment_choices,  # type: ignore
     snapshot_name: str,

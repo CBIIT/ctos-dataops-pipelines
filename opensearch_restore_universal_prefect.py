@@ -80,7 +80,7 @@ def opensearch_restore_prefect(
     )
 
 
-@flow(name="INS OpenSearch restore", log_prints=True)
+@flow(name="OpenSearch restore", log_prints=True)
 def ins_opensearch_restore_prefect(
     environment: environment_choices,  # type: ignore
     snapshot_name: str,

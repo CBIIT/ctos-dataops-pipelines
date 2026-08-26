@@ -1,5 +1,5 @@
 from prefect import flow
-from typing import Literal
+from typing import List, Literal
 import yaml
 from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME
 from bento.common.secret_manager import get_secret
@@ -86,19 +86,19 @@ def ins_opensearch_restore_prefect(
     snapshot_name: str,
     s3_bucket: str,
     opensearch_repo: str,
-    indices: str = "",
+    indices: List[str] = [],
 ):
     """Restore an INS OpenSearch snapshot.
 
     The environment selects the correct AWS secret containing ``es_host``.
-    Leaving indices blank restores every non-hidden index in the snapshot.
+    Leaving the indices array empty restores every non-hidden index in the snapshot.
 
     Args:
         environment: INS environment whose OpenSearch endpoint will be restored.
         snapshot_name: Exact name of the snapshot to restore.
         s3_bucket: S3 bucket containing the snapshot.
         opensearch_repo: Snapshot repository name.
-        indices: Comma-separated index names. Leave blank to restore all
+        indices: Index names to restore. Leave the array empty to restore all
             non-hidden indices.
     """
     run_opensearch_restore(

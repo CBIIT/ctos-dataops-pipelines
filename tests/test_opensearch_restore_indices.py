@@ -24,7 +24,7 @@ def test_restore_uses_only_explicitly_selected_indices():
     response = Mock(status_code=200, text='{"accepted":true}')
     with patch("opensearch_restore.requests.post", return_value=response) as post:
         result = restoreIndexes(
-            restore_arguments("programs,projects,publications"),
+            restore_arguments(["programs", "projects", "publications"]),
             Mock(),
         )
 
@@ -37,7 +37,7 @@ def test_restore_uses_only_explicitly_selected_indices():
 def test_blank_indices_restore_all_non_hidden_indices():
     response = Mock(status_code=200, text='{"accepted":true}')
     with patch("opensearch_restore.requests.post", return_value=response) as post:
-        restoreIndexes(restore_arguments(""), Mock())
+        restoreIndexes(restore_arguments([]), Mock())
 
     assert post.call_args.kwargs["json"]["indices"] == "*,-.*"
 

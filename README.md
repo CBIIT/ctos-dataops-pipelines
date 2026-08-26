@@ -136,9 +136,9 @@ To run a Prefect flow:
       `snapshot_name`, and optionally add index names to the `indices` array.
       Leave the array empty to snapshot all non-hidden indices.
     - For `ins-opensearch-restore`, choose the target `dev` or `qa` environment,
-      enter the exact existing `snapshot_name`, and optionally enter
-      comma-separated index names in `indices`. Leave `indices` blank to restore
-      all non-hidden indices from the snapshot.
+      enter the exact existing `snapshot_name`, and optionally add index names
+      to the `indices` array. Leave the array empty to restore all non-hidden
+      indices from the snapshot.
 
 ## Troubleshooting
 

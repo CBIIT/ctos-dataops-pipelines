@@ -34,5 +34,6 @@ def test_ins_opensearch_restore_parameter_schema():
     schema = assert_common_ins_parameter_schema(ins_opensearch_restore_prefect)
 
     assert ins_opensearch_restore_prefect.name == "OpenSearch restore"
-    assert schema["properties"]["indices"]["type"] == "string"
-    assert schema["properties"]["indices"]["default"] == ""
+    assert schema["properties"]["indices"]["type"] == "array"
+    assert schema["properties"]["indices"]["items"] == {"type": "string"}
+    assert schema["properties"]["indices"]["default"] == []

@@ -15,4 +15,4 @@ icdc_stage:
   env: stage
 icdc_prod:
   secret: "icdc_secret_name_prod"
-  env: stage
+  env: prod

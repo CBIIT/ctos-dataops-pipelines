@@ -8,9 +8,65 @@ on the mailing list will let you log in to Prefect Cloud and deploy/run flows.
 
 ## AWS and network prerequisites
 
-The IAM task role used by the Prefect ECS work pool must be able to:
+The OpenSearch backup flow uses three IAM roles with separate responsibilities:
 
-- call `secretsmanager:GetSecretValue` for both secrets;
+1. **Prefect ECS task role**
+
+   This is the task role attached to the ECS task started by the Prefect work
+   pool—not the ECS task execution role. For INS, runs have used a principal
+   such as:
+
+   ```text
+   arn:aws:iam::986019062625:role/power-user-prefect-ecs-task-ccdi-ccdi
+   ```
+
+   The Python flow initially runs as this role. It reads the AWS secret that
+   contains `es_host` and calls `sts:AssumeRole` on the OpenSearch operations
+   role. Therefore, it needs `secretsmanager:GetSecretValue` and permission to
+   assume the configured operations role. It does **not** write OpenSearch
+   snapshot files directly to S3.
+
+2. **OpenSearch operations role**
+
+   The INS Prefect configuration currently identifies this role as:
+
+   ```text
+   arn:aws:iam::082604052123:role/power-user-prefect-operations
+   ```
+
+   The flow assumes this role and uses its temporary credentials to sign HTTP
+   requests to the OpenSearch domain. This role registers the snapshot
+   repository, creates snapshots, checks repositories, and starts restores. It
+   needs the applicable `es:ESHttpGet`, `es:ESHttpPut`, `es:ESHttpPost`, and
+   `es:ESHttpDelete` permissions. It also needs `iam:PassRole` for the exact
+   snapshot role supplied during repository registration. Its trust policy must
+   allow the Prefect ECS task role to assume it.
+
+3. **OpenSearch snapshot role**
+
+   The Prefect variable `ins_opensearch_snapshot_role` should contain this
+   role's full IAM role ARN—not a policy ARN. The flow passes the ARN to
+   OpenSearch as the repository's `role_arn`. AWS OpenSearch Service then
+   assumes this role to read and write snapshot data in S3. Its trust policy
+   must allow the service principal `es.amazonaws.com` to assume it. It needs
+   `s3:ListBucket` on the snapshot bucket and the necessary `s3:GetObject`,
+   `s3:PutObject`, and `s3:DeleteObject` permissions for snapshot objects. If
+   the bucket uses a customer-managed KMS key, it also needs the corresponding
+   KMS permissions. A cross-account bucket or KMS key policy must allow this
+   role as well.
+
+The role chain is:
+
+```text
+Prefect ECS task role
+    -- sts:AssumeRole --> OpenSearch operations role
+    -- signed OpenSearch request + iam:PassRole --> OpenSearch Service
+    -- assumes snapshot role --> S3 snapshot bucket
+```
+
+For Neo4j backup and restore, the Prefect ECS task role must additionally be
+able to:
+
 - call `s3:ListBucket` on the backup bucket;
 - call `s3:GetObject` and `s3:PutObject` for objects under the selected S3 prefix;
 - call `s3:PutObjectAcl` if required for the `bucket-owner-full-control` ACL used by this repository;
@@ -20,7 +76,13 @@ The ECS task must have network access to:
 
 - SSH on the Neo4j host;
 - Neo4j Bolt on port `7687`;
+- HTTPS on port `443` to the selected OpenSearch VPC endpoint;
 - AWS Secrets Manager and S3.
+
+If the Prefect ECS tasks and an OpenSearch domain are in different VPCs, the
+VPC peering or Transit Gateway routes, network ACLs, and security groups must
+allow traffic in both directions. The OpenSearch security group should allow
+inbound TCP `443` from the Prefect ECS task security group.
 
 The SSH user must have passwordless `sudo` access for the commands used by the flows, including stopping and starting Neo4j and running `neo4j-admin`. Its public key must be installed in the user's `authorized_keys` file on the Neo4j host.
 
@@ -31,12 +93,30 @@ Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's 
 - [`config/ins-prefect.yaml`](./config/ins-prefect.yaml)
   - Name the project in `name`, up top.
   - Set `data_model_repo_url` to the GitHub repository whose branches and tags should populate the Neo4j backup's `data_model_version` dropdown.
+  - `opensearch_snapshot_role_prefect_variable` is the **name of a Prefect
+    variable**, currently `ins_opensearch_snapshot_role`. The value stored in
+    that Prefect variable must be the snapshot role's full IAM role ARN.
+  - `opensearch_operations_role` is the full IAM ARN of the role that the
+    Prefect ECS task assumes before making requests to the OpenSearch domain.
+    This is not the snapshot role.
   - Specify the INS branch `ins-pipelines` of `ctos-dataops-pipelines` in the `pull` section.
   - Specify `name`, `parameters`, and `work_pool` for the following deployments:
     - `ins-neo4j-backup`
     - `ins-neo4j-restore`
     - `ins-opensearch-backup`
     - `ins-opensearch-restore`
+  - Expressions such as
+    `{{ prefect.variables.ins_opensearch_backup_bucket }}` are resolved from
+    Prefect variables defined in the Prefect Cloud workspace during deployment. The resolved values
+    become prefilled run parameters and can still be overridden for an
+    individual run.
+  - `environment: dev` is only the initial selection. The generated run form
+    allows the operator to select `dev` or `qa`.
+  - OpenSearch `snapshot_name` is intentionally blank because backup needs a
+    new, unique name and restore needs the exact name of an existing snapshot.
+  - OpenSearch `indices` defaults to an empty array. An empty array means all
+    non-hidden indices; a populated array limits the backup or restore to the
+    listed index names.
 - [`config/prefect_drop_down_config.yaml`](./config/prefect_drop_down_config.yaml)
   - Specify parameters for the `dev` and `qa` environments.
   - The values of these parameters are the names of Prefect variables.
@@ -55,7 +135,7 @@ Define the following Workspace Variables (Settings -> Variables) in Prefect Clou
     {
       ..., // Other projects' secrets
       "super_secret_ins_stuff": {
-        "neo4j_host": "123.456.7.890",
+        "neo4j_ip": "123.456.7.890",
         "neo4j_user": "my_username",
         ... // Other INS secrets
       },
@@ -64,6 +144,9 @@ Define the following Workspace Variables (Settings -> Variables) in Prefect Clou
     ```
 
     Then `ins_secret_name_dev` should be set to `"super_secret_ins_stuff"`.
+- `ins_secret_name_qa`
+  - Same purpose as `ins_secret_name_dev`, but its value identifies the AWS
+    Secrets Manager secret for the INS QA environment.
 - `ins_dataops_backup_bucket`
   - The value of this variable should be the short name (i.e. not ARN) of the S3 bucket in which to store Neo4j dumps.
 - `ins_neo4j_ssh_secret_name`
@@ -96,6 +179,15 @@ Define the following Workspace Variables (Settings -> Variables) in Prefect Clou
       ```
 
     - Pay **close** attention to the newline characters!
+- `ins_opensearch_backup_bucket`
+  - The short S3 bucket name - not an ARN - used by the OpenSearch snapshot
+    repository.
+- `ins_opensearch_repo`
+  - The logical repository name registered in OpenSearch, such as `ins`.
+- `ins_opensearch_snapshot_role`
+  - The full IAM **role ARN** that OpenSearch Service assumes for S3 snapshot
+    access, for example `arn:aws:iam::<account-id>:role/<snapshot-role>`.
+  - Do not store a policy ARN such as `arn:aws:iam::<account-id>:policy/...`.
 
 ### Deployment
 

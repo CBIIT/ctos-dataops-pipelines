@@ -116,3 +116,23 @@ deployments:
       job_variables:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
+
+  - name: ins-opensearch-promote
+    version: null
+    tags: []
+    description: Promote an INS OpenSearch snapshot to the stage or production environment.
+    schedule: {}
+    flow_name: null
+    entrypoint: opensearch_restore_universal_prefect.py:ins_opensearch_promote_prefect
+    parameters:
+      environment: stage
+      snapshot_name: ""
+      opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
+      s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
+      indices: []
+    work_pool:
+      name: ccdi-dcc-prod-32gb-prefect-3.4.19-python3.13
+      work_queue_name: default
+      job_variables:
+        env:
+          PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"

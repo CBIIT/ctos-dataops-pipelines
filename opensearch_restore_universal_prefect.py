@@ -12,6 +12,7 @@ import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
 INS_SECRET = "neo4j_summary_secret"
+SECRET_NAME_PREFECT_VARIABLE = "secret_name_prefect_variable"
 ES_HOST = "es_host"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
@@ -21,13 +22,17 @@ if LOG_PREFIX not in os.environ:
     os.environ[APP_NAME] = 'OpenSearch Restore'
 
 INS_DROPDOWN_CONFIG_FILE = "config/prefect_drop_down_config.yaml"
+INS_PROMOTE_DROPDOWN_CONFIG_FILE = "config/ins_promote_drop_down_config.yaml"
 INS_PREFECT_CONFIG_FILE = "config/ins-prefect.yaml"
 with open(INS_DROPDOWN_CONFIG_FILE, 'r') as file:
     ins_dropdown_config = yaml.safe_load(file)
+with open(INS_PROMOTE_DROPDOWN_CONFIG_FILE, 'r') as file:
+    ins_promote_dropdown_config = yaml.safe_load(file)
 with open(INS_PREFECT_CONFIG_FILE, 'r') as file:
     ins_prefect_config = yaml.safe_load(file) or {}
 
 environment_choices = Literal[tuple(ins_dropdown_config.keys())]
+promote_environment_choices = Literal[tuple(ins_promote_dropdown_config.keys())]
 
 
 def run_opensearch_restore(
@@ -66,7 +71,7 @@ def opensearch_restore_prefect(
     aws_role_prefect_variable: str,
     opensearch_repo: str,
     s3_bucket: str,
-    indices: str = "",
+    indices: List[str] = [],
     aws_operations_role: str = "",
 ):
     run_opensearch_restore(
@@ -110,6 +115,27 @@ def ins_opensearch_restore_prefect(
         s3_bucket,
         ins_prefect_config["opensearch_operations_role"],
     )
+
+
+@flow(name="OpenSearch promote", log_prints=True)
+def ins_opensearch_promote_prefect(
+    environment: promote_environment_choices,  # type: ignore
+    snapshot_name: str,
+    s3_bucket: str,
+    opensearch_repo: str,
+    indices: List[str] = [],
+):
+    """Promote an INS OpenSearch snapshot to Stage or Production."""
+    run_opensearch_restore(
+        snapshot_name,
+        ins_promote_dropdown_config[environment][SECRET_NAME_PREFECT_VARIABLE],
+        ins_prefect_config["opensearch_snapshot_role_prefect_variable"],
+        opensearch_repo,
+        indices,
+        s3_bucket,
+        ins_prefect_config["opensearch_operations_role"],
+    )
+
 
 if __name__ == "__main__":
     # create your first deployment

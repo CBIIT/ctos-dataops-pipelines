@@ -88,7 +88,7 @@ The SSH user must have passwordless `sudo` access for the commands used by the f
 
 ### Configuration
 
-Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's needs:
+Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's needs:
 
 - [`config/ins-prefect.yaml`](./config/ins-prefect.yaml)
   - Name the project in `name`, up top.
@@ -105,6 +105,7 @@ Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's 
     - `ins-neo4j-restore`
     - `ins-opensearch-backup`
     - `ins-opensearch-restore`
+    - `ins-opensearch-promote`
   - Expressions such as
     `{{ prefect.variables.ins_opensearch_backup_bucket }}` are resolved from
     Prefect variables defined in the Prefect Cloud workspace during deployment. The resolved values
@@ -121,6 +122,17 @@ Two configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS's 
   - Specify parameters for the `dev` and `qa` environments.
   - The values of these parameters are the names of Prefect variables.
   - We don't plan to use Neo4j backup/restore in the QA environment, but the YAML needs an entry in addition to `dev`.
+- [`config/ins_promote_drop_down_config.yaml`](./config/ins_promote_drop_down_config.yaml)
+  - Defines the `stage` and `prod` choices shown by the
+    `ins-opensearch-promote` environment dropdown.
+  - Maps each choice to the Prefect variable containing that environment's AWS
+    Secrets Manager secret ARN.
+
+The `ins-opensearch-promote` deployment uses a thin Prefect wrapper around the
+existing universal OpenSearch restore implementation. The wrapper reads the
+dropdown choices and their Prefect-variable names from
+`config/ins_promote_drop_down_config.yaml`; it does not duplicate the restore
+logic.
 
 ### Prefect Cloud Workspace Variables
 
@@ -147,6 +159,14 @@ Define the following Workspace Variables (Settings -> Variables) in Prefect Clou
 - `ins_secret_name_qa`
   - Same purpose as `ins_secret_name_dev`, but its value identifies the AWS
     Secrets Manager secret for the INS QA environment.
+- `ins_secret_name_stage`
+  - Set this Prefect variable to
+    `arn:aws:secretsmanager:us-east-1:697201234594:secret:ccdi-ins-stage-credentials-cdk-Vg9jAQ`.
+  - The promote flow resolves this variable when `stage` is selected.
+- `ins_secret_name_prod`
+  - Set this Prefect variable to
+    `arn:aws:secretsmanager:us-east-1:697201234594:secret:ccdi-ins-prod-credentials-cdk-0VnG6b`.
+  - The promote flow resolves this variable when `prod` is selected.
 - `ins_dataops_backup_bucket`
   - The value of this variable should be the short name (i.e. not ARN) of the S3 bucket in which to store Neo4j dumps.
 - `ins_neo4j_ssh_secret_name`
@@ -200,6 +220,14 @@ prefect deploy --prefect-file config/ins-prefect.yaml
 
 Select the flow you want to deploy, and choose "No" for all the options that follow.
 
+Deploy the shared stage/production promotion flow from the same Prefect YAML:
+
+```bash
+prefect deploy \
+  --prefect-file config/ins-prefect.yaml \
+  --name ins-opensearch-promote
+```
+
 ### Execution
 
 To run a Prefect flow:
@@ -231,6 +259,9 @@ To run a Prefect flow:
       enter the exact existing `snapshot_name`, and optionally add index names
       to the `indices` array. Leave the array empty to restore all non-hidden
       indices from the snapshot.
+    - For `ins-opensearch-promote`, choose `stage` or `prod`, enter the exact
+      existing `snapshot_name`, and optionally add index names to the `indices`
+      array. Promotion runs on the production Prefect work pool.
 
 ## Troubleshooting
 

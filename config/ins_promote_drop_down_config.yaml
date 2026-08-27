@@ -1,0 +1,4 @@
+stage:
+  secret_name_prefect_variable: ins_secret_name_stage
+prod:
+  secret_name_prefect_variable: ins_secret_name_prod

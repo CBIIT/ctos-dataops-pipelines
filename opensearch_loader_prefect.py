@@ -15,6 +15,7 @@ from opensearch_loader import opensearch_loader
 
 SECRET = "secret"
 ENV = "env"
+ROLE_ARN = "role_arn"
 ES_HOST = "es_host"
 NEO4J_IP = "neo4j_ip"
 NEO4J_USER = "neo4j_user"
@@ -104,7 +105,7 @@ def opensearch_loader_prefect(
     static_branch = TIER_TO_STATIC_BRANCH[tier]
 
     secret = get_secret(secret_name)
-    role_arn = Variable.get("icdc_role_arn")
+    role_arn = Variable.get(env_cfg[ROLE_ARN])
     aws_session = _assume_role(role_arn)
 
     filter_list = [i.strip() for i in indices_filter.split(",") if i.strip()]

@@ -8,45 +8,46 @@ import prefect.variables as Variable
 from opensearch_backup import opensearch_backup
 
 SECRET = "secret"
+ROLE_ARN = "role_arn"
+OS_ROLE_ARN = "os_role_arn"
 ES_HOST = "es_host"
-PROJECT_NAME  = "icdc"
+PROJECT_NAME = "icdc"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
 if LOG_PREFIX not in os.environ:
-    os.environ[LOG_PREFIX] = 'OpenSearch Backup'
-    os.environ[APP_NAME] = 'OpenSearch Backup'
+    os.environ[LOG_PREFIX] = "OpenSearch Backup"
+    os.environ[APP_NAME] = "OpenSearch Backup"
 
 config_file = "config/prefect_drop_down_config_icdc.yaml"
-with open(config_file, 'r') as file:
+with open(config_file, "r") as file:
     config = yaml.safe_load(file)
 environment_choices = Literal[tuple(list(config.keys()))]
 
+
 @flow(name="OpenSearch Backup", log_prints=True)
 def opensearch_backup_prefect(
-    environment: environment_choices, # type: ignore
-    snapshot_name,
-    indices,
-    s3_bucket
+    environment: environment_choices, snapshot_name, indices, s3_bucket  # type: ignore
 ):
-    log = get_logger('OpenSearch Backup')
+    log = get_logger("OpenSearch Backup")
     secret_name = Variable.get(config[environment][SECRET])
     secret = get_secret(secret_name)
-    role_arn = Variable.get("icdc_role_arn")
-    os_role_arn = Variable.get("icdc_os_role_arn")
+    role_arn = Variable.get(config[environment][ROLE_ARN])
+    os_role_arn = Variable.get(config[environment][OS_ROLE_ARN])
     argList = {
-        'oshost': "https://" + secret[ES_HOST] + "/",
-        'repo': PROJECT_NAME,
-        's3bucket': s3_bucket,
-        'snapshot': snapshot_name,
-        'indices': indices,
-        'rolearn': role_arn,
-        'osrolearn': os_role_arn,
-        'region': REGION,
-        'basepath': snapshot_name
+        "oshost": "https://" + secret[ES_HOST] + "/",
+        "repo": PROJECT_NAME,
+        "s3bucket": s3_bucket,
+        "snapshot": snapshot_name,
+        "indices": indices,
+        "rolearn": role_arn,
+        "osrolearn": os_role_arn,
+        "region": REGION,
+        "basepath": snapshot_name,
     }
     opensearch_backup(argList)
 
+
 if __name__ == "__main__":
     # create your first deployment
-   opensearch_backup_prefect.serve(name="opensearch_backup")
+    opensearch_backup_prefect.serve(name="opensearch_backup")

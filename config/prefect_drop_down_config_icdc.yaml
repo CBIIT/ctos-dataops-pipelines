@@ -1,18 +1,30 @@
 icdc_dev:
   secret: "icdc_secret_name_dev"
   env: dev
+  role_arn: "icdc_role_arn_nonprod"
+  os_role_arn: "icdc_os_role_arn_nonprod"
 icdc_dev2:
   secret: "icdc_secret_name_dev2"
   env: dev
+  role_arn: "icdc_role_arn_nonprod"
+  os_role_arn: "icdc_os_role_arn_nonprod"
 icdc_qa:
   secret: "icdc_secret_name_qa"
   env: qa
+  role_arn: "icdc_role_arn_nonprod"
+  os_role_arn: "icdc_os_role_arn_nonprod"
 icdc_qa2:
   secret: "icdc_secret_name_qa2"
   env: qa
+  role_arn: "icdc_role_arn_nonprod"
+  os_role_arn: "icdc_os_role_arn_nonprod"
 icdc_stage:
   secret: "icdc_secret_name_stage"
   env: stage
+  role_arn: "icdc_role_arn_prod"
+  os_role_arn: "icdc_os_role_arn_prod"
 icdc_prod:
   secret: "icdc_secret_name_prod"
   env: prod
+  role_arn: "icdc_role_arn_prod"
+  os_role_arn: "icdc_os_role_arn_prod"

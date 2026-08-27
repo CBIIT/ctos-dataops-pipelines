@@ -160,13 +160,11 @@ Define the following Workspace Variables (Settings -> Variables) in Prefect Clou
   - Same purpose as `ins_secret_name_dev`, but its value identifies the AWS
     Secrets Manager secret for the INS QA environment.
 - `ins_secret_name_stage`
-  - Set this Prefect variable to
-    `arn:aws:secretsmanager:us-east-1:697201234594:secret:ccdi-ins-stage-credentials-cdk-Vg9jAQ`.
-  - The promote flow resolves this variable when `stage` is selected.
+  - Same purpose as `ins_secret_name_dev`, but its value identifies the AWS
+    Secrets Manager secret for the INS Stage environment.
 - `ins_secret_name_prod`
-  - Set this Prefect variable to
-    `arn:aws:secretsmanager:us-east-1:697201234594:secret:ccdi-ins-prod-credentials-cdk-0VnG6b`.
-  - The promote flow resolves this variable when `prod` is selected.
+  - Same purpose as `ins_secret_name_prod`, but its value identifies the AWS
+    Secrets Manager secret for the INS Stage environment.
 - `ins_dataops_backup_bucket`
   - The value of this variable should be the short name (i.e. not ARN) of the S3 bucket in which to store Neo4j dumps.
 - `ins_neo4j_ssh_secret_name`
@@ -219,14 +217,6 @@ prefect deploy --prefect-file config/ins-prefect.yaml
 ```
 
 Select the flow you want to deploy, and choose "No" for all the options that follow.
-
-Deploy the shared stage/production promotion flow from the same Prefect YAML:
-
-```bash
-prefect deploy \
-  --prefect-file config/ins-prefect.yaml \
-  --name ins-opensearch-promote
-```
 
 ### Execution
 

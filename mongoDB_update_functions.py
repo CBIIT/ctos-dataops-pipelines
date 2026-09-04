@@ -143,6 +143,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
         counter = {"node_updated": 0, "children_updated": {}, "total_records_before_update": 0, "total_records_after_update": 0}
         update_dict = {}
         reference_file_updated_field = new_parent_id_field + "_updated"
+        updated_records = []
         for index,row in update_reference.iterrows():
             update_dict[str(row[old_parent_id_field])] = str(row[reference_file_updated_field])
 
@@ -166,6 +167,7 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                             item = add_history_item(item, update_log, True)
                             counter["node_updated"] += 1
                             log.info(f"Updated node {{{old_parent_id_field} : {old_id}}}  with new ID {{{new_parent_id_field} : {new_id}}}.")
+                            updated_records.append(item)
                 else:
                     if item.get(PARENTS):
                         for index, parent in enumerate(item[PARENTS]):
@@ -184,11 +186,12 @@ def update_exported_collection(exported_file, updated_exported_file, update_refe
                                     }
                                     item = add_history_item(item, update_log, False)
                                     log.info(f"Updated child node {{type: {item[NODE_TYPE]}, node_id: {item[NODE_ID]}}} with new parent ID {{{new_parent_id_field} : {new_parent_id_value}}}.")
+                                    updated_records.append(item)
                                     if counter.get("children_updated").get(item[NODE_TYPE]):
                                         counter["children_updated"][item[NODE_TYPE]] += 1
                                     else:
                                         counter["children_updated"][item[NODE_TYPE]] = 1
-        split_dump_json(data, updated_exported_file)
+        split_dump_json(updated_records, updated_exported_file)
         log.info(f'Updated exported collection {updated_exported_file} successfully!')
         return updated_exported_file, counter
     except Exception as e:
@@ -239,9 +242,6 @@ def import_collection(client, db_name, collection_name, updated_data_file, backu
         # get total records count from the collection
         collection = client[db_name][collection_name]
         counter["total_records_before_update"] = collection.count_documents({})
-        if len(data) != counter["total_records_before_update"]:
-            log.error("Total records count mismatch between the updated data and the collection")
-            return False
         log.info("Start replacing the collection with the new data")
         result = replace_many_in_batches(collection, data)
         counter["total_records_after_update"] = collection.count_documents({})

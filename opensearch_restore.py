@@ -102,6 +102,75 @@ def registerRepo(argList, awsauth):
     )
 
 
+def listSnapshots(argList, awsauth):
+  headers = {"Content-Type": "application/json"}
+  repository = argList['repo']
+  url = argList['oshost'] + f"_snapshot/{repository}/_all"
+
+  print(f"listing snapshots in repository '{repository}'")
+  try:
+    response = requests.get(url, auth=awsauth, headers=headers)
+  except requests.exceptions.RequestException as e:
+    raise Exception(
+      f"Unable to list snapshots in repository '{repository}': {e}. "
+      "No indices were deleted."
+    ) from e
+
+  if not response.ok:
+    raise Exception(
+      f"Unable to list snapshots in repository '{repository}': "
+      f"HTTP {response.status_code}: {response.text}. No indices were deleted."
+    )
+
+  try:
+    snapshot_names = [
+      snapshot['snapshot']
+      for snapshot in response.json().get('snapshots', [])
+      if 'snapshot' in snapshot
+    ]
+  except (AttributeError, TypeError, ValueError) as e:
+    raise Exception(
+      f"Unable to parse the snapshot list for repository '{repository}': "
+      f"{response.text}. No indices were deleted."
+    ) from e
+
+  print(f"available snapshots: {snapshot_names}")
+  return snapshot_names
+
+
+def checkSnapshotExists(argList, awsauth):
+  headers = {"Content-Type": "application/json"}
+  snapshot = argList['snapshot']
+  repository = argList['repo']
+  path = f"_snapshot/{repository}/{snapshot}"
+  url = argList['oshost'] + path
+
+  print(f"checking that snapshot '{snapshot}' exists in repository '{repository}'")
+  try:
+    response = requests.get(url, auth=awsauth, headers=headers)
+  except requests.exceptions.RequestException as e:
+    raise Exception(
+      f"Unable to check snapshot '{snapshot}' in repository '{repository}': {e}. "
+      "No indices were deleted."
+    ) from e
+
+  snapshot_exists = False
+  if response.ok:
+    try:
+      snapshots = response.json().get('snapshots', [])
+      snapshot_exists = any(item.get('snapshot') == snapshot for item in snapshots)
+    except (AttributeError, ValueError):
+      snapshot_exists = False
+
+  if not snapshot_exists:
+    raise Exception(
+      f"Snapshot '{snapshot}' does not exist in repository '{repository}': "
+      f"HTTP {response.status_code}: {response.text}. No indices were deleted."
+    )
+
+  print(f"snapshot '{snapshot}' exists")
+
+
 def selectedIndices(indices):
   if not indices:
     return []
@@ -174,6 +243,8 @@ if __name__ == "__main__":
    argList = getArgs()
    awsauth = osAuth(argList)
    registerRepo(argList, awsauth)
+   listSnapshots(argList, awsauth)
+   checkSnapshotExists(argList, awsauth)
 
    deleteIndexes(argList, awsauth)
    result = restoreIndexes(argList, awsauth)
@@ -184,6 +255,8 @@ if __name__ == "__main__":
 def opensearch_restore(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
+    listSnapshots(argList, awsauth)
+    checkSnapshotExists(argList, awsauth)
 
     deleteIndexes(argList, awsauth)
     result = restoreIndexes(argList, awsauth)

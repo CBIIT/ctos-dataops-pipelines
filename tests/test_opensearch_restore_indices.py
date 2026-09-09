@@ -1,6 +1,15 @@
 from unittest.mock import Mock, patch
 
-from opensearch_restore import deleteIndexes, restoreIndexes, selectedIndices
+import pytest
+
+from opensearch_restore import (
+    checkSnapshotExists,
+    deleteIndexes,
+    listSnapshots,
+    opensearch_restore,
+    restoreIndexes,
+    selectedIndices,
+)
 
 
 def restore_arguments(indices):
@@ -18,6 +27,65 @@ def test_selected_indices_are_normalized():
         "projects",
         "files",
     ]
+
+
+def test_snapshot_preflight_accepts_existing_snapshot():
+    arguments = restore_arguments([])
+    response = Mock(
+        ok=True,
+        status_code=200,
+        text='{"snapshots":[{"snapshot":"ins-2026-08-21-all"}]}',
+    )
+    response.json.return_value = {
+        "snapshots": [{"snapshot": "ins-2026-08-21-all"}]
+    }
+
+    with patch("opensearch_restore.requests.get", return_value=response) as get:
+        checkSnapshotExists(arguments, Mock())
+
+    assert get.call_args.args[0] == (
+        arguments["oshost"] + "_snapshot/ins/ins-2026-08-21-all"
+    )
+
+
+def test_available_snapshots_are_listed(capsys):
+    arguments = restore_arguments([])
+    response = Mock(ok=True, status_code=200)
+    response.json.return_value = {
+        "snapshots": [
+            {"snapshot": "ins-2026-08-20-all"},
+            {"snapshot": "ins-2026-08-21-all"},
+        ]
+    }
+
+    with patch("opensearch_restore.requests.get", return_value=response) as get:
+        snapshot_names = listSnapshots(arguments, Mock())
+
+    assert snapshot_names == ["ins-2026-08-20-all", "ins-2026-08-21-all"]
+    assert "available snapshots: ['ins-2026-08-20-all', 'ins-2026-08-21-all']" in (
+        capsys.readouterr().out
+    )
+    assert get.call_args.args[0] == arguments["oshost"] + "_snapshot/ins/_all"
+
+
+def test_missing_snapshot_stops_restore_before_indices_are_deleted():
+    arguments = restore_arguments([])
+    response = Mock(
+        ok=False,
+        status_code=404,
+        text='{"error":"snapshot_missing_exception"}',
+    )
+
+    with patch("opensearch_restore.osAuth"), patch(
+        "opensearch_restore.registerRepo"
+    ), patch("opensearch_restore.requests.get", return_value=response), patch(
+        "opensearch_restore.deleteIndexes"
+    ) as delete, patch("opensearch_restore.restoreIndexes") as restore:
+        with pytest.raises(Exception, match="No indices were deleted"):
+            opensearch_restore(arguments)
+
+    delete.assert_not_called()
+    restore.assert_not_called()
 
 
 def test_restore_uses_only_explicitly_selected_indices():

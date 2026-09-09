@@ -126,7 +126,6 @@ deployments:
     entrypoint: opensearch_restore_universal_prefect.py:ins_opensearch_promote_prefect
     parameters:
       environment: stage
-      snapshot_name: ""
       opensearch_repo: "{{ prefect.variables.ins_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.ins_opensearch_backup_bucket }}"
       indices: []

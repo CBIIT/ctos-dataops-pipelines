@@ -115,6 +115,9 @@ Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS'
     allows the operator to select `dev` or `qa`.
   - OpenSearch `snapshot_name` is intentionally blank because backup needs a
     new, unique name and restore needs the exact name of an existing snapshot.
+    Promote requires two independent values with no defaults: `base_path`, the
+    S3 folder containing the repository data, and `snapshot_name`, the logical
+    name recorded by OpenSearch inside that repository.
   - OpenSearch `indices` defaults to an empty array. An empty array means all
     non-hidden indices; a populated array limits the backup or restore to the
     listed index names.
@@ -253,9 +256,11 @@ To run a Prefect flow:
       enter the exact existing `snapshot_name`, and optionally add index names
       to the `indices` array. Leave the array empty to restore all non-hidden
       indices from the snapshot.
-    - For `ins-opensearch-promote`, choose `stage` or `prod`, enter the exact
-      existing `snapshot_name`, and optionally add index names to the `indices`
-      array. Promotion runs on the production Prefect work pool.
+    - For `ins-opensearch-promote`, choose `stage` or `prod`, enter the logical
+      OpenSearch `snapshot_name` (for example, `3.4.0.4`), and enter the S3
+      repository folder in `base_path` (for example,
+      `opensearch-backup-2026-06-26`). Optionally add index names to the
+      `indices` array. Promotion runs on the production Prefect work pool.
 
 ## Troubleshooting
 

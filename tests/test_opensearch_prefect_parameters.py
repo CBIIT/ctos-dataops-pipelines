@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from opensearch_backup_universal_prefect import ins_opensearch_backup_prefect
@@ -85,11 +87,18 @@ def test_ins_opensearch_promote_parameter_schema():
     assert list(schema["properties"]) == [
         "environment",
         "snapshot_name",
+        "base_path",
         "s3_bucket",
         "opensearch_repo",
         "indices",
     ]
     assert schema["properties"]["environment"]["enum"] == ["stage", "prod"]
+    assert schema["properties"]["snapshot_name"]["type"] == "string"
+    assert schema["properties"]["base_path"]["type"] == "string"
+    assert "default" not in schema["properties"]["snapshot_name"]
+    assert "default" not in schema["properties"]["base_path"]
+    assert "snapshot_name" in schema["required"]
+    assert "base_path" in schema["required"]
     assert schema["properties"]["indices"]["type"] == "array"
     assert schema["properties"]["indices"]["items"] == {"type": "string"}
     assert schema["properties"]["indices"]["default"] == []
@@ -122,6 +131,44 @@ def test_stage_promote_roles_are_selected_from_dropdown_config():
         "arn:aws:iam::697201234594:role/"
         "power-user-ccdi-stage-ins-opensearch-snapshot"
     )
+
+
+def test_promote_uses_separate_logical_snapshot_name_and_s3_base_path():
+    with patch(
+        "opensearch_restore_universal_prefect.run_opensearch_restore"
+    ) as restore:
+        ins_opensearch_promote_prefect.fn(
+            environment="stage",
+            snapshot_name="3.4.0.4",
+            base_path="opensearch-backup-2026-06-26",
+            s3_bucket="ccdi-stage-ins-opensearch-snapshot-bucket",
+            opensearch_repo="ins",
+            indices=[],
+        )
+
+    assert restore.call_args.args[0] == "3.4.0.4"
+    assert restore.call_args.args[-2] == "opensearch-backup-2026-06-26"
+
+
+@pytest.mark.parametrize(
+    ("snapshot_name", "base_path", "message"),
+    [
+        ("", "opensearch-backup-2026-06-26", "snapshot_name is required"),
+        ("3.4.0.4", "", "base_path is required"),
+    ],
+)
+def test_promote_rejects_blank_snapshot_name_or_base_path(
+    snapshot_name, base_path, message
+):
+    with pytest.raises(ValueError, match=message):
+        ins_opensearch_promote_prefect.fn(
+            environment="stage",
+            snapshot_name=snapshot_name,
+            base_path=base_path,
+            s3_bucket="ccdi-stage-ins-opensearch-snapshot-bucket",
+            opensearch_repo="ins",
+            indices=[],
+        )
 
 
 def test_prod_promote_fails_until_roles_are_configured():

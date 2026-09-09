@@ -63,6 +63,7 @@ def run_opensearch_restore(
     indices,
     s3_bucket,
     aws_operations_role,
+    base_path,
     es_host_key=ES_HOST,
 ):
     log = get_logger('OpenSearch Restore')
@@ -81,7 +82,7 @@ def run_opensearch_restore(
         'rolearn': role_arn,
         'operationsrolearn': operations_role_arn,
         'region': REGION,
-        'basepath': snapshot_name
+        'basepath': base_path
     }
     opensearch_restore(argList)
 
@@ -103,6 +104,7 @@ def opensearch_restore_prefect(
         indices,
         s3_bucket,
         aws_operations_role,
+        snapshot_name,
     )
 
 
@@ -135,6 +137,7 @@ def ins_opensearch_restore_prefect(
         indices,
         s3_bucket,
         ins_prefect_config["opensearch_operations_role"],
+        snapshot_name,
     )
 
 
@@ -142,14 +145,22 @@ def ins_opensearch_restore_prefect(
 def ins_opensearch_promote_prefect(
     environment: promote_environment_choices,  # type: ignore
     snapshot_name: str,
+    base_path: str,
     s3_bucket: str,
     opensearch_repo: str,
     indices: List[str] = [],
 ):
     """Promote an INS OpenSearch snapshot to Stage or Production.
 
+    ``snapshot_name`` is the logical OpenSearch snapshot name used in the
+    restore URL. ``base_path`` is the S3 folder registered for the repository.
     Stage and Production secrets must contain ``opensearch_host``.
     """
+    if not snapshot_name.strip():
+        raise ValueError("snapshot_name is required for OpenSearch promote")
+    if not base_path.strip():
+        raise ValueError("base_path is required for OpenSearch promote")
+
     promote_config = get_promote_environment_config(environment)
     run_opensearch_restore(
         snapshot_name,
@@ -159,6 +170,7 @@ def ins_opensearch_promote_prefect(
         indices,
         s3_bucket,
         promote_config[PROMOTE_OPERATIONS_ROLE_ARN],
+        base_path,
         PROMOTE_ES_HOST,
     )
 

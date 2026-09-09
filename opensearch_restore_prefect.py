@@ -10,7 +10,7 @@ from opensearch_backup_prefect import get_aws_account_id
 import boto3
 
 SUMARY_SECRET = "memgraph_summary_secret"
-ES_HOST = "opensearch_host"
+ES_HOST = "es_host"
 PROJECT_NAME  = "gen"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
@@ -51,4 +51,4 @@ def opensearch_restore_prefect(
 
 if __name__ == "__main__":
     # create your first deployment
-    opensearch_restore_prefect.serve(name="opensearch_backup")
+   opensearch_restore_prefect.serve(name="opensearch_backup")

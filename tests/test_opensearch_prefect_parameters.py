@@ -1,7 +1,10 @@
+import pytest
+
 from opensearch_backup_universal_prefect import ins_opensearch_backup_prefect
 from opensearch_restore_universal_prefect import (
     ES_HOST,
     PROMOTE_ES_HOST,
+    get_promote_environment_config,
     ins_promote_dropdown_config,
     ins_opensearch_promote_prefect,
     ins_opensearch_restore_prefect,
@@ -91,6 +94,36 @@ def test_ins_opensearch_promote_parameter_schema():
     assert schema["properties"]["indices"]["items"] == {"type": "string"}
     assert schema["properties"]["indices"]["default"] == []
     assert ins_promote_dropdown_config == {
-        "stage": {"secret_name_prefect_variable": "ins_secret_name_stage"},
-        "prod": {"secret_name_prefect_variable": "ins_secret_name_prod"},
+        "stage": {
+            "secret_name_prefect_variable": "ins_secret_name_stage",
+            "opensearch_operations_role_arn": (
+                "arn:aws:iam::697201234594:role/ins-prod-prefect-operations"
+            ),
+            "opensearch_snapshot_role_arn": (
+                "arn:aws:iam::697201234594:role/"
+                "power-user-ccdi-stage-ins-opensearch-snapshot"
+            ),
+        },
+        "prod": {
+            "secret_name_prefect_variable": "ins_secret_name_prod",
+            "opensearch_operations_role_arn": None,
+            "opensearch_snapshot_role_arn": None,
+        },
     }
+
+
+def test_stage_promote_roles_are_selected_from_dropdown_config():
+    config = get_promote_environment_config("stage")
+
+    assert config["opensearch_operations_role_arn"] == (
+        "arn:aws:iam::697201234594:role/ins-prod-prefect-operations"
+    )
+    assert config["opensearch_snapshot_role_arn"] == (
+        "arn:aws:iam::697201234594:role/"
+        "power-user-ccdi-stage-ins-opensearch-snapshot"
+    )
+
+
+def test_prod_promote_fails_until_roles_are_configured():
+    with pytest.raises(ValueError, match="OpenSearch promote is not configured for 'prod'"):
+        get_promote_environment_config("prod")

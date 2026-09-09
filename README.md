@@ -127,10 +127,14 @@ Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS'
     `ins-opensearch-promote` environment dropdown.
   - Maps each choice to the Prefect variable containing that environment's AWS
     Secrets Manager secret ARN.
+  - Defines the full OpenSearch operations-role and snapshot-role ARNs used for
+    each environment. Stage is configured; the Prod role values remain empty
+    until those IAM roles are created. Selecting an environment with missing
+    role values stops the flow with a configuration error.
 
 The `ins-opensearch-promote` deployment uses a thin Prefect wrapper around the
 existing universal OpenSearch restore implementation. The wrapper reads the
-dropdown choices and their Prefect-variable names from
+dropdown choices, Prefect-variable names, and IAM role ARNs from
 `config/ins_promote_drop_down_config.yaml`; it does not duplicate the restore
 logic.
 

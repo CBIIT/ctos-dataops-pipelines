@@ -13,6 +13,8 @@ import boto3
 SUMARY_SECRET = "memgraph_summary_secret"
 INS_SECRET = "neo4j_summary_secret"
 SECRET_NAME_PREFECT_VARIABLE = "secret_name_prefect_variable"
+PROMOTE_OPERATIONS_ROLE_ARN = "opensearch_operations_role_arn"
+PROMOTE_SNAPSHOT_ROLE_ARN = "opensearch_snapshot_role_arn"
 ES_HOST = "es_host"
 PROMOTE_ES_HOST = "opensearch_host"
 REGION = "us-east-1"
@@ -34,6 +36,23 @@ with open(INS_PREFECT_CONFIG_FILE, 'r') as file:
 
 environment_choices = Literal[tuple(ins_dropdown_config.keys())]
 promote_environment_choices = Literal[tuple(ins_promote_dropdown_config.keys())]
+
+
+def get_promote_environment_config(environment):
+    config = ins_promote_dropdown_config[environment]
+    required_settings = (
+        SECRET_NAME_PREFECT_VARIABLE,
+        PROMOTE_OPERATIONS_ROLE_ARN,
+        PROMOTE_SNAPSHOT_ROLE_ARN,
+    )
+    missing_settings = [setting for setting in required_settings if not config.get(setting)]
+    if missing_settings:
+        raise ValueError(
+            f"OpenSearch promote is not configured for '{environment}': "
+            f"missing {', '.join(missing_settings)} in "
+            f"{INS_PROMOTE_DROPDOWN_CONFIG_FILE}"
+        )
+    return config
 
 
 def run_opensearch_restore(
@@ -131,14 +150,15 @@ def ins_opensearch_promote_prefect(
 
     Stage and Production secrets must contain ``opensearch_host``.
     """
+    promote_config = get_promote_environment_config(environment)
     run_opensearch_restore(
         snapshot_name,
-        ins_promote_dropdown_config[environment][SECRET_NAME_PREFECT_VARIABLE],
-        ins_prefect_config["opensearch_snapshot_role_prefect_variable"],
+        promote_config[SECRET_NAME_PREFECT_VARIABLE],
+        promote_config[PROMOTE_SNAPSHOT_ROLE_ARN],
         opensearch_repo,
         indices,
         s3_bucket,
-        ins_prefect_config["opensearch_operations_role"],
+        promote_config[PROMOTE_OPERATIONS_ROLE_ARN],
         PROMOTE_ES_HOST,
     )
 

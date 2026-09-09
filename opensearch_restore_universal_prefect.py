@@ -14,6 +14,7 @@ SUMARY_SECRET = "memgraph_summary_secret"
 INS_SECRET = "neo4j_summary_secret"
 SECRET_NAME_PREFECT_VARIABLE = "secret_name_prefect_variable"
 ES_HOST = "es_host"
+PROMOTE_ES_HOST = "opensearch_host"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
@@ -43,6 +44,7 @@ def run_opensearch_restore(
     indices,
     s3_bucket,
     aws_operations_role,
+    es_host_key=ES_HOST,
 ):
     log = get_logger('OpenSearch Restore')
     opensearch_secret = Variable.get(secret_name_prefect_variable)
@@ -52,7 +54,7 @@ def run_opensearch_restore(
     print(f"snapshot role: {role_arn or '<empty>'}")
     print(f"operations role: {operations_role_arn or '<empty - using task credentials>'}")
     argList = {
-        'oshost': "https://" + secret[ES_HOST] + "/",
+        'oshost': "https://" + secret[es_host_key] + "/",
         'repo': opensearch_repo,
         's3bucket': s3_bucket,
         'snapshot': snapshot_name,
@@ -125,7 +127,10 @@ def ins_opensearch_promote_prefect(
     opensearch_repo: str,
     indices: List[str] = [],
 ):
-    """Promote an INS OpenSearch snapshot to Stage or Production."""
+    """Promote an INS OpenSearch snapshot to Stage or Production.
+
+    Stage and Production secrets must contain ``opensearch_host``.
+    """
     run_opensearch_restore(
         snapshot_name,
         ins_promote_dropdown_config[environment][SECRET_NAME_PREFECT_VARIABLE],
@@ -134,6 +139,7 @@ def ins_opensearch_promote_prefect(
         indices,
         s3_bucket,
         ins_prefect_config["opensearch_operations_role"],
+        PROMOTE_ES_HOST,
     )
 
 

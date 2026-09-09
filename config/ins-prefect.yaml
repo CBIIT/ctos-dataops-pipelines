@@ -3,7 +3,7 @@
 # Required Prefect variables:
 #   ins_secret_name_dev
 #     AWS Secrets Manager secret name containing neo4j_ip, neo4j_user,
-#     neo4j_password, and es_host.
+#     neo4j_password, es_host (backup), and opensearch_host (restore).
 #   ins_neo4j_ssh_secret_name
 #     AWS Secrets Manager secret name containing neo4j_prefect_user and
 #     neo4j_key.

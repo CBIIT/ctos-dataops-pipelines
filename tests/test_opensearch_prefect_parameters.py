@@ -1,10 +1,15 @@
 from opensearch_backup_universal_prefect import ins_opensearch_backup_prefect
 from opensearch_restore_universal_prefect import (
+    ES_HOST,
     ins_promote_dropdown_config,
     ins_opensearch_promote_prefect,
     ins_opensearch_restore_prefect,
     opensearch_restore_prefect,
 )
+
+
+def test_opensearch_restore_secret_host_key():
+    assert ES_HOST == "opensearch_host"
 
 
 def assert_common_ins_parameter_schema(flow):

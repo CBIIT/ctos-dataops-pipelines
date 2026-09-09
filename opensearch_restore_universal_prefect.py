@@ -13,7 +13,7 @@ import boto3
 SUMARY_SECRET = "memgraph_summary_secret"
 INS_SECRET = "neo4j_summary_secret"
 SECRET_NAME_PREFECT_VARIABLE = "secret_name_prefect_variable"
-ES_HOST = "es_host"
+ES_HOST = "opensearch_host"
 REGION = "us-east-1"
 ENVIRONMENT = "env"
 
@@ -95,7 +95,7 @@ def ins_opensearch_restore_prefect(
 ):
     """Restore an INS OpenSearch snapshot.
 
-    The environment selects the correct AWS secret containing ``es_host``.
+    The environment selects the correct AWS secret containing ``opensearch_host``.
     Leaving the indices array empty restores every non-hidden index in the snapshot.
 
     Args:

@@ -1,9 +1,9 @@
+# Stage and Prod use the same roles at the moment
 stage:
   secret_name_prefect_variable: ins_secret_name_stage
   opensearch_operations_role_arn: arn:aws:iam::697201234594:role/ins-prod-prefect-operations
   opensearch_snapshot_role_arn: arn:aws:iam::697201234594:role/power-user-ccdi-stage-ins-opensearch-snapshot
 prod:
   secret_name_prefect_variable: ins_secret_name_prod
-  # Add the Prod role ARNs when those roles have been created.
-  opensearch_operations_role_arn:
-  opensearch_snapshot_role_arn:
+  opensearch_operations_role_arn: arn:aws:iam::697201234594:role/ins-prod-prefect-operations
+  opensearch_snapshot_role_arn: arn:aws:iam::697201234594:role/power-user-ccdi-stage-ins-opensearch-snapshot

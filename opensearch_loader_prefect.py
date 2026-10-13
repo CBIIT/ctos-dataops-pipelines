@@ -17,7 +17,7 @@ SECRET = "secret"
 ENV = "env"
 ROLE_ARN = "role_arn"
 ES_HOST = "es_host"
-NEO4J_IP = "neo4j_ip"
+NEO4J_URI = "neo4j_uri"
 NEO4J_USER = "neo4j_user"
 NEO4J_PASSWORD = "neo4j_password"
 REGION = "us-east-1"
@@ -107,6 +107,8 @@ def opensearch_loader_prefect(
     secret = get_secret(secret_name)
     role_arn = Variable.get(env_cfg[ROLE_ARN])
     aws_session = _assume_role(role_arn)
+    uri_variable = env_cfg.get("neo4j_uri_variable")
+    neo4j_uri = Variable.get(uri_variable) if uri_variable else secret[NEO4J_URI]
 
     filter_list = [i.strip() for i in indices_filter.split(",") if i.strip()]
 
@@ -131,7 +133,7 @@ def opensearch_loader_prefect(
         argList = {
             "indices_file": resolved_indices_file,
             "es_host": secret[ES_HOST],
-            "neo4j_uri": f"bolt://{secret[NEO4J_IP]}:7687",
+            "neo4j_uri": neo4j_uri,
             "neo4j_user": secret[NEO4J_USER],
             "neo4j_password": secret[NEO4J_PASSWORD],
             "about_file": about_file_path,

@@ -64,6 +64,8 @@ def icdc_dataloading_prefect(
     env_cfg = dropdown_config[environment]
     secret_name = Variable.get(env_cfg[SECRET])
     secret = get_secret(secret_name)
+    uri_variable = env_cfg.get("neo4j_uri_variable")
+    neo4j_uri = Variable.get(uri_variable) if uri_variable else secret[NEO4J_URI]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         model_dir = os.path.join(tmpdir, "model")
@@ -71,7 +73,7 @@ def icdc_dataloading_prefect(
         schema_files = [os.path.join(model_dir, p) for p in MODEL_FILES_REL]
 
         argList = {
-            "neo4j_uri": secret[NEO4J_URI],
+            "neo4j_uri": neo4j_uri,
             "neo4j_user": secret[NEO4J_USER],
             "neo4j_password": secret[NEO4J_PASSWORD],
             "schema_files": schema_files,

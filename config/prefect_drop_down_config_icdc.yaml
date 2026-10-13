@@ -23,8 +23,10 @@ icdc_stage:
   env: stage
   role_arn: "icdc_role_arn_prod"
   os_role_arn: "icdc_os_role_arn_prod"
+  neo4j_uri_variable: "icdc_neo4j_uri_stage"
 icdc_prod:
   secret: "icdc_secret_name_prod"
   env: prod
   role_arn: "icdc_role_arn_prod"
   os_role_arn: "icdc_os_role_arn_prod"
+  neo4j_uri_variable: "icdc_neo4j_uri_prod"

@@ -52,8 +52,12 @@ icdc_dev:
   os_role_arn: "icdc_os_role_arn_nonprod"  # Prefect Variable holding the OpenSearch snapshot role ARN
 ```
 
-The referenced secret must contain (depending on which flows you run):
-`es_host`, `neo4j_uri`, `neo4j_user`, `neo4j_password`, `redis_host`, `redis_password`.
+Secrets Manager holds the Neo4j username and password for all tiers, plus the
+other flow-specific values: `es_host`, `redis_host`, and `redis_password`.
+Dev/QA secrets also hold `neo4j_uri`. For Stage/Prod, the environment config
+names the Prefect Variables `icdc_neo4j_uri_stage` and `icdc_neo4j_uri_prod`;
+create those in the workspace where the deployments run. Each variable should
+contain the full Bolt URI (for example, `bolt://host:7687`).
 
 ## Local testing
 

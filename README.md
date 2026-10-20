@@ -92,7 +92,11 @@ Three configuration files tailor `ctos-dataops-pipelines` Prefect flows for INS'
 
 - [`config/ins-prefect.yaml`](./config/ins-prefect.yaml)
   - Name the project in `name`, up top.
-  - Set `data_model_repo_url` to the GitHub repository whose branches and tags should populate the Neo4j backup's `data_model_version` dropdown.
+  - Set `data_model_repo_url` to the GitHub model repository used by the Neo4j backup.
+    `data_model_version` is a text field accepting a branch or tag such as `2.5.0`.
+    Each run fetches that ref into a fresh checkout; future branches and tags
+    require no code changes or redeployment. Missing refs or model schemas fail
+    the run instead of archiving an old checkout.
   - `opensearch_snapshot_role_prefect_variable` is the **name of a Prefect
     variable**, currently `ins_opensearch_snapshot_role`. The value stored in
     that Prefect variable must be the snapshot role's full IAM role ARN.
@@ -225,6 +229,10 @@ prefect deploy --prefect-file config/ins-prefect.yaml
 
 Select the flow you want to deploy, and choose "No" for all the options that follow.
 
+To upgrade the Neo4j backup from its old model-version dropdown, publish the code
+to the configured pull branch and redeploy `ins-neo4j-backup` once to replace its
+stored parameter schema. Later model branches require no further redeployment.
+
 ### Execution
 
 To run a Prefect flow:
@@ -238,7 +246,7 @@ To run a Prefect flow:
 3. Click on "Run", and choose "Quick run" or "Custom run" - whichever floats your boat.
     - Custom runs are nice, because you can name the run something meaningful.
 4. Select or fill in each parameter for the run.
-    - For `ins-neo4j-backup`, make sure to choose a value for `data_model_version`.
+    - For `ins-neo4j-backup`, enter the branch or tag in `data_model_version`, for example `2.5.0`.
       The remaining default parameters should be good enough.
       Even the summary and dump filenames are prefilled with the time!
     - For `ins-neo4j-restore`, copy the summary and dump filenames from the `ins-neo4j-backup` run whose

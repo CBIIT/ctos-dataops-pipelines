@@ -37,9 +37,9 @@ deployments:
       snapshot_name: ""
       secret_name_prefect_variable: ""
       # Snapshot role: assumed by the OpenSearch service (es.amazonaws.com) to access S3; must trust es.amazonaws.com.
-      aws_role_prefect_variable: "power-user-ccdi-dev-c3dc-opensearch-snapshot"
+      aws_role_prefect_variable: "arn:aws:iam::624882275043:role/power-user-ccdi-dev-c3dc-opensearch-snapshot"
       # Operations role: assumed by the Prefect flow to sign OpenSearch API requests.
-      aws_operations_role: "power-user-prefect-operations"
+      aws_operations_role: "arn:aws:iam::624882275043:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""
@@ -61,9 +61,9 @@ deployments:
       snapshot_name: ""
       secret_name_prefect_variable: ""
       # Snapshot role: assumed by the OpenSearch service (es.amazonaws.com) to access S3; must trust es.amazonaws.com.
-      aws_role_prefect_variable: "power-user-ccdi-dev-c3dc-opensearch-snapshot"
+      aws_role_prefect_variable: "arn:aws:iam::624882275043:role/power-user-ccdi-dev-c3dc-opensearch-snapshot"
       # Operations role: assumed by the Prefect flow to sign OpenSearch API requests.
-      aws_operations_role: "power-user-prefect-operations"
+      aws_operations_role: "arn:aws:iam::624882275043:role/power-user-prefect-operations"
       opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
       s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
       indices: ""

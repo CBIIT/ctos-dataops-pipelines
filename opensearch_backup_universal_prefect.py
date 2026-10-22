@@ -34,7 +34,10 @@ def resolve_role(role_or_variable, log):
   # Accepts a full ARN, a Prefect variable name, or a bare role name.
   if not role_or_variable:
     return ""
-  role = role_or_variable if role_or_variable.startswith("arn:") else Variable.get(role_or_variable)
+  if role_or_variable.startswith("arn:"):
+    return role_or_variable
+  # Treat as a Prefect variable name; fall back to the literal value when no such variable exists.
+  role = Variable.get(role_or_variable) or role_or_variable
   if role.startswith("arn:"):
     return role
   return f"arn:aws:iam::{get_aws_account_id(log)}:role/{role}"

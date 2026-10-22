@@ -117,6 +117,33 @@ def registerRepo(argList, awsauth):
     )
 
 
+def verifySnapshot(argList, awsauth):
+  # Confirm the snapshot is readable and complete BEFORE any index is deleted.
+  headers = {"Content-Type": "application/json"}
+  snapshot_name = argList['snapshot'].lower()
+  url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + snapshot_name
+  print("verifying snapshot is readable before deleting indices")
+  try:
+    r = requests.get(url, auth=awsauth, headers=headers)
+  except requests.exceptions.RequestException as e:
+    raise SystemExit(e)
+
+  if not r.ok:
+    raise Exception(
+      f"Snapshot '{snapshot_name}' is not readable in repository '{argList['repo']}'; "
+      f"aborting before deleting indices. HTTP {r.status_code}: {r.text}"
+    )
+
+  snapshots = r.json().get('snapshots', [])
+  state = snapshots[0].get('state') if snapshots else None
+  if state != 'SUCCESS':
+    raise Exception(
+      f"Snapshot '{snapshot_name}' is not in SUCCESS state (state={state}); "
+      f"aborting before deleting indices."
+    )
+  print(f"snapshot '{snapshot_name}' verified (state=SUCCESS)")
+
+
 def deleteIndexes(argList, awsauth):
   # Deleting Indexes
   headers = {"Content-Type": "application/json"}
@@ -179,6 +206,7 @@ if __name__ == "__main__":
    awsauth = osAuth(argList)
    registerRepo(argList, awsauth)
 
+   verifySnapshot(argList, awsauth)
    deleteIndexes(argList, awsauth)
    result = restoreIndexes(argList, awsauth)
    print(result.text)
@@ -189,6 +217,7 @@ def opensearch_restore(argList):
     awsauth = osAuth(argList)
     registerRepo(argList, awsauth)
 
+    verifySnapshot(argList, awsauth)
     deleteIndexes(argList, awsauth)
     result = restoreIndexes(argList, awsauth)
     print(result.text)

@@ -40,8 +40,8 @@ deployments:
       aws_role_prefect_variable: "arn:aws:iam::624882275043:role/power-user-ccdi-dev-c3dc-opensearch-snapshot"
       # Operations role: assumed by the Prefect flow to sign OpenSearch API requests.
       aws_operations_role: "arn:aws:iam::624882275043:role/power-user-prefect-operations"
-      opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
-      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      opensearch_repo: "integrated-dashboard"
+      s3_bucket: "integrated-dashboard-opensearch-snapshots"
       indices: ""
     work_pool:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
@@ -64,8 +64,8 @@ deployments:
       aws_role_prefect_variable: "arn:aws:iam::624882275043:role/power-user-ccdi-dev-c3dc-opensearch-snapshot"
       # Operations role: assumed by the Prefect flow to sign OpenSearch API requests.
       aws_operations_role: "arn:aws:iam::624882275043:role/power-user-prefect-operations"
-      opensearch_repo: "{{ prefect.variables.gc_opensearch_repo }}"
-      s3_bucket: "{{ prefect.variables.gc_opensearch_backup_bucket }}"
+      opensearch_repo: "integrated-dashboard"
+      s3_bucket: "integrated-dashboard-opensearch-snapshots"
       indices: ""
     work_pool:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13

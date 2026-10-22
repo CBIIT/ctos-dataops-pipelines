@@ -89,10 +89,25 @@ def registerRepo(argList, awsauth):
 
   print(f"repository registration returned {r.status_code}: {r.text}")
   if not r.ok:
-    raise Exception(
-      f"Unable to register snapshot repository '{argList['repo']}': "
-      f"HTTP {r.status_code}: {r.text}"
+    # Registration can fail when the assumed role lacks iam:PassRole, but a
+    # previously registered repository may still be usable for restore.
+    existing = requests.get(url, auth=awsauth, headers=headers)
+    if not existing.ok or argList['repo'] not in existing.json():
+      raise Exception(
+        f"Unable to register snapshot repository '{argList['repo']}': "
+        f"HTTP {r.status_code}: {r.text}"
+      )
+    existing_base_path = existing.json()[argList['repo']].get('settings', {}).get('base_path')
+    print(
+      f"WARNING: repository registration failed; falling back to existing "
+      f"repository '{argList['repo']}' with base_path '{existing_base_path}'."
     )
+    if existing_base_path != argList['basepath']:
+      print(
+        f"WARNING: requested base_path '{argList['basepath']}' differs from the "
+        f"existing registration; restoring from '{existing_base_path}'."
+      )
+    return
 
   repository = requests.get(url, auth=awsauth, headers=headers)
   if not repository.ok or argList['repo'] not in repository.json():
@@ -148,7 +163,8 @@ def restoreIndexes(argList, awsauth):
     "indices": indices,
     "include_global_state": False,
   }
-  path = '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/_restore'
+  # OpenSearch snapshot names are always lowercase.
+  path = '_snapshot/' + argList['repo'] + '/' + argList['snapshot'].lower() + '/_restore'
   print(argList['oshost'] + path, payload)
   try:
     result = requests.post(argList['oshost'] + path, auth=awsauth, json=payload, headers=headers)

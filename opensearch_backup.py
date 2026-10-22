@@ -109,7 +109,9 @@ def createSnapshot(argList, awsauth):
     indices = '*,-.*'
   
   # Create Snapshot
-  snapshot_url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + argList['snapshot'] + '/'
+  # OpenSearch requires snapshot names to be lowercase.
+  snapshot_name = argList['snapshot'].lower()
+  snapshot_url = argList['oshost'] + '_snapshot/' + argList['repo'] + '/' + snapshot_name + '/'
   #print(snapshot_url)
 
   headers = {"Content-Type": "application/json"}

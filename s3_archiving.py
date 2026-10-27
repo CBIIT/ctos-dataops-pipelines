@@ -7,6 +7,7 @@ and upload it to a target S3 location. It maintains the S3 folder structure with
 Key Features:
 - Downloads files from source S3 location to EFS temporary directory
 - Creates zip archive maintaining folder structure
+- Calculates MD5 checksum of the zip file
 - Uploads zip file to target S3 location
 - Cleans up all temporary files after operation (success or failure)
 - Uses EFS mount at /usr/local/data for large file operations
@@ -26,7 +27,7 @@ import shutil
 import zipfile
 import fnmatch
 from bento.common.s3 import S3Bucket, upload_log_file
-from bento.common.utils import get_logger, LOG_PREFIX, APP_NAME, get_time_stamp
+from bento.common.utils import get_logger, get_md5, LOG_PREFIX, APP_NAME, get_time_stamp
 
 
 def format_file_size(size_bytes):
@@ -347,8 +348,9 @@ def s3_archiving(
     This function orchestrates the complete archiving workflow:
     1. Download files from source S3 location to EFS temp directory (excluding pattern matches)
     2. Create zip archive maintaining folder structure
-    3. Upload zip file to target S3 location
-    4. Clean up temporary files (always runs, even on error)
+    3. Calculate MD5 checksum of the zip file
+    4. Upload zip file to target S3 location
+    5. Clean up temporary files (always runs, even on error)
 
     Args:
         source_bucket (str): Source S3 bucket name
@@ -364,6 +366,7 @@ def s3_archiving(
             - file_count (int): Number of files archived
             - excluded_count (int): Number of files excluded
             - zip_size (int): Size of zip file in bytes
+            - zip_md5 (str): MD5 checksum of zip file
             - s3_path (str): S3 URI of uploaded zip file
             - error (str): Error message if status is "failed"
     """
@@ -401,6 +404,7 @@ def s3_archiving(
         "file_count": 0,
         "excluded_count": 0,
         "zip_size": 0,
+        "zip_md5": "",
         "s3_path": "",
         "error": "",
     }
@@ -410,7 +414,7 @@ def s3_archiving(
         os.makedirs(temp_dir, exist_ok=True)
 
         # Step 1: Download files from S3
-        log.info("Step 1/3: Downloading files from S3...")
+        log.info("Step 1/4: Downloading files from S3...")
         download_dir = os.path.join(temp_dir, "downloads")
         os.makedirs(download_dir, exist_ok=True)
 
@@ -422,12 +426,17 @@ def s3_archiving(
             raise Exception("No files found to archive (all files may be excluded)")
 
         # Step 2: Create zip archive
-        log.info("Step 2/3: Creating zip archive...")
+        log.info("Step 2/4: Creating zip archive...")
         zip_path = os.path.join(temp_dir, zip_filename)
         zip_size = create_zip_archive(download_dir, zip_path, log)
 
-        # Step 3: Upload to S3
-        log.info("Step 3/3: Uploading zip file to S3...")
+        # Step 3: Calculate MD5 checksum
+        log.info("Step 3/4: Calculating MD5 checksum of zip file...")
+        zip_md5 = get_md5(zip_path)
+        log.info(f"MD5: {zip_md5}")
+
+        # Step 4: Upload to S3
+        log.info("Step 4/4: Uploading zip file to S3...")
         s3_path = upload_zip_to_s3(target_bucket, target_prefix, zip_path, log)
 
         # Update result with success
@@ -435,6 +444,7 @@ def s3_archiving(
         result["file_count"] = file_count
         result["excluded_count"] = excluded_count
         result["zip_size"] = zip_size
+        result["zip_md5"] = zip_md5
         result["s3_path"] = s3_path
 
         log.info("=" * 80)
@@ -442,7 +452,8 @@ def s3_archiving(
         log.info(f"Files archived: {file_count}")
         if excluded_count > 0:
             log.info(f"Files excluded: {excluded_count}")
-        log.info(f"Zip size: {format_file_size(zip_size)}")
+        log.info(f"Zip size: {format_file_size(zip_size)} ({zip_size:,} bytes)")
+        log.info(f"Zip MD5: {zip_md5}")
         log.info(f"Location: {s3_path}")
         log.info("=" * 80)
 

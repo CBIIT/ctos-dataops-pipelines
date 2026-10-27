@@ -64,6 +64,8 @@ s3://{source_bucket}/{source_prefix}
 | Files Archived | {result.get('file_count', 0):,} |
 | Files Excluded | {result.get('excluded_count', 0):,} |
 | Zip File Size | {format_file_size(result.get('zip_size', 0))} |
+| Zip File Size (bytes) | {result.get('zip_size', 0):,} |
+| Zip MD5 Checksum | `{result.get('zip_md5', '')}` |
 | Status | {status_text} |
 '''
 
@@ -105,7 +107,7 @@ def s3_archiving_prefect(
         exclude_patterns (str, optional): Comma-separated glob patterns to exclude (e.g., "*.log,temp/*")
 
     Returns:
-        dict: Result dictionary with status, file_count, excluded_count, zip_size, and s3_path
+        dict: Result dictionary with status, file_count, excluded_count, zip_size, zip_md5, and s3_path
     """
     print("=" * 80)
     print("Starting S3 Archiving Flow")
@@ -163,7 +165,8 @@ def s3_archiving_prefect(
         print(f"Files archived: {result['file_count']:,}")
         if result.get('excluded_count', 0) > 0:
             print(f"Files excluded: {result['excluded_count']:,}")
-        print(f"Zip size: {format_file_size(result['zip_size'])}")
+        print(f"Zip size: {format_file_size(result['zip_size'])} ({result['zip_size']:,} bytes)")
+        print(f"Zip MD5: {result['zip_md5']}")
         print(f"Location: {result['s3_path']}")
     else:
         print("❌ S3 Archiving Flow Failed")

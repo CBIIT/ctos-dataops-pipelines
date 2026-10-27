@@ -88,6 +88,7 @@ def s3_archiving_prefect(
     target_bucket: str,
     target_prefix: str,
     zip_filename: str = "",
+    include_patterns: str = "",
     exclude_patterns: str = ""
 ):
     """
@@ -95,7 +96,8 @@ def s3_archiving_prefect(
 
     This flow downloads files from a source S3 location, creates a zip archive
     maintaining the folder structure, and uploads it to a target S3 location.
-    Files matching exclusion patterns are skipped. Temporary files are automatically
+    Only files matching the inclusion patterns (if any) are archived, and files
+    matching exclusion patterns are skipped. Temporary files are automatically
     cleaned up after the operation.
 
     Args:
@@ -104,6 +106,7 @@ def s3_archiving_prefect(
         target_bucket (str): Target S3 bucket name (e.g., "my-archive-bucket")
         target_prefix (str): Target S3 prefix/folder path (e.g., "archives/2024/")
         zip_filename (str, optional): Name for zip file. Auto-generated if not provided.
+        include_patterns (str, optional): Comma-separated glob patterns or filenames to include (e.g., "*.vcf,sample_1.txt"). All files if empty.
         exclude_patterns (str, optional): Comma-separated glob patterns to exclude (e.g., "*.log,temp/*")
 
     Returns:
@@ -126,11 +129,16 @@ def s3_archiving_prefect(
         zip_filename = f"{zip_filename}.zip"
         print(f"Added .zip extension: {zip_filename}")
 
-    # Parse comma-separated exclusion patterns into list
-    pattern_list = []
+    # Parse comma-separated inclusion/exclusion patterns into lists
+    include_list = []
+    if include_patterns and include_patterns.strip():
+        include_list = [p.strip() for p in include_patterns.split(',') if p.strip()]
+        print(f"Inclusion patterns: {', '.join(include_list)}")
+
+    exclude_list = []
     if exclude_patterns and exclude_patterns.strip():
-        pattern_list = [p.strip() for p in exclude_patterns.split(',') if p.strip()]
-        print(f"Exclusion patterns: {', '.join(pattern_list)}")
+        exclude_list = [p.strip() for p in exclude_patterns.split(',') if p.strip()]
+        print(f"Exclusion patterns: {', '.join(exclude_list)}")
 
     # Call core archiving function
     print("\nExecuting archiving operation...")
@@ -140,7 +148,8 @@ def s3_archiving_prefect(
         target_bucket=target_bucket,
         target_prefix=target_prefix,
         zip_filename=zip_filename,
-        exclude_patterns=pattern_list
+        include_patterns=include_list,
+        exclude_patterns=exclude_list
     )
 
     # Create markdown artifact for Prefect UI

@@ -47,53 +47,60 @@ def format_file_size(size_bytes):
     return f"{size_bytes:.1f} PB"
 
 
-def should_exclude(relative_path, exclude_patterns):
+def should_process_file(relative_path, include_patterns, exclude_patterns):
     """
-    Check if a file should be excluded based on patterns.
+    Check if a file should be archived based on include/exclude patterns.
 
-    This function matches the relative file path against a list of glob patterns.
-    It checks both the full relative path and just the filename.
+    This function matches the relative file path against lists of glob patterns.
+    It checks both the full relative path and just the filename, so exact filenames
+    can be used as patterns.
+    1. If include_patterns provided: File must match at least one include pattern
+    2. If exclude_patterns provided: File must not match any exclude pattern
 
     Args:
         relative_path (str): File path relative to source prefix (e.g., "data/file.txt")
-        exclude_patterns (list): List of glob patterns (e.g., ["*.log", "temp/*"])
+        include_patterns (list): List of glob patterns to include (e.g., ["*.vcf", "sample_1.txt"])
+        exclude_patterns (list): List of glob patterns to exclude (e.g., ["*.log", "temp/*"])
 
     Returns:
-        bool: True if file should be excluded, False otherwise
+        bool: True if file should be archived, False otherwise
 
     Examples:
-        should_exclude("data/test.log", ["*.log"]) -> True
-        should_exclude("temp/cache.txt", ["temp/*"]) -> True
-        should_exclude("data/report.pdf", ["*.log"]) -> False
+        should_process_file("data/test.log", [], ["*.log"]) -> False
+        should_process_file("temp/cache.txt", [], ["temp/*"]) -> False
+        should_process_file("data/report.pdf", ["*.pdf"], ["*.log"]) -> True
+        should_process_file("data/report.csv", ["*.pdf"], []) -> False (doesn't match include)
     """
-    if not exclude_patterns:
+    filename = os.path.basename(relative_path)
+
+    def matches_any(patterns):
+        return any(
+            fnmatch.fnmatch(relative_path, pattern) or fnmatch.fnmatch(filename, pattern)
+            for pattern in patterns
+        )
+
+    if include_patterns and not matches_any(include_patterns):
         return False
 
-    for pattern in exclude_patterns:
-        # Match against full relative path
-        if fnmatch.fnmatch(relative_path, pattern):
-            return True
+    if exclude_patterns and matches_any(exclude_patterns):
+        return False
 
-        # Match against just the filename
-        filename = os.path.basename(relative_path)
-        if fnmatch.fnmatch(filename, pattern):
-            return True
-
-    return False
+    return True
 
 
-def download_files_from_s3(s3_bucket, s3_prefix, local_dir, exclude_patterns, log):
+def download_files_from_s3(s3_bucket, s3_prefix, local_dir, include_patterns, exclude_patterns, log):
     """
     Download all files from S3 location to local directory, maintaining folder structure.
 
     This function lists all objects under the specified S3 prefix and downloads them
-    to the local directory while preserving the S3 folder hierarchy. Files matching
-    exclusion patterns are skipped.
+    to the local directory while preserving the S3 folder hierarchy. Files not matching
+    the include patterns, or matching the exclude patterns, are skipped.
 
     Args:
         s3_bucket (str): S3 bucket name
         s3_prefix (str): S3 prefix/folder path (e.g., "data/exports/")
         local_dir (str): Local directory path for downloads
+        include_patterns (list): List of glob patterns to include (e.g., ["*.vcf"]); empty means all files
         exclude_patterns (list): List of glob patterns to exclude (e.g., ["*.log", "temp/*"])
         log: Logger instance for logging progress
 
@@ -173,8 +180,8 @@ def download_files_from_s3(s3_bucket, s3_prefix, local_dir, exclude_patterns, lo
             if not relative_path:
                 continue
 
-            # Check if file should be excluded based on patterns
-            if should_exclude(relative_path, exclude_patterns):
+            # Check if file should be skipped based on include/exclude patterns
+            if not should_process_file(relative_path, include_patterns, exclude_patterns):
                 excluded_count += 1
                 # Log excluded files (first 20, then every 10th)
                 if excluded_count <= 20 or excluded_count % 10 == 0:
@@ -340,13 +347,14 @@ def cleanup_temp_files(temp_dir, log):
 
 
 def s3_archiving(
-    source_bucket, source_prefix, target_bucket, target_prefix, zip_filename, exclude_patterns=None
+    source_bucket, source_prefix, target_bucket, target_prefix, zip_filename,
+    include_patterns=None, exclude_patterns=None
 ):
     """
     Main function to archive S3 files into a zip and upload to target location.
 
     This function orchestrates the complete archiving workflow:
-    1. Download files from source S3 location to EFS temp directory (excluding pattern matches)
+    1. Download files from source S3 location to EFS temp directory (applying include/exclude patterns)
     2. Create zip archive maintaining folder structure
     3. Calculate MD5 checksum of the zip file
     4. Upload zip file to target S3 location
@@ -358,13 +366,14 @@ def s3_archiving(
         target_bucket (str): Target S3 bucket name
         target_prefix (str): Target S3 prefix/folder path
         zip_filename (str): Name for the zip file (with .zip extension)
+        include_patterns (list, optional): List of glob patterns or filenames to include (e.g., ["*.vcf"])
         exclude_patterns (list, optional): List of glob patterns to exclude (e.g., ["*.log", "temp/*"])
 
     Returns:
         dict: Result dictionary with keys:
             - status (str): "success" or "failed"
             - file_count (int): Number of files archived
-            - excluded_count (int): Number of files excluded
+            - excluded_count (int): Number of files skipped by include/exclude patterns
             - zip_size (int): Size of zip file in bytes
             - zip_md5 (str): MD5 checksum of zip file
             - s3_path (str): S3 URI of uploaded zip file
@@ -378,6 +387,8 @@ def s3_archiving(
     log = get_logger("S3 Archiving")
 
     # Convert None to empty list
+    if include_patterns is None:
+        include_patterns = []
     if exclude_patterns is None:
         exclude_patterns = []
 
@@ -419,11 +430,11 @@ def s3_archiving(
         os.makedirs(download_dir, exist_ok=True)
 
         file_count, total_size, excluded_count = download_files_from_s3(
-            source_bucket, source_prefix, download_dir, exclude_patterns, log
+            source_bucket, source_prefix, download_dir, include_patterns, exclude_patterns, log
         )
 
         if file_count == 0:
-            raise Exception("No files found to archive (all files may be excluded)")
+            raise Exception("No files found to archive (all files may be filtered out by include/exclude patterns)")
 
         # Step 2: Create zip archive
         log.info("Step 2/4: Creating zip archive...")

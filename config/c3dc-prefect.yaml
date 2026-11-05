@@ -26,7 +26,7 @@ pull:
 
 deployments:
   
-  - name: integrated-opensearch-backup
+  - name: c3dc-opensearch-backup
     version: null
     tags: []
     description: null
@@ -50,7 +50,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Backup"
   
-  - name: integrated-opensearch-restore
+  - name: c3dc-opensearch-restore
     version: null
     tags: []
     description: null
@@ -74,7 +74,7 @@ deployments:
         env:
           PREFECT_LOGGING_EXTRA_LOGGERS: "OpenSearch Restore"
 
-  - name: integrated-opensearch-promote
+  - name: c3dc-opensearch-promote
     version: null
     tags: []
     description: Promote (restore) an OpenSearch snapshot to stage or production environment

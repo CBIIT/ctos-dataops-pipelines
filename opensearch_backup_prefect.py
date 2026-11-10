@@ -31,8 +31,6 @@ def opensearch_backup_prefect(
     environment: environment_choices, snapshot_name, indices, s3_bucket  # type: ignore
 ):
     log = get_logger("OpenSearch Backup")
-    # Temporary: find the worker's private IP for the OpenSearch security group rule.
-    print("Worker private IP:", socket.gethostbyname(socket.gethostname()))
     secret_name = Variable.get(config[environment][SECRET])
     secret = get_secret(secret_name)
     role_arn = Variable.get(config[environment][ROLE_ARN])
